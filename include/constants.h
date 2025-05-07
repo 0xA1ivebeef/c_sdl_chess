@@ -12,6 +12,4 @@ extern const int file_offsets[8];
 extern const int rank_offsets[8];
 extern const int translation_table[5];
 
-int is_on_board(int file, int rank);
-
 #endif

@@ -51,9 +51,10 @@ int load_pieces_images()
 
 void clear_renderer()
 {
-    SDL_DestroyRenderer(renderer);
     for(int i = 0; i < 12; ++i)
         SDL_DestroyTexture(piece_images[i]);
+    piece_images = {0};
+    renderer = NULL;
 }
 
 void render_board()

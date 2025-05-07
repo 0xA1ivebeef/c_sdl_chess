@@ -1,13 +1,11 @@
 
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef GAME_H
+#define GAME_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 
 #undef main
 
