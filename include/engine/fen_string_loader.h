@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "char_utils.h"
+
+#include "utils/char_utils.h"
 
 void load_fen_string(uint64_t* bitboards, int* game_flags);
 

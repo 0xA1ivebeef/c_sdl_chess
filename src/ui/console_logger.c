@@ -10,7 +10,7 @@ void get_square_string(int square, char* buffer)
     buffer[2] = '\0';
 }
 
-void translate_move(move* m)
+void translate_move(Move* m)
 {
     char startsquare_str[3];
     char destsquare_str[3];
@@ -50,7 +50,7 @@ void log_bitboards(uint64_t* bitboards, uint64_t* occupancy_bitboards)
         log_bitboard(&occupancy_bitboards[i]);
 }
 
-void log_legal_moves(move* legal_moves)
+void log_legal_moves(Move* legal_moves)
 {
 	for(int i = 0; i < LEGAL_MOVES_SIZE; ++i)
     {

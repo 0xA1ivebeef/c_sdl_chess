@@ -1,26 +1,16 @@
 
-#include "include/special_move_handler.h"
+#include "engine/double_pawn_push.h"
 
-void handle_castling(uint64_t* bitboards, move* this_move, int* game_flags)
+int is_double_pawn_push(uint64_t* bitboards, Move* this_move)
 {
-    int startsquare = this_move->startsquare;
-    int destsquare = this_move->destsquare;
-    int bb_index = (startsquare == 60) ? 9 : 3;
-    if(startsquare > destsquare)
-    {
-        bitboards[bb_index] &= ~(1ULL << (destsquare - 2));
-        bitboards[bb_index] |= (1ULL << (destsquare + 1));
-    }
-    else
-    {
-        bitboards[bb_index] &= ~(1ULL << (destsquare + 1));
-        bitboards[bb_index] |= (1ULL << (destsquare - 1));
-    }
-    game_flags[1] &= (startsquare == 60) ? 3 : 12;
+    int bb_index = get_bitboard_index(bitboards, this_move->startsquare);
+    if(!(bb_index == 0 || bb_index == 6))
+        return 0;
+    return ((max(this_move->startsquare, this_move->destsquare) - min(this_move->startsquare, this_move->destsquare)) == 16);
 }
 
 // set square behind pawn as capture in game flags
-void handle_double_pawn_push(move* legal_move, int* game_flags)
+void handle_double_pawn_push(Move* legal_move, int* game_flags)
 {
     if(!game_flags[0])
     {

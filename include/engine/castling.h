@@ -3,17 +3,19 @@
 #define CASTLING_H
 
 #include <stdio.h>
-#include "constants.h"
-#include "move.h" 
-#include "legal_move_utils.h"
-#include "attack_generator.h"
-#include "check.h"
+
+#include "engine/constants.h"
+#include "engine/move.h"
+#include "engine/attack_generator.h"
+#include "engine/check.h"
+
+#include "utils/legal_move_utils.h"
 
 #define min(a, b) (a < b ? a : b)
 #define max(a, b) (a > b ? a : b)
 
 int square_under_attack(int square, uint64_t atk_bb); 
-void add_castling(int p, int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, move* legal_moves, uint64_t atk_bb);
+void add_castling(int p, int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb);
 
 #endif
 

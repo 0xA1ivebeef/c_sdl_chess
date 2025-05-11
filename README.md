@@ -3,6 +3,17 @@ important functions:
 void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, move* legal_moves, uint64_t atk_bb)
 uint64_t get_attack_bitboard(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags)
 
+typedef struct
+{
+    uint64_t bitboards[12];
+    uint64_t occupancy[3];
+    int game_flags[5];
+    Move legal_moves[LEGAL_MOVES_SIZE]
+    int running;
+    int needs_update;
+    int selected_square;
+} GameContext;
+
 problems:
 
 DONE:

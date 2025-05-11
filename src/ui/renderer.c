@@ -95,7 +95,7 @@ void render_pieces(const uint64_t* bitboards)
     }
 }
 
-void render_legal_moves(int startsquare, move* legal_moves)
+void render_legal_moves(int startsquare, Move* legal_moves)
 {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 150, 0, 0, 100);

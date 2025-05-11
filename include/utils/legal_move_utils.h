@@ -1,5 +1,5 @@
 
-#include "move.h"
-#include "constants.h"
+#include "engine/move.h"
+#include "engine/constants.h"
 
-int get_endindex(move* legal_moves);
+int get_endindex(Move* legal_moves);

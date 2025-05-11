@@ -4,10 +4,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include "move.h"
 
-void handle_castling(uint64_t* bitboards, move* this_move, int* game_flags);
-void handle_double_pawn_push(move* legal_move, int* game_flags);
+#include "engine/move.h"
+
+void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags);
+void handle_double_pawn_push(Move* legal_move, int* game_flags);
 void handle_enpassant(uint64_t* bitboards, int* game_flags);
 
 #endif

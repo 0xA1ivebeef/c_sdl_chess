@@ -6,7 +6,64 @@ int square_under_attack(int square, uint64_t atk_bb)
     return (atk_bb & (1ULL << square)) != 0;
 }
 
-void add_castling_move(int startsquare, int destsquare, move* legal_moves)
+// castle rights = KQkq white - black
+void update_castle_rights(uint64_t* bitboards, Move* this_move, int* game_flags)
+{
+    int index = get_bitboard_index(bitboards, this_move->startsquare);
+    switch(index)
+    {
+        case 3:
+        case 9:
+            // remove castle rights for one side
+            switch(this_move->startsquare)
+            {
+                case 0:
+                    game_flags[1] &= 14; // keep all but black queenside
+                    break;
+                case 7:
+                    game_flags[1] &= 13; // keep all but black kingside
+                    break;
+                case 56:
+                    game_flags[1] &= 11; // white qs
+                    break;
+                case 63:
+                    game_flags[1] &= 7; // white kingside
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 5:
+        case 11:
+            // remove castle rights for player
+            game_flags[1] &= (this_move->startsquare == 60) ? 3 : 12;
+            break;
+        default:
+            return;
+    }
+}
+
+void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags)
+{
+    int startsquare = this_move->startsquare;
+    int destsquare = this_move->destsquare;
+    int bb_index = (startsquare == 60) ? 9 : 3;
+    if(startsquare > destsquare)
+    {
+        bitboards[bb_index] &= ~(1ULL << (destsquare - 2));
+        bitboards[bb_index] |= (1ULL << (destsquare + 1));
+    }
+    else
+    {
+        bitboards[bb_index] &= ~(1ULL << (destsquare + 1));
+        bitboards[bb_index] |= (1ULL << (destsquare - 1));
+    }
+    game_flags[1] &= (startsquare == 60) ? 3 : 12;
+}
+
+
+
+void add_castling_move(int startsquare, int destsquare, Move* legal_moves)
 {
 	int i = get_endindex(legal_moves);
     move m = {startsquare, destsquare, 1};
@@ -60,7 +117,7 @@ int can_castle(int p, int startsquare, int destsquare, uint64_t* bitboards, uint
 	return 1;
 }
 
-void add_castling(int p, int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, move* legal_moves, uint64_t atk_bb)
+void add_castling(int p, int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb)
 {
 	int castle_rights = game_flags[1];
 
