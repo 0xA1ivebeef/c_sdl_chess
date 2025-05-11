@@ -7,6 +7,6 @@ typedef struct
     int startsquare;
     int destsquare;
     int flags;
-} move;
+} Move;
 
 #endif
