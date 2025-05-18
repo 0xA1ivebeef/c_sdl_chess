@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <stdint.h> 
 
+#include "ui/console_logger.h"
+
+#include "engine/move_handler.h"
+
 #include "utils/legal_move_utils.h"
 #include "utils/bitboard_utils.h"
 

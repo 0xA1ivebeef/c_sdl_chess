@@ -1,5 +1,5 @@
 
-#include "include/sdl_wrapper.h"
+#include "ui/sdl_wrapper.h"
 
 void cleanup(AppContext* app)
 {
@@ -32,11 +32,11 @@ int init_sdl(AppContext* app)
         return 1;
     }
     
-    app->renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
+    app->renderer = SDL_CreateRenderer(app->window, -1, SDL_RENDERER_ACCELERATED);
     if(app->renderer == NULL)
     {
         fprintf(stderr, "renderer creation: %s\n", SDL_GetError());
-        SDL_DestroyWindow(*window);
+        SDL_DestroyWindow(app->window);
         IMG_Quit();
         SDL_Quit();
         return 1;

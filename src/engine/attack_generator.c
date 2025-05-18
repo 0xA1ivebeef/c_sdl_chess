@@ -1,5 +1,5 @@
 
-#include "include/attack_generator.h"
+#include "engine/attack_generator.h"
 
 uint64_t get_pawn_attack_moves(int p, int square, uint64_t* occupancy_bitboards)
 {
@@ -92,7 +92,7 @@ uint64_t resolve_attack_bitboard(int p, uint64_t bb, int bb_index, uint64_t* occ
 	return result;
 }
 
-uint64_t get_attack_bitboard(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags)
+uint64_t get_attack_bitboard(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards)
 {
 	uint64_t result = 0;
 	int bb_startindex = p*6;

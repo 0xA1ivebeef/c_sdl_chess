@@ -8,6 +8,7 @@
 
 #include "engine/move.h"
 #include "engine/constants.h"
+
 #include "ui/console_logger.h"
 
 int load_pieces_images();

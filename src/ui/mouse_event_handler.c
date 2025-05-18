@@ -1,5 +1,5 @@
 
-#include "include/mouse_event_handler.h"
+#include "ui/mouse_event_handler.h"
 
 int handle_mouse_event(int mouse_x, int mouse_y, uint64_t occupancy_bitboard)
 {

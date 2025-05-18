@@ -1,5 +1,5 @@
 
-#include "include/console_logger.h"
+#include "ui/console_logger.h"
 
 void get_square_string(int square, char* buffer)
 {

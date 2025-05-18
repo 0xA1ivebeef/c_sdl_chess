@@ -1,5 +1,5 @@
 
-#include "include/char_utils.h"
+#include "utils/char_utils.h"
 
 int char_to_int(const char c)
 {

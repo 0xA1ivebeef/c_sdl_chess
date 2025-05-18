@@ -1,13 +1,13 @@
 
-#include "include/tester.h"
+#include "engine/tester.h"
 
 int get_nodes(uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, int depth)
 {
     if(depth == 0)
         return 1;
 
-    move current_moves[LEGAL_MOVES_SIZE] = {0};
-    generate_legal_moves(game_flags[0], bitboards, occupancy_bitboards, game_flags, current_moves, get_attack_bitboard(!game_flags[0], bitboards, occupancy_bitboards, game_flags));
+    Move current_moves[LEGAL_MOVES_SIZE] = {0};
+    generate_legal_moves(game_flags[0], bitboards, occupancy_bitboards, game_flags, current_moves, get_attack_bitboard(!game_flags[0], bitboards, occupancy_bitboards));
     printf("depth: %d\n legal_moves:\n", depth);
     log_legal_moves(current_moves);
 

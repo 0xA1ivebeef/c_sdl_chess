@@ -1,5 +1,5 @@
 
-#include "include/castling.h"
+#include "engine/castling.h"
 
 int square_under_attack(int square, uint64_t atk_bb)
 {
@@ -66,13 +66,16 @@ void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags)
 void add_castling_move(int startsquare, int destsquare, Move* legal_moves)
 {
 	int i = get_endindex(legal_moves);
-    move m = {startsquare, destsquare, 1};
+    Move m = {startsquare, destsquare, 1};
 	legal_moves[i] = m;
 }	
 
 // called seperatly for kingside, queenside each (twice for one player)
-int can_castle(int p, int startsquare, int destsquare, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, uint64_t atk_bb)
+int can_castle(int startsquare, int destsquare, uint64_t* occupancy_bitboards, uint64_t atk_bb)
 {
+    if (destsquare == -1) 
+        return 0;
+    
     /*
                 qs  | K |  ks
        black:  2,  3,  4,  5,  6
@@ -117,44 +120,25 @@ int can_castle(int p, int startsquare, int destsquare, uint64_t* bitboards, uint
 	return 1;
 }
 
-void add_castling(int p, int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb)
+void add_castling(int square, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb)
 {
 	int castle_rights = game_flags[1];
 
     log_bitboard(&atk_bb);
     
-    int destsquare;
-    if(square == 4)
-	{
-		// black
-		if(castle_rights & 1)
-        {
-			destsquare = 2;
-            if(can_castle(p, square, destsquare, bitboards, occupancy_bitboards, game_flags, atk_bb))
-                add_castling_move(square, destsquare, legal_moves);
-        }
-        if(castle_rights & 2)
-        {
-            destsquare = 6;
-            if(can_castle(p, square, destsquare, bitboards, occupancy_bitboards, game_flags, atk_bb))
-                add_castling_move(square, destsquare, legal_moves);
-	    }
-    }
-	// white
-	else if(square == 60)
-	{	
-		if(castle_rights & 4)
-	    {
-            destsquare = 58;
-            if(can_castle(p, square, destsquare, bitboards, occupancy_bitboards, game_flags, atk_bb))
-                add_castling_move(square, destsquare, legal_moves);
-        }
-        if(castle_rights & 8)
-        {
-            destsquare = 62;
-            if(can_castle(p, square, destsquare, bitboards, occupancy_bitboards, game_flags, atk_bb))
-                add_castling_move(square, destsquare, legal_moves);
-	    }
+    if (square == 4) 
+    {
+        if ((castle_rights & 1) && can_castle(4, 2, occupancy_bitboards, atk_bb))
+            add_castling_move(4, 2, legal_moves);
+        if ((castle_rights & 2) && can_castle(4, 6, occupancy_bitboards, atk_bb))
+            add_castling_move(4, 6, legal_moves);
+    } 
+    else if (square == 60) 
+    {
+        if ((castle_rights & 4) && can_castle(60, 58, occupancy_bitboards, atk_bb))
+            add_castling_move(60, 58, legal_moves);
+        if ((castle_rights & 8) && can_castle(60, 62, occupancy_bitboards, atk_bb))
+            add_castling_move(60, 62, legal_moves);
     }
 }
 

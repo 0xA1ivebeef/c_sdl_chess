@@ -1,5 +1,5 @@
 
-#include "include/fen_string_loader.h"
+#include "engine/fen_string_loader.h"
 
 static const char* fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 // "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w kq - 4 11";

@@ -1,7 +1,7 @@
 
-#include "include/legal_move_utils.h"
+#include "utils/legal_move_utils.h"
 
-int get_endindex(move* legal_moves)
+int get_endindex(Move* legal_moves)
 {
 	int i = 0;
 	while(legal_moves[i].startsquare != legal_moves[i].destsquare)

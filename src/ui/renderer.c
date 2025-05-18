@@ -1,5 +1,5 @@
 
-#include "include/renderer.h"
+#include "ui/renderer.h"
 
 static SDL_Texture* piece_images[12];
 static SDL_Renderer* renderer;
@@ -53,8 +53,6 @@ void clear_renderer()
 {
     for(int i = 0; i < 12; ++i)
         SDL_DestroyTexture(piece_images[i]);
-    piece_images = {0};
-    renderer = NULL;
 }
 
 void render_board()

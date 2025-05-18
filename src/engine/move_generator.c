@@ -1,10 +1,10 @@
 
-#include "include/move_generator.h"
+#include "engine/move_generator.h"
 
 static int legal_moves_index = 0;
 
 // TODO: where is the game_flags en passant square set?
-void add_enpassant(int p, uint64_t* bitboards, int* game_flags, move* legal_moves)
+void add_enpassant(int p, uint64_t* bitboards, int* game_flags, Move* legal_moves)
 {
     int enpassant_square = game_flags[2];
     int current_bit = 0;
@@ -16,7 +16,7 @@ void add_enpassant(int p, uint64_t* bitboards, int* game_flags, move* legal_move
             // if enemy pawn on gameflags enpassant square
             if(bitmasks[5 - p][current_bit] & (1ULL << enpassant_square))
             {
-                move this_move = {current_bit, enpassant_square, 2};
+                Move this_move = {current_bit, enpassant_square, 2};
                 legal_moves[legal_moves_index] = this_move;
                 ++legal_moves_index;
                 printf("added enpassant move %d, %d\n", current_bit, enpassant_square);
@@ -126,7 +126,7 @@ uint64_t get_legal_moves_bitmask(int p, int bitboard_index, int square, uint64_t
     }
 }
 
-void get_pieces_moves(int p, int bitboard_index, int square, move* legal_moves, uint64_t* occupancy_bitboards)
+void get_pieces_moves(int p, int bitboard_index, int square, Move* legal_moves, uint64_t* occupancy_bitboards)
 {
     uint64_t legal_moves_bitmask = get_legal_moves_bitmask(p, bitboard_index, square, occupancy_bitboards);
     
@@ -135,7 +135,7 @@ void get_pieces_moves(int p, int bitboard_index, int square, move* legal_moves, 
     {
         if(legal_moves_bitmask & 1)
         {
-            move m = {square, destsquare, 0};
+            Move m = {square, destsquare, 0};
             legal_moves[legal_moves_index] = m;
             legal_moves_index++;
         }
@@ -145,7 +145,7 @@ void get_pieces_moves(int p, int bitboard_index, int square, move* legal_moves, 
 }
 
 // might make this async
-void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, move* legal_moves, uint64_t* occupancy_bitboards)
+void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, Move* legal_moves, uint64_t* occupancy_bitboards)
 {
     int current_bit = 0;
     while(bitboard)
@@ -158,7 +158,7 @@ void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, move* legal_
     }
 }
 
-void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, move* legal_moves, uint64_t atk_bb)
+void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb)
 {
     legal_moves_index = 0;
     int bitboard_start_index = p*6;
@@ -167,7 +167,7 @@ void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboa
     
     // every turn
     int king_square = get_piece_square(bitboards[6*p+5]);
-    add_castling(p, king_square, bitboards, occupancy_bitboards, game_flags, legal_moves, atk_bb);
+    add_castling(king_square, occupancy_bitboards, game_flags, legal_moves, atk_bb);
     add_enpassant(p, bitboards, game_flags, legal_moves);
 }
 

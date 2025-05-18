@@ -12,7 +12,7 @@ int is_check(int p, uint64_t* bitboards, uint64_t attack_bitboard)
 // only keep moves that are not check after making them on the board
 void filter_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t attack_bitboard)
 {
-    move valid_moves[LEGAL_MOVES_SIZE] = {0};
+    Move valid_moves[LEGAL_MOVES_SIZE] = {0};
     int endindex = get_endindex(legal_moves);
     int c = 0;
     uint64_t bb_copy[12] = {0};
@@ -30,7 +30,7 @@ void filter_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int
             ++c;
         }
     }
-    memcpy(legal_moves, valid_moves, sizeof(move)*LEGAL_MOVES_SIZE);
+    memcpy(legal_moves, valid_moves, sizeof(Move)*LEGAL_MOVES_SIZE);
     printf("valid moves: \n"); 
     log_legal_moves(legal_moves);
 }
