@@ -37,3 +37,5 @@ stalemate / draw
 pawn promotion
 
 opponent ? 
+
+!!! IF ROOK IS CAPTURED A NEW ROOK SPAWNS ON CASTLING !!! 

@@ -1,5 +1,5 @@
 
-#include "include/main/main.h"
+#include "main/main.h"
 
 int main()
 {

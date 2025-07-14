@@ -8,9 +8,6 @@ OBJ_DIR = obj
 # Recursively find all .c files in src/
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c')
 
-# Add main.c explicitly (since it's not in src/)
-SRC_FILES += main.c
-
 # Convert .c file list to .o file list, putting .o files under obj/
 OBJ_FILES := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
