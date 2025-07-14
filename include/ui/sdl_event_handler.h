@@ -10,6 +10,7 @@
 #include "engine/game_context.h"
 #include "engine/move_handler.h"
 
+#include "utils/macros.h"
 
 void handle_event(GameContext* game, SDL_Event* event);
 

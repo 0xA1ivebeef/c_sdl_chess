@@ -13,6 +13,7 @@ int setup(GameContext* game, SDL_Renderer* renderer)
     load_bitmasks();
     generate_legal_moves(game->game_flags[0], game->bitboards, game->occupancy, game->game_flags, game->legal_moves, 0);
     log_legal_moves(game->legal_moves);
+
     return 0;
 }
 
@@ -32,7 +33,7 @@ void update(GameContext* game)
     generate_legal_moves(game->game_flags[0], game->bitboards, game->occupancy, game->game_flags, game->legal_moves, atk_bb); 
 
     // filter out moves that would put me into check
-    filter_moves(game->game_flags[0], game->bitboards, game->occupancy, game->game_flags, game->legal_moves, atk_bb);
+    filter_moves(game->game_flags[0], game->bitboards, game->occupancy, game->legal_moves, atk_bb);
     
     // if im in check, only give me moves that move me out of check
     if(is_check(game->game_flags[0], game->bitboards, atk_bb))
@@ -50,16 +51,14 @@ void game_loop(GameContext* game)
     while (game->running)
     {
         if (SDL_WaitEvent(&event))
-            handle_event(game, &event);
-        
+            handle_event(game, &event); // outsourcing further
         if (game->needs_update)
         {
             update(game);
             render(game->bitboards);
             game->needs_update = 0;
         }
-
-        SDL_Delay(16);
+        SDL_Delay(16); // smoothing
     }
 }
 

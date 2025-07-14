@@ -10,7 +10,7 @@ int is_check(int p, uint64_t* bitboards, uint64_t attack_bitboard)
 }
 
 // only keep moves that are not check after making them on the board
-void filter_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t attack_bitboard)
+void filter_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, Move* legal_moves, uint64_t attack_bitboard)
 {
     Move valid_moves[LEGAL_MOVES_SIZE] = {0};
     int endindex = get_endindex(legal_moves);
@@ -23,7 +23,7 @@ void filter_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int
         get_bb_copy(bitboards, occupancy_bitboards, bb_copy, occ_bb_copy);
         apply_move(bb_copy, legal_moves[i].startsquare, legal_moves[i].destsquare);
         update_occupancy_bitboards(bb_copy, occ_bb_copy);
-        attack_bitboard = get_attack_bitboard(!p, bb_copy, occ_bb_copy, game_flags);
+        attack_bitboard = get_attack_bitboard(!p, bb_copy, occ_bb_copy);
         if (!is_check(p, bb_copy, attack_bitboard)) 
         {
             valid_moves[c] = legal_moves[i];
