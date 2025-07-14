@@ -8,8 +8,11 @@ OBJ_DIR = obj
 # Recursively find all .c files in src/
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c')
 
-# Replace src/ with obj/ and .c with .o
-OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
+# Add main.c explicitly (since it's not in src/)
+SRC_FILES += main.c
+
+# Convert .c file list to .o file list, putting .o files under obj/
+OBJ_FILES := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
 # Default target
 all: main
@@ -18,8 +21,8 @@ all: main
 main: $(OBJ_FILES)
 	$(CC) $(OBJ_FILES) -lSDL2 -lSDL2_image -o main
 
-# Compile .c to .o, preserving directory structure
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+# Compile .c to .o, preserving directory structure inside obj/
+$(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 

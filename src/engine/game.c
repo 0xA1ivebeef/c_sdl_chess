@@ -13,7 +13,7 @@ int setup(GameContext* game, SDL_Renderer* renderer)
     load_bitmasks();
     generate_legal_moves(game->game_flags[0], game->bitboards, game->occupancy, game->game_flags, game->legal_moves, 0);
     log_legal_moves(game->legal_moves);
-
+    render(game->bitboards);
     return 0;
 }
 
@@ -51,14 +51,13 @@ void game_loop(GameContext* game)
     while (game->running)
     {
         if (SDL_WaitEvent(&event))
-            handle_event(game, &event); // outsourcing further
+            handle_event(game, &event); // outsourcing ui/sdl_event_handler.c
         if (game->needs_update)
         {
             update(game);
             render(game->bitboards);
             game->needs_update = 0;
         }
-        SDL_Delay(16); // smoothing
     }
 }
 

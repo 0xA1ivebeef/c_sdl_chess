@@ -7,6 +7,4 @@
 #include "engine/game_context.h"
 #include "engine/game.h"
 
-#undef main
-
 #endif

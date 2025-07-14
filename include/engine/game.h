@@ -27,6 +27,7 @@
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"
 
-// TODO give void game_loop(GameContext* app) for the main;
+int setup(GameContext* game, SDL_Renderer* renderer);
+void game_loop(GameContext* app);
 
 #endif

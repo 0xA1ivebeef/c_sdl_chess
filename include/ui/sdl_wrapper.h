@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#undef main
 
 // needed for clearing the loaded textures in the renderer.c which cleanup() also handles
 #include "renderer.h"

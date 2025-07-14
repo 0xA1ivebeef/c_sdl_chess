@@ -79,12 +79,12 @@ int is_legal_move(uint64_t* bitboards, int startsquare, int destsquare, int* gam
 int handle_move(uint64_t* bitboards, int startsquare, int destsquare, Move* legal_moves, int* game_flags)
 {
     if(startsquare == -1 || destsquare == -1)
-        return 1;
+        return 0;
 
     if(!is_legal_move(bitboards, startsquare, destsquare, game_flags, legal_moves))
-        return 1;
+        return 0;
 
     apply_move(bitboards, startsquare, destsquare);
-    return 0;
+    return 1;
 }
 

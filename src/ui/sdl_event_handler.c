@@ -26,6 +26,7 @@ void handle_event(GameContext* game, SDL_Event* event)
             if (handle_move(game->bitboards, game->selected_square, destsquare, game->legal_moves, game->game_flags))
                 game->needs_update = 1;
             game->selected_square = -1; // always unselect piece
+            render(game->bitboards); // for removing legal move visuals
             break;
     }
 }
