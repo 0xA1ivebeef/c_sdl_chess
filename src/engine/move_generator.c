@@ -167,7 +167,7 @@ void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboa
     
     // every turn
     int king_square = get_piece_square(bitboards[6*p+5]);
-    add_castling(king_square, occupancy_bitboards, game_flags, legal_moves, atk_bb);
+    add_castling(king_square, bitboards, occupancy_bitboards, game_flags, legal_moves, atk_bb);
     add_enpassant(p, bitboards, game_flags, legal_moves);
 }
 
