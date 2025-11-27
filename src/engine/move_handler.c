@@ -46,46 +46,45 @@ void apply_move(uint64_t* bitboards, int startsquare, int destsquare)
     bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
 }
 
-int is_legal_move(GameContext* game, int startsquare, int destsquare)
+int is_legal_move(Position* position, int startsquare, int destsquare)
 {
-    for(int i = 0; i < LEGAL_MOVES_SIZE; ++i)
+    for(int i = 0; i < position->legal_move_count; ++i)
     {
-        if((game->legal_moves[i].startsquare != startsquare) || (game->legal_moves[i].destsquare != destsquare))
+        if((position->legal_moves[i].startsquare != startsquare) || (position->legal_moves[i].destsquare != destsquare))
             continue;
      
-        switch(game->legal_moves[i].flags)
+        switch(position->legal_moves[i].flags)
         {
             case 1:
-                handle_castling(game->bitboards, &game->legal_moves[i], game->game_flags);
+                handle_castling(position->bitboards, &position->legal_moves[i], position->game_flags);
                 break;
             case 2:
-                handle_enpassant(game->bitboards, game->game_flags);
+                handle_enpassant(position->bitboards, position->game_flags);
                 break;
             default:
                 break;
         }
         
-        if(is_double_pawn_push(game-> bitboards, &game->legal_moves[i]))
-            handle_double_pawn_push(&game->legal_moves[i], game->game_flags);
+        if(is_double_pawn_push(position->bitboards, &position->legal_moves[i]))
+            handle_double_pawn_push(&position->legal_moves[i], position->game_flags);
         else
-            game->game_flags[2] = -1;
+            position->game_flags[2] = -1;
         
-        update_castle_rights(game->bitboards, &game->legal_moves[i], game->game_flags);
+        update_castle_rights(position->bitboards, &position->legal_moves[i], position->game_flags);
         return 1;
     }
     return 0;
 }
 
-
-int handle_move(GameContext* game, int startsquare, int destsquare)
+int handle_move(Position* position, int startsquare, int destsquare)
 {
     if(startsquare == -1 || destsquare == -1)
         return 0;
 
-    if(!is_legal_move(game, startsquare, destsquare))
+    if(!is_legal_move(position, startsquare, destsquare))
         return 0;
 
-    apply_move(game->bitboards, startsquare, destsquare);
+    apply_move(position->bitboards, startsquare, destsquare);
     return 1;
 }
 

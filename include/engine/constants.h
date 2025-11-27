@@ -8,6 +8,9 @@
 
 #define LEGAL_MOVES_SIZE 256
 
+#define BLACK 0
+#define WHITE 1
+
 extern const int file_offsets[8];
 extern const int rank_offsets[8];
 extern const int translation_table[5];

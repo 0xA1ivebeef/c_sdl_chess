@@ -20,9 +20,14 @@ static char* piece_image_paths[12] =
     "assets/pieces-basic-png/white-king.png"
 };
 
-void load_renderer(SDL_Renderer* r)
+int load_renderer(SDL_Renderer* r)
 {
-    renderer = r;
+    renderer = r; // static
+    if (!renderer)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 int load_pieces_images()

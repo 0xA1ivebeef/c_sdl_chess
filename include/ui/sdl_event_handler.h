@@ -4,14 +4,14 @@
 
 #include <SDL2/SDL.h>
 
+#include "ui/ui_context.h"
 #include "ui/mouse_event_handler.h"
 #include "ui/renderer.h"
 
-#include "engine/game_context.h"
+#include "engine/move.h"
+#include "engine/position.h"
 #include "engine/move_handler.h"
 
-#include "utils/macros.h"
-
-void handle_event(GameContext* game, SDL_Event* event);
+int handle_event(Position* position, UIContext* ui_context, SDL_Event* event);
 
 #endif

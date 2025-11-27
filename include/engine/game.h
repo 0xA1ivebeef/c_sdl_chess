@@ -24,10 +24,12 @@
 #include "castling.h"
 #include "engine/tester.h"
 
+#include "opponent/opponent.h"
+
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"
 
-int setup(GameContext* game, SDL_Renderer* renderer);
-void game_loop(GameContext* app);
+int setup(Position* position);
+void game_loop(Position* position, UIContext* ui_context);
 
 #endif

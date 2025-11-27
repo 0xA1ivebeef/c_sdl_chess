@@ -12,7 +12,7 @@
 #include "ui/console_logger.h"
 
 int load_pieces_images();
-void load_renderer(SDL_Renderer* r);
+int load_renderer(SDL_Renderer* r);
 void clear_renderer();
 void render(uint64_t* bitboards);
 void render_legal_moves(int startsquare, Move* legal_moves);

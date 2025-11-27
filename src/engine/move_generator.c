@@ -158,16 +158,19 @@ void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, Move* legal_
     }
 }
 
-void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb)
+void generate_legal_moves(Position* position)
 {
-    legal_moves_index = 0;
-    int bitboard_start_index = p*6;
+    int current_player = position->game_flags[0];
+    uint64_t enemy_attack_bitboard = position->attack_bitboards[!current_player];
+    legal_moves_index = 0; // static
+    int bitboard_start_index = current_player*6;
     for(int i = bitboard_start_index; i < bitboard_start_index + 6; i++)
-        resolve_bitboard(p, bitboards[i], i, legal_moves, occupancy_bitboards);
-    
-    // every turn
-    int king_square = get_piece_square(bitboards[6*p+5]);
-    add_castling(king_square, bitboards, occupancy_bitboards, game_flags, legal_moves, atk_bb);
-    add_enpassant(p, bitboards, game_flags, legal_moves);
+    {
+        resolve_bitboard(current_player, position->bitboards[i], i, position->legal_moves, position->occupancy);
+    }
+
+    int king_square = get_piece_square(position->bitboards[6*current_player+5]);
+    add_castling(king_square, position->bitboards, position->occupancy, position->game_flags, position->legal_moves, enemy_attack_bitboard);
+    add_enpassant(current_player, position->bitboards, position->game_flags, position->legal_moves);
 }
 

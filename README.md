@@ -6,11 +6,6 @@ flags flag special moves like castling or promotions
 
 legal_moves: static array of Move* 
 
-
-important functions:
-void generate_legal_moves(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, move* legal_moves, uint64_t atk_bb)
-uint64_t get_attack_bitboard(int p, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags)
-
 typedef struct
 {
     uint64_t bitboards[12];
@@ -20,7 +15,7 @@ typedef struct
     int running;
     int needs_update;
     int selected_square;
-} GameContext;
+} Position;
 
 problems:
 
