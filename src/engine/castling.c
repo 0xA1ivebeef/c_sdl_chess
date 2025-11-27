@@ -87,7 +87,7 @@ void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags)
 
 void add_castling_move(int startsquare, int destsquare, Move* legal_moves)
 {
-	int i = get_endindex(legal_moves);
+	int i = get_legal_move_count(legal_moves);
     Move m = {startsquare, destsquare, 1};
 	legal_moves[i] = m;
 }	

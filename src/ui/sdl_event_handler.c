@@ -24,7 +24,9 @@ void handle_event(GameContext* game, SDL_Event* event)
         case SDL_MOUSEBUTTONUP:
             destsquare = handle_mouse_event(mouse_x, mouse_y, game->occupancy[game->game_flags[0]]);
             if (handle_move(game->bitboards, game->selected_square, destsquare, game->legal_moves, game->game_flags))
+            {
                 game->needs_update = 1;
+            }
             game->selected_square = -1; // always unselect piece
             render(game->bitboards); // for removing legal move visuals
             break;

@@ -3,6 +3,7 @@
 
 int main()
 {
+    srand(time(NULL));  
     AppContext app = {0}; // sdl components
     if (init_sdl(&app) != 0) 
         return 1;

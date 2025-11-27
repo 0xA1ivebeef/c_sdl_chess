@@ -1,0 +1,24 @@
+
+1. game is loaded with all assets and starting position (FEN)
+    renderer, game flags etc.
+
+2. moving logic:
+    - update(game): called after a move was made
+        switch player
+        update occ
+        generate enemy attack bitboard
+        delete and generate legal moves
+        filter legal moves for checks 
+        render game
+    - program is in a still state where it waits for inputs of a move
+    - either automated move from opponent (also in update()) or manual input 
+    -> get in a move from any interface (player, random legal move, evaluation etc.)   
+    -> handle_move (bitboards, startsquare, destsquare, legal_moves, gameflags)
+    handles a move given as startsquare and destsquare, all additional special move properties and checks for the move beeing legal
+    -> calls apply_move(bitboards, startsquare, destsquare) which updates the bitboards
+
+* for a manual move there are additional tests for selecting a piece
+    but generally it calls handle_move(game, startsquare, destsquare, game flags)
+    handle move returns 1 if a move was made, this invokes the update function
+    (+ unselecting piece and rendering)
+

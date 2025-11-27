@@ -2,4 +2,4 @@
 #include "engine/move.h"
 #include "engine/constants.h"
 
-int get_endindex(Move* legal_moves);
+int get_legal_move_count(Move* legal_moves);

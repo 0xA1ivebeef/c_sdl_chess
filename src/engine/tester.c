@@ -1,26 +1,40 @@
 
 #include "engine/tester.h"
 
-int get_nodes(uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, int depth)
+/*
+    -> test how many legal moves are found for a given depth
+    calculate legal moves, copy the state, make every move recursively till depth
+    and count the moves
+
+    -> for the current position - which is described by the GameContext - count all legal moves till a depth
+    -> copy the GameContext*
+
+    typedef struct
+    {
+        uint64_t bitboards[12];
+        uint64_t occupancy[3];
+        int game_flags[5];
+        Move legal_moves[LEGAL_MOVES_SIZE];
+        int running;
+        int needs_update;
+        int selected_square;
+        int game_over;
+    } GameContext;
+
+*/ 
+
+int get_nodes(GameContext* game, int depth)
 {
     if(depth == 0)
         return 1;
 
-    Move current_moves[LEGAL_MOVES_SIZE] = {0};
-    generate_legal_moves(game_flags[0], bitboards, occupancy_bitboards, game_flags, current_moves, get_attack_bitboard(!game_flags[0], bitboards, occupancy_bitboards));
-    printf("depth: %d\n legal_moves:\n", depth);
-    log_legal_moves(current_moves);
-
     int num_positions = 0;
-    uint64_t copy_bb[12] = {0};
-    uint64_t copy_occ[3] = {0};
-    int endindex = get_endindex(current_moves);
-    for(int i = 0; i < endindex; ++i)
+
+    for(int i = 0; i < game->legal_move_count; ++i)
     {
-        get_bb_copy(bitboards, occupancy_bitboards, copy_bb, copy_occ);
-        apply_move(copy_bb, current_moves[i].startsquare, current_moves[i].destsquare);
-        printf("applying move: %d, %d to bitboard: \n", current_moves[i].startsquare, current_moves[i].destsquare);
-        num_positions += get_nodes(copy_bb, copy_occ, game_flags, depth-1);
+        GameContext next = *game; // copy parent 
+        handle_move(next.bitboards, next.legal_moves[i].startsquare, next.legal_moves[i].destsquare, next.game_flags);
+        num_positions += get_nodes(&next, depth-1);
     }
     return num_positions;
 }
