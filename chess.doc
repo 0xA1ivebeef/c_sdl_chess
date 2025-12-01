@@ -1,0 +1,48 @@
+
+-------------------------------------------------------------------------------
+
+move_handler.c:
+
+Move* is_legal_move(Position* position, int startsquare, int destsquare)
+{
+    check if the move is legal, if then return its address
+}
+
+void apply_move(Position* position, Move* this_move)
+{
+    apply move: this_move to Position* position
+    - handle_special_moves()
+}
+
+int handle_move(Position* position, int startsquare, int destsquare)
+{
+    if this move is legal, apply it and adjust for special moves
+    - is_legal_move()
+    - apply_move()
+}
+
+-------------------------------------------------------------------------------
+
+special_move_handler.c:
+
+int is_pawn_promotion(bitboards, move);
+void handle_pawn_promotion(bitboards, move);
+int is_double_pawn_push(bitboards, move);
+void handle_double_pawn_push(move, game_flags);
+void handle_enpassant(bitboards, game_flags);
+void handle_castling(bitboards, move, game_flags);
+
+-------------------------------------------------------------------------------
+
+move_generator.c:
+
+-------------------------------------------------------------------------------
+
+attack_generator.c:
+
+-------------------------------------------------------------------------------
+
+check.c:
+
+-------------------------------------------------------------------------------
+
