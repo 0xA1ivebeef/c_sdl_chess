@@ -7,11 +7,11 @@
 #include "engine/position.h"
 #include "engine/move.h"
 #include "engine/castling.h"
-#include "engine/double_pawn_push.h"
+#include "engine/special_move_handler.h"
 
 #include "utils/bitboard_utils.h"
 
-void apply_move(uint64_t* bitboards, int startsquare, int destsquare); // needed for check.c 
+void apply_move(Position* position, Move* this_move);
 int handle_move(Position* position, int startsquare, int destsquare);
 
 #endif

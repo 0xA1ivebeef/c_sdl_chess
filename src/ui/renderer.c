@@ -62,7 +62,6 @@ void clear_renderer()
 
 void render_board()
 {
-    printf("rendering");
     SDL_SetRenderDrawColor(renderer, 130, 115, 185, 255);
     SDL_RenderClear(renderer);
     

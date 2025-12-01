@@ -94,12 +94,19 @@ uint64_t resolve_attack_bitboard(int p, uint64_t bb, int bb_index, uint64_t* occ
 
 uint64_t get_attack_bitboard(int player, uint64_t* bitboards, uint64_t* occupancy_bitboards)
 {
+    printf("getting attack bitboard for: %s\n", player ? "WHITE" : "BLACK");
+
 	uint64_t result = 0;
 	int bb_startindex = player*6;
+    printf("bitboard startindex = %d\n", bb_startindex);
 	for(int i = bb_startindex; i < bb_startindex + 6; ++i)
         result |= resolve_attack_bitboard(player, bitboards[i], i, occupancy_bitboards);; 
     // result |= square of game_flags[2] which is enpassant
 	
+    printf("logging attack bitboard for: %s\n", player ? "WHITE" : "BLACK");
+    log_bitboard(&result);
+    printf("\n");
+
     return result;
 }
 

@@ -26,8 +26,13 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
             destsquare = handle_mouse_event(mouse_x, mouse_y, position->occupancy[current_player]);
             if (handle_move(position, ui_context->selected_square, destsquare))  
             {
+                // move was made
+                ui_context->selected_square = -1;
                 return 1;
             }
+            // no move was made render and unselect square
+            ui_context->selected_square = -1;
+            render(position->bitboards);
             break;
     }
     return 0;

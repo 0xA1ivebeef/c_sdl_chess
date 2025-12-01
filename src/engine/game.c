@@ -15,8 +15,11 @@ int setup(Position* position)
 
     load_bitmasks();
 
+    generate_attack_bitboards(position); // attack bitboards first since they are used in move generation
     generate_legal_moves(position);
-    generate_attack_bitboards(position);
+    position->legal_move_count = get_legal_move_count(position->legal_moves);
+
+    log_legal_moves(position->legal_moves);
 
     render(position->bitboards);
 
@@ -30,17 +33,16 @@ void update(Position* position, UIContext* ui_context)
 
     update_occupancy_bitboards(position->bitboards, position->occupancy);
 
-    // attack bitboards
     generate_attack_bitboards(position);
-                                                                                                              
-    // legal_moves
+ 
+    // legal moves
     memset(position->legal_moves, -1, sizeof(Move) * LEGAL_MOVES_SIZE); 
     generate_legal_moves(position); 
     filter_moves(position);
     position->legal_move_count = get_legal_move_count(position->legal_moves);
     
     // check
-    if (is_check(position->game_flags[0], position->bitboards, position->attack_bitboards[!current_player])) 
+    if (0) // is_check(position->game_flags[0], position->bitboards, position->attack_bitboards[!current_player])) 
     {   
         printf("CHECK!\n");
         if (position->legal_move_count == 0) 
@@ -60,19 +62,24 @@ void game_loop(Position* position, UIContext* ui_context)
         SDL_WaitEvent(&event); 
         
         // players move
-        if (handle_event(position, ui_context, &event))
+        if (handle_event(position, ui_context, &event) == 1)
+        {
             ui_context->needs_update = 1;
-    
+            printf("GAMELOOP: move was made\n");
+        }
+
         // ai move 
-        if (position->game_flags[0] == AI_COLOR)
+        if (0 == 1) // position->game_flags[0] == AI_COLOR)
         {
             opponent_move(position);
             ui_context->needs_update = 1;
+            printf("GAMELOOP: ai move was made\n");
         }
     
         // update
         if (ui_context->needs_update) 
         {
+            printf("UPDATE AND RENDER\n");
             update(position, ui_context);
             render(position->bitboards);
             ui_context->needs_update = 0;

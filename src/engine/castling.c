@@ -1,9 +1,9 @@
 
 #include "engine/castling.h"
 
-int square_under_attack(int square, uint64_t atk_bb)
+int square_under_attack(int square, uint64_t enemy_attack_bitboard)
 {
-    return (atk_bb & (1ULL << square)) != 0;
+    return (enemy_attack_bitboard & (1ULL << square)) != 0;
 }
 
 // remove castle_rights given index kqKQ
@@ -67,29 +67,12 @@ void update_castle_rights(uint64_t* bitboards, Move* this_move, int* game_flags)
     }
 }
 
-void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags)
-{
-    int startsquare = this_move->startsquare;
-    int destsquare = this_move->destsquare;
-    int bb_index = (startsquare == 60) ? 9 : 3;
-    if(startsquare > destsquare)
-    {
-        bitboards[bb_index] &= ~(1ULL << (destsquare - 2));
-        bitboards[bb_index] |= (1ULL << (destsquare + 1));
-    }
-    else
-    {
-        bitboards[bb_index] &= ~(1ULL << (destsquare + 1));
-        bitboards[bb_index] |= (1ULL << (destsquare - 1));
-    }
-    game_flags[1] &= (startsquare == 60) ? 3 : 12;
-}
-
 void add_castling_move(int startsquare, int destsquare, Move* legal_moves)
 {
 	int i = get_legal_move_count(legal_moves);
     Move m = {startsquare, destsquare, 1};
 	legal_moves[i] = m;
+    printf("castling move added: %d, %d\n", startsquare, destsquare);
 }	
 
 int players_rook_on_castle_square(int startsquare, int destsquare, uint64_t* bitboards)
@@ -112,7 +95,7 @@ int players_rook_on_castle_square(int startsquare, int destsquare, uint64_t* bit
 }
 
 // called seperatly for kingside, queenside each (twice for one player)
-int can_castle(int startsquare, int destsquare, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, uint64_t atk_bb)
+int can_castle(int startsquare, int destsquare, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, uint64_t enemy_attack_bitboard)
 {
     if (destsquare == -1) 
         return 0;
@@ -135,16 +118,17 @@ int can_castle(int startsquare, int destsquare, uint64_t* bitboards, uint64_t* o
 	int max_square = max(startsquare, destsquare);
 	for(int i = min_square; i <= max_square; ++i)
 	{
-        printf("CASTLING: square under attack looking at square %d\n", i);
-		if(square_under_attack(i, atk_bb))
+        printf("CASTLING: looking at square %d\n", i);
+		if(square_under_attack(i, enemy_attack_bitboard))
         {
             printf("CASTLING: square %d is under attack\n", i);
             printf("CASTLING: according to attack bitboard: \n");
-            log_bitboard(&atk_bb);
+            log_bitboard(&enemy_attack_bitboard);
 			return 0;
         }
 	}
 
+    printf("\n");
     // squares occupied by any pieces:
     // from smaller to larger square to use for-loop for counting
     int startindex, endindex;
@@ -166,24 +150,25 @@ int can_castle(int startsquare, int destsquare, uint64_t* bitboards, uint64_t* o
 	return 1;
 }
 
-void add_castling(int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t atk_bb)
+void add_castling(int square, uint64_t* bitboards, uint64_t* occupancy_bitboards, int* game_flags, Move* legal_moves, uint64_t enemy_attack_bitboard)
 {
 	int castle_rights = game_flags[1];
 
-    log_bitboard(&atk_bb);
+    printf("castling got attack bitboard: \n");
+    log_bitboard(&enemy_attack_bitboard);
     
     if (square == 4) 
     {
-        if ((castle_rights & 1) && can_castle(4, 2, bitboards, occupancy_bitboards, game_flags, atk_bb))
+        if ((castle_rights & 1) && can_castle(4, 2, bitboards, occupancy_bitboards, game_flags, enemy_attack_bitboard))
             add_castling_move(4, 2, legal_moves);
-        if ((castle_rights & 2) && can_castle(4, 6, bitboards, occupancy_bitboards, game_flags, atk_bb))
+        if ((castle_rights & 2) && can_castle(4, 6, bitboards, occupancy_bitboards, game_flags, enemy_attack_bitboard))
             add_castling_move(4, 6, legal_moves);
     } 
     else if (square == 60) 
     {
-        if ((castle_rights & 4) && can_castle(60, 58, bitboards, occupancy_bitboards, game_flags, atk_bb))
+        if ((castle_rights & 4) && can_castle(60, 58, bitboards, occupancy_bitboards, game_flags, enemy_attack_bitboard))
             add_castling_move(60, 58, legal_moves);
-        if ((castle_rights & 8) && can_castle(60, 62, bitboards, occupancy_bitboards, game_flags, atk_bb))
+        if ((castle_rights & 8) && can_castle(60, 62, bitboards, occupancy_bitboards, game_flags, enemy_attack_bitboard))
             add_castling_move(60, 62, legal_moves);
     }
 }

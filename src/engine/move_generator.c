@@ -161,7 +161,16 @@ void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, Move* legal_
 void generate_legal_moves(Position* position)
 {
     int current_player = position->game_flags[0];
+
+    printf("LEGAL MOVE GENERATION: current player is ");
+    printf("%s", (current_player ? "WHITE" : "BLACK"));
+    printf("\n");
+
     uint64_t enemy_attack_bitboard = position->attack_bitboards[!current_player];
+    printf("Enemy attack bitboard is: \n");
+    log_bitboard(&position->attack_bitboards[!current_player]);
+    printf("\n");
+
     legal_moves_index = 0; // static
     int bitboard_start_index = current_player*6;
     for(int i = bitboard_start_index; i < bitboard_start_index + 6; i++)
@@ -170,7 +179,12 @@ void generate_legal_moves(Position* position)
     }
 
     int king_square = get_piece_square(position->bitboards[6*current_player+5]);
+    printf("king is on square: %d\n", king_square);
+
     add_castling(king_square, position->bitboards, position->occupancy, position->game_flags, position->legal_moves, enemy_attack_bitboard);
     add_enpassant(current_player, position->bitboards, position->game_flags, position->legal_moves);
+    position->legal_move_count = get_legal_move_count(position->legal_moves);
 }
+
+// TODO set a flag for pawn promotions to handle them in move_handler -> special move handler
 

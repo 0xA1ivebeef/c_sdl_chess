@@ -1,90 +1,90 @@
 
 #include "engine/move_handler.h"
 
-int is_pawn_promotion(uint64_t* bitboards, int startsquare, int destsquare)
+void handle_special_move(Position* position, Move* this_move)
 {
-    int index = get_bitboard_index(bitboards, startsquare);
-    if(!(index == 0 || index == 6))
-        return 0;
-    return ((destsquare >= 0 && destsquare <= 7) || (destsquare >= 56 && destsquare <= 63));
-}
-
-void handle_pawn_promotion(uint64_t* bitboards, int startsquare, int destsquare)
-{
-    int ds_i = get_bitboard_index(bitboards, destsquare);
-    bitboards[ds_i] &= ~(1ULL << destsquare);
-    if(destsquare >= 0 && destsquare <= 7)
+    switch(this_move->flags)
     {
-        bitboards[6] &= ~(1ULL << startsquare); // delete pawn
-        bitboards[10] |= (1ULL << destsquare); // place queen
-    }   
+        case 1:
+            handle_castling(position->bitboards, this_move, position->game_flags);
+            break;
+        case 2:
+            handle_enpassant(position->bitboards, position->game_flags);
+            break;
+        default:
+            break;
+    }
+    if(is_double_pawn_push(position->bitboards, &position->legal_moves[i]))
+        handle_double_pawn_push(&position->legal_moves[i], position->game_flags);
     else
-    { 
-        bitboards[0] &= ~(1ULL << startsquare); // delete pawn
-        bitboards[4] |= (1ULL << destsquare); // place queen
-    }
+        position->game_flags[2] = -1;
+        
+    update_castle_rights(position->bitboards, &position->legal_moves[i], position->game_flags);
 }
 
-// return bitboard index of destination square, -1 if empty
-void apply_move(uint64_t* bitboards, int startsquare, int destsquare)
+void apply_move(Position* position, Move* this_move)
 {
-    int bitboard_index = get_bitboard_index(bitboards, startsquare);
-    int dest_bitboard_index = get_bitboard_index(bitboards, destsquare);
+    int startsquare = this_move.startsquare;
+    int destsquare = this_move.destsquare;
 
-    if(is_pawn_promotion(bitboards, startsquare, destsquare))
-    {
-        handle_pawn_promotion(bitboards, startsquare, destsquare);
-        return;
-    }
-    
-    bitboards[bitboard_index] &= ~(1ULL << startsquare); // delete piece on startsquare
-    bitboards[bitboard_index] |= (1ULL << destsquare); // set new piece on destsquare    
+    printf("APPLY MOVE: %d, %d, flag: %d\n", startsquare, destsquare, this_move->flags);
+
+    int bitboard_index = get_bitboard_index(position->bitboards, startsquare);
+    int dest_bitboard_index = get_bitboard_index(position->bitboards, destsquare);
+
+    position->bitboards[bitboard_index] &= ~(1ULL << startsquare); // delete piece on startsquare
+    position->bitboards[bitboard_index] |= (1ULL << destsquare); // set new piece on destsquare    
+    // TODO: special move handling 
+    handle_special_moves(position, this_move);
 
     if(dest_bitboard_index == -1) // dest square empty
         return;
 
-    bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
+    position->bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
 }
 
-int is_legal_move(Position* position, int startsquare, int destsquare)
+Move* is_legal_move(Position* position, int startsquare, int destsquare)
 {
+    printf("validating move: %d, %d\n", startsquare, destsquare);
     for(int i = 0; i < position->legal_move_count; ++i)
     {
-        if((position->legal_moves[i].startsquare != startsquare) || (position->legal_moves[i].destsquare != destsquare))
-            continue;
-     
-        switch(position->legal_moves[i].flags)
+        if((position->legal_moves[i].startsquare == startsquare) && (position->legal_moves[i].destsquare == destsquare))
         {
-            case 1:
-                handle_castling(position->bitboards, &position->legal_moves[i], position->game_flags);
-                break;
-            case 2:
-                handle_enpassant(position->bitboards, position->game_flags);
-                break;
-            default:
-                break;
+            return &position->legal_moves[i];
         }
-        
-        if(is_double_pawn_push(position->bitboards, &position->legal_moves[i]))
-            handle_double_pawn_push(&position->legal_moves[i], position->game_flags);
-        else
-            position->game_flags[2] = -1;
-        
-        update_castle_rights(position->bitboards, &position->legal_moves[i], position->game_flags);
-        return 1;
     }
-    return 0;
+    return NULL;
 }
+
+/* maybe this is not needed 
+Move* get_legal_move_from_squares(Position* position, int startsquare, int destsquare)
+{
+    for (int i = 0; i < position->legal_move_count; ++i)
+    {
+        if ((startsquare == position->legal_moves[i].startsquare) && (destsquare == position->legal_moves[i].destsquare))
+        {
+            return &position->legal_moves[i];
+        }
+    }
+    return NULL;
+}
+*/
 
 int handle_move(Position* position, int startsquare, int destsquare)
 {
     if(startsquare == -1 || destsquare == -1)
         return 0;
 
-    if(!is_legal_move(position, startsquare, destsquare))
+    printf("HANDLE MOVE: %d, %d\n", startsquare, destsquare);
+    Move* this_move = is_legal_move(position, startsquare, destsquare);
+    if (!this_move)
+    {
+        printf("MOVE HANDLER: illegal move\n");
         return 0;
+    }
 
-    apply_move(position->bitboards, startsquare, destsquare);
+    printf("MOVE HANDLER: legal move, applying\n"); 
+    apply_move(position, this_move);
     return 1;
 }
 
