@@ -11,24 +11,32 @@ int is_check(int player, uint64_t* bitboards, uint64_t attack_bitboard)
 
 void filter_moves(Position* position)
 {
-    int current_player = position->game_flags[0];
-    uint64_t attack_bitboard = 0;
-    Position copy = *position;
+    // given the current position
+    // make every possible move and see if the king is under attack
+    // return only the moves that dont put the king under attack
+    // -> basically cant put own king in check
+    // this logic also works for moving out of checks
 
     Move valid_moves[LEGAL_MOVES_SIZE] = {0};
     int valid_moves_counter = 0;
     for (int i = 0; i < position->legal_move_count; i++)
     {
-        apply_move(copy.bitboards, copy.legal_moves[i].startsquare, copy.legal_moves[i].destsquare); // special moves are part of legal moves but apply moves cant apply special moves so the calculation will fail
+        Position copy = *position;
+        Move m = position->legal_moves[i];
+
+        apply_move(copy, &m);
+
         update_occupancy_bitboards(copy.bitboards, copy.occupancy);
-        attack_bitboard = position->attack_bitboards[!current_player];
-        if (!is_check(current_player, copy.bitboards, attack_bitboard)) 
+
+        uint64_t attack_bitboard = get_attack_bitboard(!copy.current_player, copy.bitboards, copy.occupancy); // get enemy attack bitboard
+        if (!is_check(copy.current_player, copy.bitboards, attack_bitboard)) 
         {
-            valid_moves[valid_moves_counter] = position->legal_moves[i];
-            ++valid_moves_counter;
+            valid_moves[valid_move_count++] = m;
         }
+        // either undo move or reset copy
     }
     memcpy(position->legal_moves, valid_moves, sizeof(Move)*LEGAL_MOVES_SIZE);
+    position->legal_move_count = valid_move_count;
 }
 
 

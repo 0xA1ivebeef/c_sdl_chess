@@ -8,8 +8,8 @@
 
 #define LEGAL_MOVES_SIZE 256
 
-#define BLACK 0
-#define WHITE 1
+#define min(a, b) (a < b ? a : b)
+#define max(a, b) (a > b ? a : b)
 
 extern const int file_offsets[8];
 extern const int rank_offsets[8];

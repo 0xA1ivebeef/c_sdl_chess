@@ -3,29 +3,34 @@
 
 void handle_special_move(Position* position, Move* this_move)
 {
-    switch(this_move->flags)
+    switch (this_move->flags)
     {
         case 1:
-            handle_castling(position->bitboards, this_move, position->game_flags);
+            handle_castling(position->bitboards, this_move, position->castle_rights);
             break;
         case 2:
-            handle_enpassant(position->bitboards, position->game_flags);
+            handle_enpassant(position->bitboards, position->enpassant_square);
             break;
         default:
             break;
     }
-    if(is_double_pawn_push(position->bitboards, &position->legal_moves[i]))
-        handle_double_pawn_push(&position->legal_moves[i], position->game_flags);
+
+    if (is_pawn_promotion(position->bitboards, this_move))
+        handle_pawn_promotion(position->bitboards, this_move);
+
+    // set enpassant flag, otherwise delete it 
+    if (is_double_pawn_push(position->bitboards, this_move))
+        handle_double_pawn_push(this_move, position->enpassant_square);
     else
-        position->game_flags[2] = -1;
+        position->enpassant_square = -1;
         
-    update_castle_rights(position->bitboards, &position->legal_moves[i], position->game_flags);
+    update_castle_rights(position->bitboards, this_move, position->game_flags);
 }
 
 void apply_move(Position* position, Move* this_move)
 {
-    int startsquare = this_move.startsquare;
-    int destsquare = this_move.destsquare;
+    int startsquare = this_move->startsquare;
+    int destsquare = this_move->destsquare;
 
     printf("APPLY MOVE: %d, %d, flag: %d\n", startsquare, destsquare, this_move->flags);
 
@@ -34,8 +39,8 @@ void apply_move(Position* position, Move* this_move)
 
     position->bitboards[bitboard_index] &= ~(1ULL << startsquare); // delete piece on startsquare
     position->bitboards[bitboard_index] |= (1ULL << destsquare); // set new piece on destsquare    
-    // TODO: special move handling 
-    handle_special_moves(position, this_move);
+                                                                 
+    handle_special_move(position, this_move);
 
     if(dest_bitboard_index == -1) // dest square empty
         return;
@@ -43,9 +48,10 @@ void apply_move(Position* position, Move* this_move)
     position->bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
 }
 
+// if given move is legal, return its address
 Move* is_legal_move(Position* position, int startsquare, int destsquare)
 {
-    printf("validating move: %d, %d\n", startsquare, destsquare);
+    printf("IS_LEGAL_MOVE validating move: %d, %d\n", startsquare, destsquare);
     for(int i = 0; i < position->legal_move_count; ++i)
     {
         if((position->legal_moves[i].startsquare == startsquare) && (position->legal_moves[i].destsquare == destsquare))
@@ -56,21 +62,28 @@ Move* is_legal_move(Position* position, int startsquare, int destsquare)
     return NULL;
 }
 
-/* maybe this is not needed 
-Move* get_legal_move_from_squares(Position* position, int startsquare, int destsquare)
+// TODO: adjust to only whats needed 
+void save_state(Position* position, Undo* undo)
 {
-    for (int i = 0; i < position->legal_move_count; ++i)
-    {
-        if ((startsquare == position->legal_moves[i].startsquare) && (destsquare == position->legal_moves[i].destsquare))
-        {
-            return &position->legal_moves[i];
-        }
-    }
-    return NULL;
-}
-*/
+    memcpy(undo->bitboards, position->bitboards, sizeof(position->bitboards));
+    memcpy(undo->occupancy, position->occupancy, sizeof(position->occupancy));
+    
+    undo->current_player   = position->current_player;
+    undo->castle_rights    = position->castle_rights;
+    undo->enpassant_square = position->enpassant_square;
+    undo->halfmove_clock   = position->halfmove_clock;
+    undo->fullmove_number  = position->fullmove_number;
 
-int handle_move(Position* position, int startsquare, int destsquare)
+    memcpy(undo->legal_moves, position->legal_moves, sizeof(position->legal_moves));
+    undo->legal_move_count = position->legal_move_count;
+
+    memcpy(undo->attack_bitboards, position->attack_bitboards, sizeof(position->attack_bitboards));
+
+    memcpy(undo->king_square, position->king_square, sizeof(position->king_square));
+}
+
+// if undo is NULL, nothing is saved 
+int handle_move(Position* position, int startsquare, int destsquare, Undo* undo)
 {
     if(startsquare == -1 || destsquare == -1)
         return 0;
@@ -79,11 +92,15 @@ int handle_move(Position* position, int startsquare, int destsquare)
     Move* this_move = is_legal_move(position, startsquare, destsquare);
     if (!this_move)
     {
-        printf("MOVE HANDLER: illegal move\n");
+        printf("HANDLE MOVE: illegal move\n");
         return 0;
     }
 
-    printf("MOVE HANDLER: legal move, applying\n"); 
+    // save old state
+    if (undo)
+        save_state(position, undo);
+        
+    // apply move
     apply_move(position, this_move);
     return 1;
 }

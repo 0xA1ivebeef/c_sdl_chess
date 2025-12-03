@@ -53,24 +53,26 @@ int square_string_to_int(char* square_string)
     
 }
 
-void resolve_token(char* token, int index, int* game_flags)
+// TODO: hier eventuell mit raw pointer arbeiten und als array betrachten weil c cool ist
+// allgemein logik optimieren, switch mit index wahrscheinlich nicht noetig
+void resolve_token(Position* position, char* token, int index)
 {
     switch(index)
     {
         case 0:
-            game_flags[0] = !strcmp(token, "w");
+            position->current_player = !strcmp(token, "w");
             break;
         case 1:
-            game_flags[1] = get_castle_rights(token);
+            position->castle_rights = get_castle_rights(token);
             break;
         case 2:
-            game_flags[2] = square_string_to_int(token);
+            position->enpassant_square = square_string_to_int(token);
             break;
         case 3:
-            game_flags[3] = atoi(token);
+            position->halfmove_clock = atoi(token);
             break;
         case 4:
-            game_flags[4] = atoi(token);
+            position->fullmove_number = atoi(token);
             break;
         default:
             printf("undefined behaviour token resolve fen string\n");
@@ -78,7 +80,7 @@ void resolve_token(char* token, int index, int* game_flags)
     }
 }
 
-void resolve_game_flags(int* game_flags, int fen_string_index)
+void resolve_game_flags(Position* position, int fen_string_index)
 {
     int buffer_size = strlen(fen_string) - fen_string_index + 1;
     char buff[buffer_size];
@@ -88,13 +90,13 @@ void resolve_game_flags(int* game_flags, int fen_string_index)
     while(token != NULL)
     {
         if(token[0] != '-')
-            resolve_token(token, index, game_flags);
+            resolve_token(position, token, index);
         ++index;
         token = strtok(NULL, " ");
     }
 }
 
-void load_fen_string(uint64_t* bitboards, int* game_flags)
+void load_fen_string(Position* position)
 {
     size_t i = 0;
     int bb_index;
@@ -116,12 +118,12 @@ void load_fen_string(uint64_t* bitboards, int* game_flags)
         else if(is_letter(c))
         {
             bb_index = (char_to_int(to_lower(c)) + (is_upper(c) ? 6 : 0));
-            bitboards[bb_index] |= (1ULL << (row * 8 + col));
+            position->bitboards[bb_index] |= (1ULL << (row * 8 + col));
             col++;
         }
         ++i;
     }
 
-    resolve_game_flags(game_flags, i);
+    resolve_game_flags(position, i);
 }
 

@@ -74,7 +74,7 @@ void handle_enpassant(uint64_t* bitboards, int* game_flags)
 }
 
 // given bitboards and move and game flags, move the rook of the castling move 
-void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags)
+void handle_castling(uint64_t* bitboards, Move* this_move, int* castle_rights)
 {
     int startsquare = this_move->startsquare;
     int destsquare = this_move->destsquare;
@@ -89,7 +89,6 @@ void handle_castling(uint64_t* bitboards, Move* this_move, int* game_flags)
         bitboards[bb_index] &= ~(1ULL << (destsquare + 1));
         bitboards[bb_index] |= (1ULL << (destsquare - 1));
     }
-    game_flags[1] &= (startsquare == 60) ? 3 : 12;
+    *castle_rights &= (startsquare == 60) ? 3 : 12; // take away castlerights
 }
-
 

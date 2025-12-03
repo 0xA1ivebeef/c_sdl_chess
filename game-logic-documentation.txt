@@ -1,11 +1,6 @@
 
 
-TODO:   remove legal moves and legal move count from Position
-        remove game running from position
-        position should have player to move since it can just be switched in the position, no need to export that
-        fix update() to handle ui_context and position
-
-render legal moves is only called on clicking a piece, not embedded into rendering itself
+TODO:   
 
 KEY CONCEPTS:
 

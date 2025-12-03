@@ -1,24 +1,58 @@
 
 -------------------------------------------------------------------------------
 
+attack_generator.c:
+(this is static and not dependent on any gamestate, just returns attacking squares of pieces on board)
+ TODO: except what about enpassant ? 
+
+void generate_attack_bitboards(Position* position)
+{
+    return attack bitboard for current position of given player
+    get_attack_bitboard(player, bitboards, occupancy);
+}
+
+-------------------------------------------------------------------------------
+
+renderer.c:
+
+render(bitboards)
+{
+    clear and render current state of bitboards
+    - render board()
+    - render pieces()
+}
+
+-------------------------------------------------------------------------------
+
 move_handler.c:
+
+void handle_special_move(Position* position, Move* this_move)
+{
+    switch moves flag:
+    - handle_castling(bitboards, move, gameflags)
+    - handle_enpassant(bitboards, game_flags)
+
+    - is_pawn_promotion(bitboards, move) -> handle_pawn_promotion(bitboards, move)
+    - is_double_pawn_push(bitboards, move) -> handle_double_pawn_push(move, gameflags)
+    - update_castle_rights(bitboards, move, gameflags)
+}
 
 Move* is_legal_move(Position* position, int startsquare, int destsquare)
 {
-    check if the move is legal, if then return its address
+    check if the move is legal, return its address
 }
 
 void apply_move(Position* position, Move* this_move)
 {
     apply move: this_move to Position* position
-    - handle_special_moves()
+    - handle_special_moves(position, move)
 }
 
 int handle_move(Position* position, int startsquare, int destsquare)
 {
     if this move is legal, apply it and adjust for special moves
-    - is_legal_move()
-    - apply_move()
+    - is_legal_move(position, startsquare, destsquare)
+    - apply_move(position, startsquare, destsquare)
 }
 
 -------------------------------------------------------------------------------
@@ -27,9 +61,12 @@ special_move_handler.c:
 
 int is_pawn_promotion(bitboards, move);
 void handle_pawn_promotion(bitboards, move);
+
 int is_double_pawn_push(bitboards, move);
 void handle_double_pawn_push(move, game_flags);
+
 void handle_enpassant(bitboards, game_flags);
+
 void handle_castling(bitboards, move, game_flags);
 
 -------------------------------------------------------------------------------
