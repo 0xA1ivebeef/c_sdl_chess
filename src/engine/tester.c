@@ -11,7 +11,8 @@ int get_nodes(Position* position, int depth)
     for(int i = 0; i < position->legal_move_count; ++i) 
     {
         Position next = *position; // copy parent 
-        handle_move(&next, position->legal_moves[i].startsquare, position->legal_moves[i].destsquare);
+        Undo undo = {};
+        handle_move(&next, position->legal_moves[i].startsquare, position->legal_moves[i].destsquare, &undo);
         num_positions += get_nodes(&next, depth-1);
     }
     return num_positions;

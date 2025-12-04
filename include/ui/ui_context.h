@@ -7,6 +7,7 @@ typedef struct
     int running;
     int selected_square;
     int needs_update;
+    int game_over;
 } UIContext;
 
 #endif 

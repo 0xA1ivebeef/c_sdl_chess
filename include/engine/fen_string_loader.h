@@ -7,8 +7,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "engine/position.h"
+
 #include "utils/char_utils.h"
 
-void load_fen_string(uint64_t* bitboards, int* game_flags);
+void load_fen_string(Position* position);
 
 #endif

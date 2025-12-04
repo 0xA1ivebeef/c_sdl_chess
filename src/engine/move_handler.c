@@ -6,10 +6,10 @@ void handle_special_move(Position* position, Move* this_move)
     switch (this_move->flags)
     {
         case 1:
-            handle_castling(position->bitboards, this_move, position->castle_rights);
+            handle_castling(position->bitboards, this_move, &position->castle_rights);
             break;
         case 2:
-            handle_enpassant(position->bitboards, position->enpassant_square);
+            handle_enpassant(position->current_player, position->bitboards, position->enpassant_square);
             break;
         default:
             break;
@@ -20,11 +20,11 @@ void handle_special_move(Position* position, Move* this_move)
 
     // set enpassant flag, otherwise delete it 
     if (is_double_pawn_push(position->bitboards, this_move))
-        handle_double_pawn_push(this_move, position->enpassant_square);
+        handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
     else
         position->enpassant_square = -1;
         
-    update_castle_rights(position->bitboards, this_move, position->game_flags);
+    update_castle_rights(position->bitboards, this_move, &position->castle_rights);
 }
 
 void apply_move(Position* position, Move* this_move)
@@ -46,6 +46,18 @@ void apply_move(Position* position, Move* this_move)
         return;
 
     position->bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
+
+    // TODO
+    if (dest_bitboard_index == WHITE_KING)
+    {
+        position->king_square[WHITE] = this_move->destsquare;
+        printf("WHITE king is on square: %d\n", position->king_square[WHITE]);
+    }
+    else if (dest_bitboard_index == BLACK_KING)
+    {
+        position->king_square[BLACK] = this_move->destsquare;
+        printf("BLACK king is on square: %d\n", position->king_square[BLACK]);
+    }
 }
 
 // if given move is legal, return its address

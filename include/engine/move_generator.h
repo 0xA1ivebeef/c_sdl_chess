@@ -8,6 +8,7 @@
 #include "engine/move.h"
 #include "engine/bitmask_loader.h"
 #include "engine/castling.h"
+#include "ui/console_logger.h"
 
 void generate_legal_moves(Position* position);
 

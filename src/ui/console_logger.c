@@ -62,11 +62,3 @@ void log_legal_moves(Move* legal_moves)
     }
 }
 
-void log_game_flags(int* game_flags)
-{
-    printf("current player, %d\n", game_flags[0]);
-    printf("castle rights, %d\n", game_flags[1]);
-    printf("enpassant, %d\n", game_flags[2]);
-    printf("halfmove clock, %d\n", game_flags[3]);
-    printf("fullmove number, %d\n", game_flags[4]);
-}

@@ -10,14 +10,13 @@ int setup(Position* position)
         return 1;
     }
 
-    load_fen_string(position->bitboards, position->game_flags);
+    load_fen_string(position);
     update_occupancy_bitboards(position->bitboards, position->occupancy);
 
-    load_bitmasks();
+    load_bitmasks(); // external function for bitmask_loader.c
 
     generate_attack_bitboards(position); // attack bitboards first since they are used in move generation
     generate_legal_moves(position);
-    position->legal_move_count = get_legal_move_count(position->legal_moves);
 
     log_legal_moves(position->legal_moves);
 
@@ -26,30 +25,46 @@ int setup(Position* position)
     return 0;
 }
 
+int get_king_square(uint64_t king_bitboard)
+{
+    int i = 0;
+    while(king_bitboard)
+    {
+        king_bitboard >>= 1;
+        ++i;
+    }
+    return i - 1;
+}
+
 void update(Position* position, UIContext* ui_context)
 {
-    int current_player = position->game_flags[0];
-    position->game_flags[0] = !current_player;
+    position->current_player ^= 1;
 
     update_occupancy_bitboards(position->bitboards, position->occupancy);
 
     generate_attack_bitboards(position);
  
-    // legal moves
+    // clear and generate legal moves filter illegal moves
     memset(position->legal_moves, -1, sizeof(Move) * LEGAL_MOVES_SIZE); 
     generate_legal_moves(position); 
     filter_moves(position);
-    position->legal_move_count = get_legal_move_count(position->legal_moves);
     
     // check
-    if (0) // is_check(position->game_flags[0], position->bitboards, position->attack_bitboards[!current_player])) 
-    {   
-        printf("CHECK!\n");
-        if (position->legal_move_count == 0) 
+    if (ui_context)
+    {
+        if (is_check(position, 0))
+        {   
+            printf("CHECK!\n");
+            if (position->legal_move_count == 0) 
+            {
+                printf("CHECKMATE\n");
+                ui_context->game_over = 1;  
+            }
+        }
+        else if (position->legal_move_count == 0)
         {
-            printf("CHECKMATE\n");
-            ui_context->running = 0; 
-            exit(0);
+            printf("STALEMATE\n");
+            ui_context->game_over = 1;  
         }
     }
 }
@@ -61,6 +76,11 @@ void game_loop(Position* position, UIContext* ui_context)
     {
         SDL_WaitEvent(&event); 
         
+        if (ui_context->game_over)
+        {
+            continue; // dont take inputs
+        }
+
         // players move
         if (handle_event(position, ui_context, &event) == 1)
         {

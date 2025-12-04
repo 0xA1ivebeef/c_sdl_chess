@@ -1,4 +1,50 @@
 
+assign undo struct where its needed like check tester and opponent
+otherwise pass NULL so its not copied
+
+-------------------------------------------------------------------------------
+
+castling.c
+
+TODO: logic and placement
+
+void remove_castle_rights(&castle_rights, int index)
+{
+    given index calced before called update castlerights
+}
+
+void update_castle_rights(bitboards, move, &castle_rights)
+{
+    if king or rook moves, remove castle_rights
+}
+
+void add_castling_move(Position* position, int startsquare, int destsquare)
+{
+    append to legal_moves 
+}
+
+int square_under_attack(int square, uint64_t attack_bitboard)
+{
+    return if square is under attack of attack bitboard
+}
+
+int can_castle(Position* position, int startsquare, int destsquare)
+{
+    check everything and return yes or no 
+    - players_rook_on_castle_square()
+    - square_under_attack()
+    - squares occupied by any pieces
+}
+
+void add_castling(Position* position, int square);
+{
+    given kingsquare
+    if castle_rights && can_castle() -> add_castling_move()
+}
+
+void update_castle_rights(uint64_t* bitboards, Move* this_move, int* game_flags);
+void remove_castle_rights(int* castle_rights, int index); // index 0 black qs 1 ks 2 white qs 3 ks
+
 -------------------------------------------------------------------------------
 
 attack_generator.c:
@@ -48,7 +94,7 @@ void apply_move(Position* position, Move* this_move)
     - handle_special_moves(position, move)
 }
 
-int handle_move(Position* position, int startsquare, int destsquare)
+int handle_move(Position* position, int startsquare, int destsquare, Undo* undo)
 {
     if this move is legal, apply it and adjust for special moves
     - is_legal_move(position, startsquare, destsquare)
@@ -60,14 +106,36 @@ int handle_move(Position* position, int startsquare, int destsquare)
 special_move_handler.c:
 
 int is_pawn_promotion(bitboards, move);
+{
+    return yes or no given move and bitboards
+}
+
 void handle_pawn_promotion(bitboards, move);
+{
+    TODO: N B R
+    replace pawn with queen 
+}
 
 int is_double_pawn_push(bitboards, move);
-void handle_double_pawn_push(move, game_flags);
+{
+    return yes or no given move and bitboards
+}
 
-void handle_enpassant(bitboards, game_flags);
+void handle_double_pawn_push(player, &move, &enpassant_square);
+{
+    set enpassant square if yes 
+}
 
-void handle_castling(bitboards, move, game_flags);
+void handle_enpassant(player, bitboards, enpassant_square); ! enpassant_square by value
+{
+    capture enpassanted pawn 
+}
+
+void handle_castling(bitboards, &move, &castle_rights);
+{
+    TODO: maybe update_castle_rights elsewhere
+    place rook and update castle_rights 
+}
 
 -------------------------------------------------------------------------------
 

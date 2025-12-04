@@ -6,7 +6,7 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
     int mouse_x = 0; 
     int mouse_y = 0;
     int destsquare = -1;
-    int current_player = position->game_flags[0];
+    int current_player = position->current_player;
 
     SDL_GetMouseState(&mouse_x, &mouse_y);
     switch (event->type)
@@ -24,7 +24,7 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
             break;
         case SDL_MOUSEBUTTONUP:
             destsquare = handle_mouse_event(mouse_x, mouse_y, position->occupancy[current_player]);
-            if (handle_move(position, ui_context->selected_square, destsquare))  
+            if (handle_move(position, ui_context->selected_square, destsquare, NULL))  
             {
                 // move was made
                 ui_context->selected_square = -1;

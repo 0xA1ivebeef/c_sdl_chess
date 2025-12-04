@@ -16,6 +16,7 @@ int is_pawn_promotion(uint64_t* bitboards, Move* this_move)
 // given bitboards and move, place queen for pawn
 void handle_pawn_promotion(uint64_t* bitboards, Move* this_move)
 {
+    // TODO knight bishop rook 
     int startsquare = this_move->startsquare;
     int destsquare = this_move->destsquare;
 
@@ -45,35 +46,35 @@ int is_double_pawn_push(uint64_t* bitboards, Move* this_move)
     return ((max(startsquare, destsquare) - min(startsquare, destsquare)) == 16);
 }
 
-// given move, set game flags[2] as enpassant square (int)
-void handle_double_pawn_push(Move* this_move, int* game_flags)
+// given move, set enpassant square in position (int)
+void handle_double_pawn_push(int current_player, Move* this_move, int* enpassant_square)
 {
     // wenn 0 dann -8, wenn 1 dann plus 8
-    if(!game_flags[0])
+    if(!current_player)
     {
         // black
-        game_flags[2] = this_move->destsquare - 8;
-        printf("can enpassant on square: %d\n", game_flags[2]);
+        *enpassant_square = this_move->destsquare - 8;
+        printf("can enpassant on square: %d\n", *enpassant_square);
     }
     else
     {
         // white
-        game_flags[2] = this_move->destsquare + 8;
-        printf("can enpassant on square: %d\n", game_flags[2]);
+        *enpassant_square = this_move->destsquare + 8;
+        printf("can enpassant on square: %d\n", *enpassant_square);
     }
 }
 
-// given bitboards and game flags, apply the capture en passant 
-void handle_enpassant(uint64_t* bitboards, int* game_flags)
+// given bitboards, enpassant_square, apply capture enpassant 
+void handle_enpassant(int current_player, uint64_t* bitboards, int enpassant_square)
 {
-    int p = game_flags[0];
-    int index = !p*6;
-    int d = (game_flags[2] + (16*p - 8));
-    printf("handling enpassant: game flag: %d, index = %d, square: %d\n", game_flags[2], index, d);
-    bitboards[index] &= ~(1ULL << d); // capture enpassanted pawn
+    int i = !current_player * 6;
+    int d = (enpassant_square + (16 * current_player - 8));
+    printf("handling enpassant: game flag: %d, index = %d, square: %d\n", enpassant_square, i, d);
+    bitboards[i] &= ~(1ULL << d); // capture enpassanted pawn
 }
 
-// given bitboards and move and game flags, move the rook of the castling move 
+// TODO: maybe dont set castle_rights here, just move the rook
+// given bitboards and move and castle_rights, move the rook of the castling move and remove castle_rights
 void handle_castling(uint64_t* bitboards, Move* this_move, int* castle_rights)
 {
     int startsquare = this_move->startsquare;

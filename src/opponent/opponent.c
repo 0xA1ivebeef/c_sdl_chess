@@ -11,8 +11,8 @@ Move* pick_move(Move* legal_moves)
 int opponent_move(Position* position)
 {
     Move* m = pick_move(position->legal_moves);
- 
-    if (handle_move(position, m->startsquare, m->destsquare))
+    Undo undo = {};
+    if (handle_move(position, m->startsquare, m->destsquare, &undo))
     {
         return 0;
     }

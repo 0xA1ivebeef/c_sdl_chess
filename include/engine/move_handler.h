@@ -2,6 +2,7 @@
 #ifndef MOVE_HANDLER_H
 #define MOVE_HANDLER_H
 
+#include <string.h>
 #include <stdint.h>
 
 #include "engine/position.h"
@@ -12,6 +13,6 @@
 #include "utils/bitboard_utils.h"
 
 void apply_move(Position* position, Move* this_move);
-int handle_move(Position* position, int startsquare, int destsquare);
+int handle_move(Position* position, int startsquare, int destsquare, Undo* undo);
 
 #endif

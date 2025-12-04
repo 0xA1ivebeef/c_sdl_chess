@@ -1,41 +1,28 @@
 
 #include "engine/move_generator.h"
 
-static int legal_moves_index = 0;
-
-// TODO: where is the game_flags en passant square set?
-void add_enpassant(int p, uint64_t* bitboards, int* game_flags, Move* legal_moves)
+// TODO: maybe outsource (castling is in its own module)
+void add_enpassant(Position* position)
 {
-    int enpassant_square = game_flags[2];
+    int current_player = position->current_player;
     int current_bit = 0;
-    uint64_t bb = bitboards[p*6];
+    uint64_t bb = position->bitboards[current_player * 6];
     while(bb)
     {
         if(bb & 1)
         {
-            // if enemy pawn on gameflags enpassant square
-            if(bitmasks[5 - p][current_bit] & (1ULL << enpassant_square))
+            // if enemy pawn on enpassant square
+            if(bitmasks[5 - current_player][current_bit] & (1ULL << position->enpassant_square))
             {
-                Move this_move = {current_bit, enpassant_square, 2};
-                legal_moves[legal_moves_index] = this_move;
-                ++legal_moves_index;
-                printf("added enpassant move %d, %d\n", current_bit, enpassant_square);
+                Move this_move = {current_bit, position->enpassant_square, 2};
+                position->legal_moves[position->legal_move_count++] = this_move; // append to legal_moves post increment
+
+                printf("added enpassant move %d, %d\n", current_bit, position->enpassant_square);
             }
         }
         bb >>= 1;
         ++current_bit;
     }
-}
-
-int get_piece_square(uint64_t bb)
-{
-    int index = 0;
-    while(bb)
-    {
-        bb >>= 1;
-        ++index;
-    }
-    return index - 1;
 }
 
 uint64_t get_pawn_attacking_moves(int p, int square, uint64_t* occupancy_bitboards)
@@ -106,38 +93,37 @@ uint64_t get_king_legal_moves(int p, int square, uint64_t* occupancy_bitboards)
     return (bitmasks[10][square] & ~occupancy_bitboards[p]);
 }
 
-uint64_t get_legal_moves_bitmask(int p, int bitboard_index, int square, uint64_t* occupancy_bitboards)
+uint64_t get_legal_moves_bitmask(int current_player, int bitboard_index, int piece_square, uint64_t* occupancy_bitboards)
 {
-    bitboard_index %= 6;
+    bitboard_index %= 6; // abstract color, keep piecetype
     switch(bitboard_index)
     {
         case 0:
-            return get_pawn_legal_moves(p, square, occupancy_bitboards);
+            return get_pawn_legal_moves(current_player, piece_square, occupancy_bitboards);
         case 1:
-            return get_knight_legal_moves(p, square, occupancy_bitboards);
+            return get_knight_legal_moves(current_player, piece_square, occupancy_bitboards);
         case 2:
         case 3:
         case 4:
-            return get_sliding_piece_legal_moves(p, square, bitboard_index, occupancy_bitboards);
+            return get_sliding_piece_legal_moves(current_player, piece_square, bitboard_index, occupancy_bitboards);
         case 5:
-            return get_king_legal_moves(p, square, occupancy_bitboards);
+            return get_king_legal_moves(current_player, piece_square, occupancy_bitboards);
         default:
             return 0;
     }
 }
 
-void get_pieces_moves(int p, int bitboard_index, int square, Move* legal_moves, uint64_t* occupancy_bitboards)
+void get_pieces_moves(Position* position, int bitboard_index, int piece_square)
 {
-    uint64_t legal_moves_bitmask = get_legal_moves_bitmask(p, bitboard_index, square, occupancy_bitboards);
+    uint64_t legal_moves_bitmask = get_legal_moves_bitmask(position->current_player, bitboard_index, piece_square, position->occupancy);
     
     int destsquare = 0;
     while(legal_moves_bitmask)
     {
         if(legal_moves_bitmask & 1)
         {
-            Move m = {square, destsquare, 0};
-            legal_moves[legal_moves_index] = m;
-            legal_moves_index++;
+            Move m = {piece_square, destsquare, 0}; // normal moves
+            position->legal_moves[position->legal_move_count++] = m;
         }
         legal_moves_bitmask >>= 1;
         destsquare++;
@@ -145,13 +131,14 @@ void get_pieces_moves(int p, int bitboard_index, int square, Move* legal_moves, 
 }
 
 // might make this async
-void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, Move* legal_moves, uint64_t* occupancy_bitboards)
+void resolve_bitboard(Position* position, int bitboard_index) 
 {
     int current_bit = 0;
+    uint64_t bitboard = position->bitboards[bitboard_index];
     while(bitboard)
     {
         if(bitboard & 1)
-            get_pieces_moves(p, bitboard_index, current_bit, legal_moves, occupancy_bitboards);
+            get_pieces_moves(position, bitboard_index, current_bit);
         
         bitboard >>= 1;
         ++current_bit;
@@ -160,30 +147,29 @@ void resolve_bitboard(int p, uint64_t bitboard, int bitboard_index, Move* legal_
 
 void generate_legal_moves(Position* position)
 {
-    int current_player = position->game_flags[0];
-
+    int current_player = position->current_player;
     printf("LEGAL MOVE GENERATION: current player is ");
     printf("%s", (current_player ? "WHITE" : "BLACK"));
     printf("\n");
 
     uint64_t enemy_attack_bitboard = position->attack_bitboards[!current_player];
     printf("Enemy attack bitboard is: \n");
-    log_bitboard(&position->attack_bitboards[!current_player]);
+    log_bitboard(&enemy_attack_bitboard);
     printf("\n");
 
-    legal_moves_index = 0; // static
-    int bitboard_start_index = current_player*6;
+    // reset this and use it for indexing, appending legal_moves 
+    position->legal_move_count = 0; 
+
+    // index => only white or black bitboards then resolve these bitboards
+    int bitboard_start_index = current_player*6; 
     for(int i = bitboard_start_index; i < bitboard_start_index + 6; i++)
     {
-        resolve_bitboard(current_player, position->bitboards[i], i, position->legal_moves, position->occupancy);
+        resolve_bitboard(position, i);
     }
 
-    int king_square = get_piece_square(position->bitboards[6*current_player+5]);
-    printf("king is on square: %d\n", king_square);
-
-    add_castling(king_square, position->bitboards, position->occupancy, position->game_flags, position->legal_moves, enemy_attack_bitboard);
-    add_enpassant(current_player, position->bitboards, position->game_flags, position->legal_moves);
-    position->legal_move_count = get_legal_move_count(position->legal_moves);
+   // legal move count is updated automatically
+    add_castling(position);
+    add_enpassant(position);
 }
 
 // TODO set a flag for pawn promotions to handle them in move_handler -> special move handler

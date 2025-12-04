@@ -23,6 +23,7 @@ int main()
 
     UIContext ui_context = {0};
     ui_context.running = 1;
+    ui_context.game_over = 0;
 
     game_loop(&position, &ui_context); // game.h
  
