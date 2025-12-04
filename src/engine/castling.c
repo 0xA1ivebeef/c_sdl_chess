@@ -1,7 +1,6 @@
 
 #include "engine/castling.h"
 
-
 // remove castle_rights given index kqKQ
 void remove_castle_rights(int* castle_rights, int index)
 {
@@ -57,7 +56,7 @@ void update_castle_rights(uint64_t* bitboards, Move* this_move, int* castle_righ
         case 5: // black and white king 
         case 11:
             // remove castle rights for player
-            castle_rights &= (this_move->startsquare == 60) ? 3 : 12;
+            *castle_rights &= (this_move->startsquare == 60) ? 3 : 12;
             break;
         default:
             return;
@@ -77,7 +76,7 @@ int square_under_attack(int square, uint64_t attack_bitboard)
     return (attack_bitboard & (1ULL << square)) != 0;
 }
 
-int players_rook_on_castle_square(int* bitboards, int startsquare, int destsquare)
+int players_rook_on_castle_square(uint64_t* bitboards, int startsquare, int destsquare)
 {
     // queenside
     if (destsquare < startsquare)
@@ -122,7 +121,7 @@ int can_castle(Position* position, int startsquare, int destsquare)
     // destsquare = startsquare + 2 is kingside
 	int min_square = min(startsquare, destsquare);
 	int max_square = max(startsquare, destsquare);
-    uint64_t enemy_attack_bitboard = position->attack_bitboard[!current_player];
+    uint64_t enemy_attack_bitboard = position->attack_bitboards[!position->current_player];
 	for(int i = min_square; i <= max_square; ++i)
 	{
         printf("CASTLING: looking at square %d\n", i);
@@ -153,7 +152,7 @@ int can_castle(Position* position, int startsquare, int destsquare)
 
     for(int i = startindex; i <= endindex; ++i)
 	{
-		if(occupancy_bitboards[2] & (1ULL << i))
+		if(position->occupancy[2] & (1ULL << i))
 			return 0;
 	}
 
