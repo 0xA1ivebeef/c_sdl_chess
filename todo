@@ -1,0 +1,21 @@
+
+TODO:
+
+king squares are not updated, castle rights are not removed when king moves
+
+if rook is captured, cant castle anymore
+just like rook or king having moved
+
+apply moves and filter moves have sideeffects
+remove castle rights is callled
+
+PRIO:
+-> enpassant squares are not set
+-> castle rights are deleted
+
+normal:
+-> does king square update work properly? since it is embedded into apply move
+
+optional:
+-> 
+

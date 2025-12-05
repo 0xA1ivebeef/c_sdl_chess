@@ -8,8 +8,9 @@ int is_pawn_promotion(uint64_t* bitboards, Move* this_move)
     int destsquare = this_move->destsquare;
 
     int index = get_bitboard_index(bitboards, startsquare);
-    if(!(index == WHITE_PAWN || index == BLACK_PAWN))
+    if(!(index == BLACK_PAWN || index == WHITE_PAWN))
         return 0;
+
     return ((destsquare >= 0 && destsquare <= 7) || (destsquare >= 56 && destsquare <= 63));
 }
 
@@ -43,14 +44,18 @@ int is_double_pawn_push(uint64_t* bitboards, Move* this_move)
     int bb_index = get_bitboard_index(bitboards, startsquare);
     if(!(bb_index == 0 || bb_index == 6))
         return 0;
-    return ((max(startsquare, destsquare) - min(startsquare, destsquare)) == 16);
+
+    int res = ((max(startsquare, destsquare) - min(startsquare, destsquare)) == 16);
+    printf("is double pawn push move %d, %d: %d\n", this_move->startsquare, this_move->destsquare, res);
+    return res;
 }
 
 // given move, set enpassant square in position (int)
 void handle_double_pawn_push(int current_player, Move* this_move, int* enpassant_square)
 {
+    printf("HANDLING DOUBLE PAWN PUSH!\n");
     // wenn 0 dann -8, wenn 1 dann plus 8
-    if(!current_player)
+    if(current_player == BLACK)
     {
         // black
         *enpassant_square = this_move->destsquare - 8;

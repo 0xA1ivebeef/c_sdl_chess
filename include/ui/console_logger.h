@@ -5,9 +5,15 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "engine/pieces.h"
 #include "engine/move.h"
 #include "engine/constants.h"
+#include "engine/position.h"
 
+#include "utils/utils.h"
+
+void print_binary(int x);
+void log_gamestate(Position* position);
 void get_square_string(int square, char* buffer);
 void translate_move(Move* m);
 void log_bitboard(uint64_t* bitboard);

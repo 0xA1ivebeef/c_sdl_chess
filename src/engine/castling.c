@@ -76,45 +76,39 @@ int square_under_attack(int square, uint64_t attack_bitboard)
     return (attack_bitboard & (1ULL << square)) != 0;
 }
 
+// return if the rook is still there
 int players_rook_on_castle_square(uint64_t* bitboards, int startsquare, int destsquare)
 {
     // queenside
     if (destsquare < startsquare)
     {
-        if (startsquare == 4)
-            return (bitboards[WHITE_ROOK] & (1ULL << 0)) != 0; // black qs
-        else 
-            return (bitboards[BLACK_ROOK] & (1ULL << 56)) != 0; // white qs
+        if (startsquare == 4) // black
+            return (bitboards[BLACK_ROOK] & (1ULL << 0)) != 0; 
+        else // white
+            return (bitboards[WHITE_ROOK] & (1ULL << 56)) != 0; 
     }
     // kingside
     else 
     {
-        if (startsquare == 4)
-            return (bitboards[WHITE_ROOK] & (1ULL << 7)) != 0; // black ks
-        else 
-            return (bitboards[BLACK_ROOK] & (1ULL << 63)) != 0; // white ks
+        if (startsquare == 4) // black
+            return (bitboards[BLACK_ROOK] & (1ULL << 7)) != 0;
+        else // white
+            return (bitboards[BLACK_ROOK] & (1ULL << 63)) != 0; 
     }
 }
 
 // TODO seperate logic in single functions
 // called seperatly for kingside, queenside each (twice for one player)
+// can_castle should not mutate castle_rights !! 
 int can_castle(Position* position, int startsquare, int destsquare)
 {
+    printf("can castle called with: %s = %d, %s = %d\n", square_to_notation(startsquare), startsquare, square_to_notation(destsquare), destsquare); 
+
     if (destsquare == -1) 
         return 0;
     
-    // update castle rights and return 0
     if (!players_rook_on_castle_square(position->bitboards, startsquare, destsquare))
-    {
-        // TODO redo this weird logic idk what i did here 
-        int is_kingside = (startsquare < destsquare); // if its kingside
-        int index = (startsquare == 4) ? 0 : 2; // if its black king startsquare 4, index 0 if its white 2
-        index += is_kingside;
-
-        printf("CASTLING: removing castlerights with index %d\n", index);
-        remove_castle_rights(&position->castle_rights, index); 
         return 0;
-    }
 
     // startsquare always 4 for black, 60 for white
     // destsquare = startsquare - 2 is queenside

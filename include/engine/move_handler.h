@@ -9,6 +9,8 @@
 #include "engine/move.h"
 #include "engine/castling.h"
 #include "engine/special_move_handler.h"
+#include "engine/pieces.h"
+#include "engine/game.h"
 
 #include "utils/bitboard_utils.h"
 

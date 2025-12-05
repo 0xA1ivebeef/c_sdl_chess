@@ -52,7 +52,7 @@ void filter_moves(Position* position)
         // TODO either undo move or reset copy
         // currently just creating a copy every iteration which is fine
     }
-    memcpy(position->legal_moves, valid_moves, sizeof(Move)*LEGAL_MOVES_SIZE);
+    memcpy(position->legal_moves, valid_moves, sizeof(Move) * LEGAL_MOVES_SIZE);
     position->legal_move_count = valid_move_count;
 }
 

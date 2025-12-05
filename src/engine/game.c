@@ -3,28 +3,6 @@
 
 #define AI_COLOR BLACK
 
-int setup(Position* position)
-{
-   if (load_pieces_images() != 0)
-    {
-        return 1;
-    }
-
-    load_fen_string(position);
-    update_occupancy_bitboards(position->bitboards, position->occupancy);
-
-    load_bitmasks(); // external function for bitmask_loader.c
-
-    generate_attack_bitboards(position); // attack bitboards first since they are used in move generation
-    generate_legal_moves(position);
-
-    log_legal_moves(position->legal_moves);
-
-    render(position->bitboards);
-
-    return 0;
-}
-
 int get_king_square(uint64_t king_bitboard)
 {
     int i = 0;
@@ -36,8 +14,51 @@ int get_king_square(uint64_t king_bitboard)
     return i - 1;
 }
 
+int setup(Position* position)
+{
+    // do everything as normal since starting position can be different starting gamestate is loaded (from fen string)
+    
+    printf("SETUP IS CALLED\n");
+   if (load_pieces_images() != 0)
+    {
+        return 1;
+    }
+
+    load_fen_string(position);
+    update_occupancy_bitboards(position->bitboards, position->occupancy);
+
+    load_bitmasks(); // external function for bitmask_loader.c
+
+    // set position->king_square[2]
+    position->king_square[BLACK] = get_king_square(position->bitboards[BLACK_KING]);
+    position->king_square[WHITE] = get_king_square(position->bitboards[WHITE_KING]);
+
+    generate_attack_bitboards(position); // attack bitboards first since they are used in move generation
+    
+    printf("SETUP: logging attack bitboards: \n");
+    printf("BLACK:\n");
+    log_bitboard(&position->attack_bitboards[BLACK]);
+    printf("\n");
+    
+    printf("WHITE:\n");
+    log_bitboard(&position->attack_bitboards[WHITE]);
+    printf("\n");
+                                         
+    generate_legal_moves(position);
+    // filter_moves(position); 
+
+    log_legal_moves(position->legal_moves);
+
+    render(position->bitboards);
+
+    log_gamestate(position);
+
+    return 0;
+}
+
 void update(Position* position, UIContext* ui_context)
 {
+    printf("UPDATE IS CALLED\n");
     position->current_player ^= 1;
 
     update_occupancy_bitboards(position->bitboards, position->occupancy);
@@ -67,6 +88,8 @@ void update(Position* position, UIContext* ui_context)
             ui_context->game_over = 1;  
         }
     }
+
+    log_gamestate(position);
 }
 
 void game_loop(Position* position, UIContext* ui_context)
@@ -106,4 +129,4 @@ void game_loop(Position* position, UIContext* ui_context)
         }
     }
 }
-
+                                                                 

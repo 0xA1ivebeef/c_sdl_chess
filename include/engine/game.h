@@ -25,9 +25,12 @@
 
 #include "opponent/opponent.h"
 
+#include "utils/utils.h"
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"
 
+
+int get_king_square(uint64_t bitboard);
 int setup(Position* position);
 void game_loop(Position* position, UIContext* ui_context);
 

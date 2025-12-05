@@ -1,8 +1,10 @@
 
 #include "engine/move_handler.h"
 
+// called after every move (through apply_move() !!!)
 void handle_special_move(Position* position, Move* this_move)
 {
+    printf("handle_special_move called\n");
     switch (this_move->flags)
     {
         case 1:
@@ -22,8 +24,8 @@ void handle_special_move(Position* position, Move* this_move)
     if (is_double_pawn_push(position->bitboards, this_move))
         handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
     else
-        position->enpassant_square = -1;
-        
+        position->enpassant_square = -1;       
+    
     update_castle_rights(position->bitboards, this_move, &position->castle_rights);
 }
 
@@ -32,32 +34,24 @@ void apply_move(Position* position, Move* this_move)
     int startsquare = this_move->startsquare;
     int destsquare = this_move->destsquare;
 
-    printf("APPLY MOVE: %d, %d, flag: %d\n", startsquare, destsquare, this_move->flags);
+    printf("apply move: %s = %d, %s = %d, flag: %d\n", square_to_notation(startsquare), startsquare, square_to_notation(destsquare), destsquare, this_move->flags);
 
     int bitboard_index = get_bitboard_index(position->bitboards, startsquare);
     int dest_bitboard_index = get_bitboard_index(position->bitboards, destsquare);
 
     position->bitboards[bitboard_index] &= ~(1ULL << startsquare); // delete piece on startsquare
     position->bitboards[bitboard_index] |= (1ULL << destsquare); // set new piece on destsquare    
-                                                                 
-    handle_special_move(position, this_move);
 
     if(dest_bitboard_index == -1) // dest square empty
         return;
 
     position->bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
 
-    // TODO
-    if (dest_bitboard_index == WHITE_KING)
-    {
-        position->king_square[WHITE] = this_move->destsquare;
-        printf("WHITE king is on square: %d\n", position->king_square[WHITE]);
-    }
-    else if (dest_bitboard_index == BLACK_KING)
-    {
-        position->king_square[BLACK] = this_move->destsquare;
-        printf("BLACK king is on square: %d\n", position->king_square[BLACK]);
-    }
+    // set position->king_square[2]
+    position->king_square[BLACK] = get_king_square(position->bitboards[BLACK_KING]);
+    position->king_square[WHITE] = get_king_square(position->bitboards[WHITE_KING]);
+    
+    handle_special_move(position, this_move);
 }
 
 // if given move is legal, return its address
@@ -77,6 +71,7 @@ Move* is_legal_move(Position* position, int startsquare, int destsquare)
 // TODO: adjust to only whats needed 
 void save_state(Position* position, Undo* undo)
 {
+    printf("SAVE_STATE is called in Move handler\n");
     memcpy(undo->bitboards, position->bitboards, sizeof(position->bitboards));
     memcpy(undo->occupancy, position->occupancy, sizeof(position->occupancy));
     

@@ -42,7 +42,7 @@ void add_castling(Position* position, int square);
     if castle_rights && can_castle() -> add_castling_move()
 }
 
-void update_castle_rights(uint64_t* bitboards, Move* this_move, int* game_flags);
+void update_castle_rights(uint64_t* bitboards, Move* this_move, int* castle_rights)
 void remove_castle_rights(int* castle_rights, int index); // index 0 black qs 1 ks 2 white qs 3 ks
 
 -------------------------------------------------------------------------------
@@ -76,11 +76,11 @@ void handle_special_move(Position* position, Move* this_move)
 {
     switch moves flag:
     - handle_castling(bitboards, move, gameflags)
-    - handle_enpassant(bitboards, game_flags)
+    - handle_enpassant(bitboards, enpassant)
 
     - is_pawn_promotion(bitboards, move) -> handle_pawn_promotion(bitboards, move)
-    - is_double_pawn_push(bitboards, move) -> handle_double_pawn_push(move, gameflags)
-    - update_castle_rights(bitboards, move, gameflags)
+    - is_double_pawn_push(bitboards, move) -> handle_double_pawn_push(move, &enpassant_square)
+    - update_castle_rights(bitboards, move, &castle_rights)
 }
 
 Move* is_legal_move(Position* position, int startsquare, int destsquare)

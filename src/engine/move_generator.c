@@ -167,7 +167,10 @@ void generate_legal_moves(Position* position)
         resolve_bitboard(position, i);
     }
 
-   // legal move count is updated automatically
+    printf("GENERATE_LEGAL_MOVES: legal_move_count: %d\n", position->legal_move_count);
+    printf("last move in legal_moves: %d, %d\n", position->legal_moves[position->legal_move_count-1].startsquare, position->legal_moves[position->legal_move_count-1].destsquare);
+
+    // legal move count is updated automatically
     add_castling(position);
     add_enpassant(position);
 }

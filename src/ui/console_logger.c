@@ -1,6 +1,45 @@
 
 #include "ui/console_logger.h"
 
+void print_binary(int x) 
+{
+    if (x == 0) 
+    {
+        putchar('0');
+        return;
+    }
+
+    int started = 0;
+    for (int i = sizeof(x) * 8 - 1; i >= 0; i--) 
+    {
+        if (x & (1u << i))
+            started = 1;
+
+        if (started)
+            putchar((x & (1u << i)) ? '1' : '0');
+    }
+}
+
+void log_gamestate(Position* position)
+{
+    printf("\n --------------------------------------------\n\n");
+    printf("logging GAMESTATE: \n");   
+    
+    printf("current player: %s\n", position->current_player ? "WHITE" : "BLACK");
+    
+    printf("castle_rights: ");
+    print_binary(position->castle_rights);
+    printf("\n");
+
+    printf("enpassant square: %d, %s\n", position->enpassant_square, square_to_notation(position->enpassant_square));
+
+    printf("halfmove clock: %d\n", position->halfmove_clock);
+    printf("fullmove number: %d\n", position->fullmove_number);
+
+    printf("king square: BLACK: %d, WHITE: %d\n", position->king_square[BLACK], position->king_square[WHITE]);
+    printf("\n --------------------------------------------\n\n");
+}
+
 void get_square_string(int square, char* buffer)
 {
     int col = square % 8;
@@ -26,9 +65,9 @@ void log_bitboard(uint64_t* n)
 	for (int i = 0; i < 64; ++i)
 	{
 		if (*n & (1ULL << i))
-			printf("1");
+			printf("# ");
 		else
-			printf("0");
+			printf(". ");
 
 		if ((i + 1) % 8 == 0)
 			printf("\n");

@@ -44,7 +44,7 @@ int get_castle_rights(char* token)
 
 int square_string_to_int(char* square_string)
 {
-    if(square_string[0] == '-')
+    if(square_string[0] < 'a' || square_string[0] > 'h')
         return -1;
 
     int col = square_string[0] - 'a';
