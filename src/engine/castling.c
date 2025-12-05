@@ -1,66 +1,59 @@
 
 #include "engine/castling.h"
 
-// remove castle_rights given index kqKQ
-void remove_castle_rights(int* castle_rights, int index)
-{
-    switch (index)
-    {
-        case 0:
-            *castle_rights &= 14; // keep all but black queenside
-            break;
-        case 1:
-            *castle_rights &= 13; // keep all but black kingside
-            break;
-        case 2:
-            *castle_rights &= 11; // keep all but white queenside
-            break;
-        case 3:
-            *castle_rights &= 7; // keep all but white kingside
-            break;
-        default:
-            printf("CASTLING: Input Error: remove_castle_rights(int* castle_rights, int index)\n");
-            return;
-    }
-}
+// index 0 = BLACK_QUEENSIDE, 1 = BLACK_KINGSIDE, 2 = WHITE_QUEENSIDE, 3 = WHITE_KINGSIDE
+const int castle_starts[4] = {4, 4, 60, 60};   // e8, e8, e1, e1
+const int castle_dests[4]  = {2, 6, 58, 62};   // c8, g8, c1, g1
 
-// TODO optimize redo logic
-// castle rights = KQkq white - black
-void update_castle_rights(uint64_t* bitboards, Move* this_move, int* castle_rights)
+const int ROOK_SQUARES[4] = {0, 7, 56, 63};
+
+// Black
+const uint64_t BLACK_QUEENSIDE_MASK = (1ULL << 4) | (1ULL << 3) | (1ULL << 2);
+const uint64_t BLACK_KINGSIDE_MASK  = (1ULL << 4) | (1ULL << 5) | (1ULL << 6);
+
+// White
+const uint64_t WHITE_QUEENSIDE_MASK = (1ULL << 60) | (1ULL << 59) | (1ULL << 58);
+const uint64_t WHITE_KINGSIDE_MASK  = (1ULL << 60) | (1ULL << 61) | (1ULL << 62);
+
+const uint64_t CASTLING_MASKS[4] = 
 {
-    // if king or rook moves remove castlerights
-    int index = get_bitboard_index(bitboards, this_move->startsquare);
-    switch(index)
-    {
-        case 3: // black and white rooks
-        case 9:
-            // remove castle rights for one side
-            switch(this_move->startsquare)
-            {
-                case 0:
-                    remove_castle_rights(castle_rights, 0); // black qs
-                    break;
-                case 7:
-                    remove_castle_rights(castle_rights, 1); // black ks
-                    break;
-                case 56:
-                    remove_castle_rights(castle_rights, 2); // white qs
-                    break;
-                case 63:
-                    remove_castle_rights(castle_rights, 3); // white ks
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case 5: // black and white king 
-        case 11:
-            // remove castle rights for player
-            *castle_rights &= (this_move->startsquare == 60) ? 3 : 12;
-            break;
-        default:
-            return;
-    }
+	BLACK_QUEENSIDE_MASK,
+	BLACK_KINGSIDE_MASK,
+	WHITE_QUEENSIDE_MASK,
+	WHITE_KINGSIDE_MASK
+};
+
+const char* CASTLE_STRINGS[4] =
+{
+	"BLACK_QUEENSIDE",
+	"BLACK_KINGSIDE",
+	"WHITE_QUEENSIDE",
+	"WHITE_KINGSIDE"	
+};
+
+void update_castle_rights(Position* position, Move* this_move)
+{
+	// king moves -> remove both sides
+	if (this_move->startsquare == 4) // black king
+	{
+    	position->castle_rights &= ~((1ULL << 0) | (1ULL << 1)); // clear BLACK_QS and BLACK_KS
+		printf("UPDATE CASTLE RIGHTS removing black castling\n");
+	}
+
+	if (this_move->startsquare == 60) // white king
+	{
+    	position->castle_rights &= ~((1ULL << 2) | (1ULL << 3)); // clear WHITE_QS and WHITE_KS
+		printf("UPDATE CASTLE RIGHTS removing white castling\n");
+	}
+
+	for (int i = 0; i < 4; ++i)
+	{
+		if(this_move->startsquare == ROOK_SQUARES[i] || this_move->destsquare == ROOK_SQUARES[i]) 
+		{
+			printf("removing castle rights for %s\n", CASTLE_STRINGS[i]);
+    		position->castle_rights &= ~(1 << i);
+		}
+	}
 }
 
 // add to legal moves of position
@@ -71,108 +64,48 @@ void add_castling_move(Position* position, int startsquare, int destsquare)
     printf("castling move added: %d, %d\n", startsquare, destsquare);
 }	
 
-int square_under_attack(int square, uint64_t attack_bitboard)
-{
-    return (attack_bitboard & (1ULL << square)) != 0;
-}
-
-// return if the rook is still there
-int players_rook_on_castle_square(uint64_t* bitboards, int startsquare, int destsquare)
-{
-    // queenside
-    if (destsquare < startsquare)
-    {
-        if (startsquare == 4) // black
-            return (bitboards[BLACK_ROOK] & (1ULL << 0)) != 0; 
-        else // white
-            return (bitboards[WHITE_ROOK] & (1ULL << 56)) != 0; 
-    }
-    // kingside
-    else 
-    {
-        if (startsquare == 4) // black
-            return (bitboards[BLACK_ROOK] & (1ULL << 7)) != 0;
-        else // white
-            return (bitboards[BLACK_ROOK] & (1ULL << 63)) != 0; 
-    }
-}
-
-// TODO seperate logic in single functions
 // called seperatly for kingside, queenside each (twice for one player)
-// can_castle should not mutate castle_rights !! 
-int can_castle(Position* position, int startsquare, int destsquare)
+int can_castle(Position* position, int bit_index)
 {
-    printf("can castle called with: %s = %d, %s = %d\n", square_to_notation(startsquare), startsquare, square_to_notation(destsquare), destsquare); 
+	uint64_t bitmask = CASTLING_MASKS[bit_index];
 
-    if (destsquare == -1) 
-        return 0;
-    
-    if (!players_rook_on_castle_square(position->bitboards, startsquare, destsquare))
-        return 0;
-
-    // startsquare always 4 for black, 60 for white
-    // destsquare = startsquare - 2 is queenside
-    // destsquare = startsquare + 2 is kingside
-	int min_square = min(startsquare, destsquare);
-	int max_square = max(startsquare, destsquare);
-    uint64_t enemy_attack_bitboard = position->attack_bitboards[!position->current_player];
-	for(int i = min_square; i <= max_square; ++i)
+	if (position->attack_bitboards[!position->current_player] & bitmask)
 	{
-        printf("CASTLING: looking at square %d\n", i);
-		if(square_under_attack(i, enemy_attack_bitboard))
-        {
-            printf("CASTLING: square %d is under attack\n", i);
-            printf("CASTLING: according to attack bitboard: \n");
-            log_bitboard(&enemy_attack_bitboard);
-			return 0;
-        }
+		printf("CAN CASTLE: %s square is under attack\n", CASTLE_STRINGS[bit_index]);
+		return 0;	
 	}
 
-    printf("\n");
-
-    // squares occupied by any pieces:
-    // from smaller to larger square to use for-loop for counting
-    int startindex, endindex;
-    if(startsquare < destsquare)
-    {
-        startindex = startsquare + 1;
-        endindex = destsquare;
-    }
-    else
-    {
-        startindex = destsquare - 1;
-        endindex = startsquare - 1;
-    }
-
-    for(int i = startindex; i <= endindex; ++i)
+	// correct bitmask to handle occupancy
+	bitmask &= ~((1ULL << 4) | (1ULL << 60));
+	if (position->occupancy[2] & bitmask) 
 	{
-		if(position->occupancy[2] & (1ULL << i))
-			return 0;
+		printf("CAN CASTLE: %s occupied by piece\n", CASTLE_STRINGS[bit_index]);
+		return 0;
 	}
 
 	return 1;
 }
 
-// TODO: this is weird logic because you might have to take multiple paths which makes
-// simplifying hard, how can you optimize this?
-// given king square and position, add castling moves to legal moves if they are legal
+// given position, add castling moves to legal moves if they are legal
 void add_castling(Position* position)
 {
+    // only add for current player
+    // do both sides of course k and q
 	int castle_rights = position->castle_rights;
+    int current_player = position->current_player;
+   
+    for(int side = 0; side < 2; ++side) 
+    { // 0=queenside, 1=kingside
+        int bit_index = current_player * 2 + side;  // maps to 0..3
+        uint8_t castle_flag = 1 << bit_index; // 1 << 0..3 = 1, 2, 4, 8
 
-    if (position->king_square[position->current_player] == 4) 
-    {
-        if ((castle_rights & 1) && can_castle(position, 4, 2))
-            add_castling_move(position, 4, 2);
-        if ((castle_rights & 2) && can_castle(position, 4, 6))
-            add_castling_move(position, 4, 6);
-    } 
-    else if (position->king_square[position->current_player] == 60) 
-    {
-        if ((castle_rights & 4) && can_castle(position, 60, 58))
-            add_castling_move(position, 60, 58);
-        if ((castle_rights & 8) && can_castle(position, 60, 62))
-            add_castling_move(position, 60, 62);
+        if(castle_rights & castle_flag) 
+        {
+            if(can_castle(position, bit_index)) // passing bit_index 0..3 to map to bitmasks
+            {        
+                add_castling_move(position, castle_starts[bit_index], castle_dests[bit_index]);
+            }   
+        }
     }
 }
 

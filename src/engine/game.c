@@ -68,8 +68,9 @@ void update(Position* position, UIContext* ui_context)
     // clear and generate legal moves filter illegal moves
     memset(position->legal_moves, -1, sizeof(Move) * LEGAL_MOVES_SIZE); 
     generate_legal_moves(position); 
-    filter_moves(position);
-    
+    // filter_moves(position);
+    log_legal_moves(position->legal_moves);
+
     // check
     if (ui_context)
     {

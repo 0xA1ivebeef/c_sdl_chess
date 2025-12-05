@@ -1,25 +1,15 @@
 
 #include "ui/console_logger.h"
 
-void print_binary(int x) 
+void print_castle_rights(int castle_rights) 
 {
-    if (x == 0) 
-    {
-        putchar('0');
-        return;
+    // Print 4 bits: BLACK_QS, BLACK_KS, WHITE_QS, WHITE_KS
+    for(int i = 3; i >= 0; --i) 
+	{
+        putchar( (castle_rights & (1 << i)) ? '1' : '0' );
     }
-
-    int started = 0;
-    for (int i = sizeof(x) * 8 - 1; i >= 0; i--) 
-    {
-        if (x & (1u << i))
-            started = 1;
-
-        if (started)
-            putchar((x & (1u << i)) ? '1' : '0');
-    }
+    putchar('\n');
 }
-
 void log_gamestate(Position* position)
 {
     printf("\n --------------------------------------------\n\n");
@@ -28,10 +18,10 @@ void log_gamestate(Position* position)
     printf("current player: %s\n", position->current_player ? "WHITE" : "BLACK");
     
     printf("castle_rights: ");
-    print_binary(position->castle_rights);
+    print_castle_rights(position->castle_rights);
     printf("\n");
 
-    printf("enpassant square: %d, %s\n", position->enpassant_square, square_to_notation(position->enpassant_square));
+    printf("enpassant square: %d\n", position->enpassant_square);
 
     printf("halfmove clock: %d\n", position->halfmove_clock);
     printf("fullmove number: %d\n", position->fullmove_number);

@@ -3,7 +3,7 @@
 
 const char* square_to_notation(int sq) 
 {
-    static char bufs[8][3];   /* allows up to 8 simultaneous results */
+    static char bufs[8][3];   // allows up to 8 simultaneous results 
     static int idx = 0;
     char *out = bufs[(idx++) & 7];
 
@@ -19,3 +19,4 @@ const char* square_to_notation(int sq)
 
     return out;
 }
+

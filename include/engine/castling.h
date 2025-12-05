@@ -14,7 +14,7 @@
 #include "ui/console_logger.h"
 
 void add_castling(Position* position);
-void update_castle_rights(uint64_t* bitboards, Move* this_move, int* castle_rights);
+void update_castle_rights(Position* position, Move* this_move);
 
 #endif
 

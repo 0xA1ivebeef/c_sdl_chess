@@ -25,8 +25,6 @@ void handle_special_move(Position* position, Move* this_move)
         handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
     else
         position->enpassant_square = -1;       
-    
-    update_castle_rights(position->bitboards, this_move, &position->castle_rights);
 }
 
 void apply_move(Position* position, Move* this_move)
@@ -42,9 +40,6 @@ void apply_move(Position* position, Move* this_move)
     position->bitboards[bitboard_index] &= ~(1ULL << startsquare); // delete piece on startsquare
     position->bitboards[bitboard_index] |= (1ULL << destsquare); // set new piece on destsquare    
 
-    if(dest_bitboard_index == -1) // dest square empty
-        return;
-
     position->bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
 
     // set position->king_square[2]
@@ -52,6 +47,7 @@ void apply_move(Position* position, Move* this_move)
     position->king_square[WHITE] = get_king_square(position->bitboards[WHITE_KING]);
     
     handle_special_move(position, this_move);
+	update_castle_rights(position, this_move);
 }
 
 // if given move is legal, return its address
