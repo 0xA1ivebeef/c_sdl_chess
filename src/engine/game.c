@@ -45,7 +45,7 @@ int setup(Position* position)
     printf("\n");
                                          
     generate_legal_moves(position);
-    // filter_moves(position); 
+    filter_moves(position); 
 
     log_legal_moves(position->legal_moves);
 
@@ -59,8 +59,8 @@ int setup(Position* position)
 void update(Position* position, UIContext* ui_context)
 {
     printf("UPDATE IS CALLED\n");
-    position->current_player ^= 1;
 
+	position->current_player ^= 1;
     update_occupancy_bitboards(position->bitboards, position->occupancy);
 
     generate_attack_bitboards(position);
@@ -68,7 +68,7 @@ void update(Position* position, UIContext* ui_context)
     // clear and generate legal moves filter illegal moves
     memset(position->legal_moves, -1, sizeof(Move) * LEGAL_MOVES_SIZE); 
     generate_legal_moves(position); 
-    // filter_moves(position);
+    filter_moves(position);
     log_legal_moves(position->legal_moves);
 
     // check
@@ -89,6 +89,12 @@ void update(Position* position, UIContext* ui_context)
             ui_context->game_over = 1;  
         }
     }
+
+	if (position->halfmove_clock == 100)
+	{
+		printf("50 move draw\n");
+        ui_context->game_over = 1;  
+	}
 
     log_gamestate(position);
 }

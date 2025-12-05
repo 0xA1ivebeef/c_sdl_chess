@@ -1,15 +1,16 @@
 
 #include "engine/move_generator.h"
 
-// TODO: maybe outsource (castling is in its own module)
 void add_enpassant(Position* position)
 {
+	printf("ENPASSANT: add enpassant\n");
+	printf("enpassant square %s\n", square_to_notation(position->enpassant_square));
     int current_player = position->current_player;
     int current_bit = 0;
-    uint64_t bb = position->bitboards[current_player * 6];
-    while(bb)
+    uint64_t pawn_bb = position->bitboards[current_player * 6];
+    while(pawn_bb)
     {
-        if(bb & 1)
+        if(pawn_bb & 1)
         {
             // if enemy pawn on enpassant square
             if(bitmasks[5 - current_player][current_bit] & (1ULL << position->enpassant_square))
@@ -20,7 +21,7 @@ void add_enpassant(Position* position)
                 printf("added enpassant move %d, %d\n", current_bit, position->enpassant_square);
             }
         }
-        bb >>= 1;
+        pawn_bb >>= 1;
         ++current_bit;
     }
 }
@@ -166,9 +167,6 @@ void generate_legal_moves(Position* position)
     {
         resolve_bitboard(position, i);
     }
-
-    printf("GENERATE_LEGAL_MOVES: legal_move_count: %d\n", position->legal_move_count);
-    printf("last move in legal_moves: %d, %d\n", position->legal_moves[position->legal_move_count-1].startsquare, position->legal_moves[position->legal_move_count-1].destsquare);
 
     // legal move count is updated automatically
     add_castling(position);

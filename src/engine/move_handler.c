@@ -2,7 +2,7 @@
 #include "engine/move_handler.h"
 
 // called after every move (through apply_move() !!!)
-void handle_special_move(Position* position, Move* this_move)
+void handle_special_move(Position* position, Move* this_move, int ss_bb_i)
 {
     printf("handle_special_move called\n");
     switch (this_move->flags)
@@ -21,34 +21,54 @@ void handle_special_move(Position* position, Move* this_move)
         handle_pawn_promotion(position->bitboards, this_move);
 
     // set enpassant flag, otherwise delete it 
-    if (is_double_pawn_push(position->bitboards, this_move))
+    if (is_double_pawn_push(this_move, ss_bb_i))
         handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
     else
         position->enpassant_square = -1;       
 }
 
-void apply_move(Position* position, Move* this_move)
+void apply_move(Position* position, Move* m)
 {
-    int startsquare = this_move->startsquare;
-    int destsquare = this_move->destsquare;
+	int ss = m->startsquare;
+	int ds = m->destsquare;
+    int ss_bb_i = get_bitboard_index(position->bitboards, ss);
+	printf("apply move: ss_bb_i %d\n", ss_bb_i);
+    if (ss_bb_i == -1) 
+	{
+        fprintf(stderr, "apply_move: no piece on startsquare %d\n", ss_bb_i);
+        abort();
+    }
 
-    printf("apply move: %s = %d, %s = %d, flag: %d\n", square_to_notation(startsquare), startsquare, square_to_notation(destsquare), destsquare, this_move->flags);
+    int ds_bb_i = get_bitboard_index(position->bitboards, ds); // -1 if empty
 
-    int bitboard_index = get_bitboard_index(position->bitboards, startsquare);
-    int dest_bitboard_index = get_bitboard_index(position->bitboards, destsquare);
+	// capture
+    if (ds_bb_i != -1) 
+        position->bitboards[ds_bb_i] &= ~(1ULL << ds);
 
-    position->bitboards[bitboard_index] &= ~(1ULL << startsquare); // delete piece on startsquare
-    position->bitboards[bitboard_index] |= (1ULL << destsquare); // set new piece on destsquare    
+    // move
+    position->bitboards[ss_bb_i] &= ~(1ULL << ss);
+    position->bitboards[ss_bb_i] |=  (1ULL << ds);
 
-    position->bitboards[dest_bitboard_index] &= ~(1ULL << destsquare); // delete piece on destsquare
+    // update king squares 
+    if (ss_bb_i == WHITE_KING) 
+        position->king_square[WHITE] = ds;
+	else if (ss_bb_i == BLACK_KING) 
+	    position->king_square[BLACK] = ds;
+  
+    handle_special_move(position, m, ss_bb_i);
 
-    // set position->king_square[2]
-    position->king_square[BLACK] = get_king_square(position->bitboards[BLACK_KING]);
-    position->king_square[WHITE] = get_king_square(position->bitboards[WHITE_KING]);
-    
-    handle_special_move(position, this_move);
-	update_castle_rights(position, this_move);
+    update_castle_rights(position, m);
+
+    int is_pawn_move = (ss_bb_i == WHITE_PAWN || ss_bb_i == BLACK_PAWN);
+    if (is_pawn_move || ds_bb_i != -1 || (m->flags == ENPASSANT_FLAG)) 
+        position->halfmove_clock = 0;
+	else 
+        position->halfmove_clock++;
+
+    if (position->current_player == BLACK) 
+        position->fullmove_number++;
 }
+
 
 // if given move is legal, return its address
 Move* is_legal_move(Position* position, int startsquare, int destsquare)

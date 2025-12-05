@@ -21,7 +21,7 @@ void log_gamestate(Position* position)
     print_castle_rights(position->castle_rights);
     printf("\n");
 
-    printf("enpassant square: %d\n", position->enpassant_square);
+    printf("enpassant square: %d = %s\n", position->enpassant_square, square_to_notation(position->enpassant_square));
 
     printf("halfmove clock: %d\n", position->halfmove_clock);
     printf("fullmove number: %d\n", position->fullmove_number);

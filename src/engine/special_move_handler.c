@@ -35,18 +35,28 @@ void handle_pawn_promotion(uint64_t* bitboards, Move* this_move)
     }
 }
 
-// given bitboards and move, return if the move is a double pawn push
-int is_double_pawn_push(uint64_t* bitboards, Move* this_move)
+int abs_int(int x) 
 {
+    return x < 0 ? -x : x;
+}
+
+// given bitboards and move, return if the move is a double pawn push
+int is_double_pawn_push(Move* this_move, int ss_bb_i)
+{
+	printf("SPECIAL MOVE HANDLER double pawn push detected\n");
     int startsquare = this_move->startsquare;
     int destsquare = this_move->destsquare;
-
-    int bb_index = get_bitboard_index(bitboards, startsquare);
-    if(!(bb_index == 0 || bb_index == 6))
+	
+	printf("ss_bb_i = %d\n", ss_bb_i);
+    if(!(ss_bb_i == BLACK_PAWN || ss_bb_i == WHITE_PAWN))
+	{
+		printf("moved piece is not a pawn\n");
         return 0;
+	}
 
-    int res = ((max(startsquare, destsquare) - min(startsquare, destsquare)) == 16);
-    printf("is double pawn push move %d, %d: %d\n", this_move->startsquare, this_move->destsquare, res);
+	printf("ss: %d, ds: %d\n", startsquare, destsquare);
+    int res = (abs_int(startsquare - destsquare) == 16); // moved two squares 
+    printf("SPEICAL MOVE HANDLER is double pawn push %d, %d: %s\n", this_move->startsquare, this_move->destsquare, res ? "TRUE" : "FALSE");
     return res;
 }
 
