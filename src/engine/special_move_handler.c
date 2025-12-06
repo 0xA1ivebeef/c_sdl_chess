@@ -43,40 +43,25 @@ int abs_int(int x)
 // given bitboards and move, return if the move is a double pawn push
 int is_double_pawn_push(Move* this_move, int ss_bb_i)
 {
-	printf("SPECIAL MOVE HANDLER double pawn push detected\n");
     int startsquare = this_move->startsquare;
     int destsquare = this_move->destsquare;
 	
-	printf("ss_bb_i = %d\n", ss_bb_i);
+    // moved piece is not a pawn
     if(!(ss_bb_i == BLACK_PAWN || ss_bb_i == WHITE_PAWN))
-	{
-		printf("moved piece is not a pawn\n");
         return 0;
-	}
 
-	printf("ss: %d, ds: %d\n", startsquare, destsquare);
     int res = (abs_int(startsquare - destsquare) == 16); // moved two squares 
-    printf("SPEICAL MOVE HANDLER is double pawn push %d, %d: %s\n", this_move->startsquare, this_move->destsquare, res ? "TRUE" : "FALSE");
     return res;
 }
 
 // given move, set enpassant square in position (int)
 void handle_double_pawn_push(int current_player, Move* this_move, int* enpassant_square)
 {
-    printf("HANDLING DOUBLE PAWN PUSH!\n");
     // wenn 0 dann -8, wenn 1 dann plus 8
     if(current_player == BLACK)
-    {
-        // black
         *enpassant_square = this_move->destsquare - 8;
-        printf("can enpassant on square: %d\n", *enpassant_square);
-    }
     else
-    {
-        // white
         *enpassant_square = this_move->destsquare + 8;
-        printf("can enpassant on square: %d\n", *enpassant_square);
-    }
 }
 
 // given bitboards, enpassant_square, apply capture enpassant 

@@ -1,10 +1,22 @@
 
 #include "engine/move_generator.h"
 
+int PROMOTION_FLAGS[4] = 
+{
+    KNIGHT_PROMOTION,
+    BISHOP_PROMOTION,
+    ROOK_PROMOTION,
+    QUEEN_PROMOTION
+};
+
+uint64_t PROMOTION_RANK_MASK[2] = 
+{
+    0xFF00000000000000ULL,  // Black promotion rank (squares 56–63)
+    0x00000000000000FFULL // White promotion rank (squares 0–7)
+};
+
 void add_enpassant(Position* position)
 {
-	printf("ENPASSANT: add enpassant\n");
-	printf("enpassant square %s\n", square_to_notation(position->enpassant_square));
     int current_player = position->current_player;
     int current_bit = 0;
     uint64_t pawn_bb = position->bitboards[current_player * 6];
@@ -96,11 +108,12 @@ uint64_t get_king_legal_moves(int p, int square, uint64_t* occupancy_bitboards)
 
 uint64_t get_legal_moves_bitmask(int current_player, int bitboard_index, int piece_square, uint64_t* occupancy_bitboards)
 {
+    // returns a bitmask that is resolved into move structs with startsquare and destsquare
     bitboard_index %= 6; // abstract color, keep piecetype
     switch(bitboard_index)
     {
         case 0:
-            return get_pawn_legal_moves(current_player, piece_square, occupancy_bitboards);
+            return get_pawn_legal_moves(current_player, piece_square, occupancy_bitboards); 
         case 1:
             return get_knight_legal_moves(current_player, piece_square, occupancy_bitboards);
         case 2:
@@ -114,6 +127,28 @@ uint64_t get_legal_moves_bitmask(int current_player, int bitboard_index, int pie
     }
 }
 
+int is_promotion(int p, int bitboard_index, int destsquare)
+{
+    if (p * 6 != bitboard_index)
+        return 0;
+
+    if ((PROMOTION_RANK_MASK[p] & (1ULL << destsquare)) == 0)
+        return 0;
+
+    return 1;
+}
+
+void add_promotion_moves(Position* position, Move* m)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        m->flags = PROMOTION_FLAGS[i];
+        printf("adding promotion move with %d\n", m->flags);
+        position->legal_moves[position->legal_move_count++] = *m;
+    }
+}
+
+// called for each piece of the current player by resolve bitboard
 void get_pieces_moves(Position* position, int bitboard_index, int piece_square)
 {
     uint64_t legal_moves_bitmask = get_legal_moves_bitmask(position->current_player, bitboard_index, piece_square, position->occupancy);
@@ -123,8 +158,15 @@ void get_pieces_moves(Position* position, int bitboard_index, int piece_square)
     {
         if(legal_moves_bitmask & 1)
         {
-            Move m = {piece_square, destsquare, 0}; // normal moves
-            position->legal_moves[position->legal_move_count++] = m;
+            Move m = {piece_square, destsquare, 0}; 
+
+            if (is_promotion(position->current_player, bitboard_index, destsquare))
+            {
+                printf("pawn promotion detected for %d, %d\n", piece_square, destsquare);
+                add_promotion_moves(position, &m);
+            }
+            else
+                position->legal_moves[position->legal_move_count++] = m;
         }
         legal_moves_bitmask >>= 1;
         destsquare++;
@@ -173,5 +215,5 @@ void generate_legal_moves(Position* position)
     add_enpassant(position);
 }
 
-// TODO set a flag for pawn promotions to handle them in move_handler -> special move handler
-
+// if pawn reaches last rank -> add promotion moves to each piece so the user can pick
+// ! each promotion move is a different move to each piece

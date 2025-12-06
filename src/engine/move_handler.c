@@ -4,7 +4,6 @@
 // called after every move (through apply_move() !!!)
 void handle_special_move(Position* position, Move* this_move, int ss_bb_i)
 {
-    printf("handle_special_move called\n");
     switch (this_move->flags)
     {
         case 1:
@@ -32,7 +31,6 @@ void apply_move(Position* position, Move* m)
 	int ss = m->startsquare;
 	int ds = m->destsquare;
     int ss_bb_i = get_bitboard_index(position->bitboards, ss);
-	printf("apply move: ss_bb_i %d\n", ss_bb_i);
     if (ss_bb_i == -1) 
 	{
         fprintf(stderr, "apply_move: no piece on startsquare %d\n", ss_bb_i);

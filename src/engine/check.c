@@ -11,7 +11,6 @@ int is_check(Position* position, uint64_t attack_bitboard)
     }
 
     int king_sq = position->king_square[position->current_player];
-	printf("own king is on %d \n", king_sq);
 	
     // Safety: ensure the square is valid
     if (king_sq < 0 || king_sq >= 64)
