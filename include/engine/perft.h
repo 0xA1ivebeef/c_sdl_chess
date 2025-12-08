@@ -1,6 +1,6 @@
 
-#ifndef TESTER_H
-#define TESTER_H
+#ifndef PERFT_H
+#define PERFT_H
 
 #include <stdint.h>
 
@@ -15,5 +15,6 @@
 #include "utils/legal_move_utils.h"
 
 int get_nodes(Position* position, int depth);
+void perft_divide(Position* position, int depth);
 
 #endif

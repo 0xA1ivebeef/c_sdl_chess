@@ -99,28 +99,17 @@ void update(Position* position, UIContext* ui_context)
     log_gamestate(position);
 }
 
-void perft_test(Position* position)
+void perft(Position* position)
 {
-    int expected[6] = {20, 400, 8902, 197281, 4865609, 119060324};
-    
-    FILE* log_file = fopen("perft.log", "w");
-    for (int i = 0; i < 8; ++i)
-    {
-        Position copy = *position;
-        int nodes = get_nodes(&copy, i);
-        
-        printf("depth %d finished\n", i);
-        fprintf(log_file, "Test %d, expected: %d, actual: %d\n", i, expected[i], nodes);
-    }
-    fclose(log_file);
+    perft_divide(position, 5);
 }
 
 void game_loop(Position* position, UIContext* ui_context)
 {
     SDL_Event event;
 
-    perft_test(position);
-    return;
+    // perft(position);
+    // return;
 
     while (ui_context->running)
     {
@@ -132,14 +121,14 @@ void game_loop(Position* position, UIContext* ui_context)
         }
 
         // players move
-        if (0) // handle_event(position, ui_context, &event) == 1)
+        if (handle_event(position, ui_context, &event) == 1)
         {
             ui_context->needs_update = 1;
             printf("GAMELOOP: move was made\n");
         }
 
         // ai move 
-        if (0 == 1) // position->game_flags[0] == AI_COLOR)
+        if (0) // position->current_player == AI_COLOR)
         {
             opponent_move(position);
             ui_context->needs_update = 1;

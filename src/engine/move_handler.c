@@ -2,28 +2,29 @@
 #include "engine/move_handler.h"
 
 // called after every move (through apply_move() !!!)
-void handle_special_move(Position* position, Move* this_move, int ss_bb_i)
+void handle_special_move(Position* position, Move* this_move)
 {
     switch (this_move->flags)
     {
-        case 1:
+        case CASTLE_FLAG:
             handle_castling(position->bitboards, this_move, &position->castle_rights);
             break;
-        case 2:
+        case ENPASSANT_FLAG:
             handle_enpassant(position->current_player, position->bitboards, position->enpassant_square);
             break;
+        case KNIGHT_PROMOTION:
+        case BISHOP_PROMOTION:
+        case ROOK_PROMOTION:
+        case QUEEN_PROMOTION:
+            handle_pawn_promotion(position->bitboards, this_move); 
+            break;
+        case DOUBLE_PAWN_PUSH:
+            handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
+            break;
         default:
+            position->enpassant_square = -1;
             break;
     }
-
-    if (is_pawn_promotion(position->bitboards, this_move))
-        handle_pawn_promotion(position->bitboards, this_move);
-
-    // set enpassant flag, otherwise delete it 
-    if (is_double_pawn_push(this_move, ss_bb_i))
-        handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
-    else
-        position->enpassant_square = -1;       
 }
 
 void apply_move(Position* position, Move* m)
@@ -53,7 +54,7 @@ void apply_move(Position* position, Move* m)
 	else if (ss_bb_i == BLACK_KING) 
 	    position->king_square[BLACK] = ds;
   
-    handle_special_move(position, m, ss_bb_i);
+    handle_special_move(position, m);
 
     update_castle_rights(position, m);
 
@@ -116,6 +117,10 @@ int handle_move(Position* position, int startsquare, int destsquare, Undo* undo)
         printf("HANDLE MOVE: illegal move\n");
         return 0;
     }
+
+    // if promotion, ask human which piece to promote to
+    if (this_move->flags >= KNIGHT_PROMOTION && this_move->flags <= QUEEN_PROMOTION)
+        *this_move = choose_promotion_move(this_move);
 
     // save old state
     if (undo)

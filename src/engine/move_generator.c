@@ -3,8 +3,8 @@
 
 int PROMOTION_FLAGS[4] = 
 {
-    KNIGHT_PROMOTION,
-    BISHOP_PROMOTION,
+    KNIGHT_PROMOTION, // 3..6
+    BISHOP_PROMOTION, 
     ROOK_PROMOTION,
     QUEEN_PROMOTION
 };
@@ -143,9 +143,23 @@ void add_promotion_moves(Position* position, Move* m)
     for (int i = 0; i < 4; ++i)
     {
         m->flags = PROMOTION_FLAGS[i];
-        printf("adding promotion move with %d\n", m->flags);
+        // printf("adding promotion move with %d\n", m->flags);
         position->legal_moves[position->legal_move_count++] = *m;
     }
+}
+
+// given bitboards and move, return if the move is a double pawn push
+int is_double_pawn_push(Move* this_move, int ss_bb_i)
+{
+    int startsquare = this_move->startsquare;
+    int destsquare = this_move->destsquare;
+	
+    // moved piece is not a pawn
+    if(!(ss_bb_i == BLACK_PAWN || ss_bb_i == WHITE_PAWN))
+        return 0;
+
+    int res = (abs_int(startsquare - destsquare) == 16); // moved two squares 
+    return res;
 }
 
 // called for each piece of the current player by resolve bitboard
@@ -161,12 +175,14 @@ void get_pieces_moves(Position* position, int bitboard_index, int piece_square)
             Move m = {piece_square, destsquare, 0}; 
 
             if (is_promotion(position->current_player, bitboard_index, destsquare))
+                add_promotion_moves(position, &m); // add manually cause 4x move
+            else if (is_double_pawn_push(&m, bitboard_index))
             {
-                printf("pawn promotion detected for %d, %d\n", piece_square, destsquare);
-                add_promotion_moves(position, &m);
+                m.flags = DOUBLE_PAWN_PUSH;
+                position->legal_moves[position->legal_move_count++] = m; // set flag and add
             }
             else
-                position->legal_moves[position->legal_move_count++] = m;
+                position->legal_moves[position->legal_move_count++] = m; // just add
         }
         legal_moves_bitmask >>= 1;
         destsquare++;

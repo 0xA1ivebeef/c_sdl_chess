@@ -12,6 +12,7 @@
 #include "engine/pieces.h"
 #include "engine/game.h"
 
+#include "utils/utils.h"
 #include "utils/bitboard_utils.h"
 
 void apply_move(Position* position, Move* this_move);

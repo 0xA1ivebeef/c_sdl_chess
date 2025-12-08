@@ -21,7 +21,7 @@
 #include "engine/move.h"
 #include "engine/check.h"
 #include "engine/attack_generator.h"
-#include "engine/tester.h"
+#include "engine/perft.h"
 
 #include "opponent/opponent.h"
 

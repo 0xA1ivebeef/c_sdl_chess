@@ -1,6 +1,6 @@
 
 CC = gcc
-CFLAGS = -Wall -Wextra -g -Iinclude
+CFLAGS = -O3 -march=native -flto -Wall -Wextra -g -Iinclude
 
 SRC_DIR = src
 OBJ_DIR = obj

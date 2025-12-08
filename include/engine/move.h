@@ -9,6 +9,7 @@
 #define BISHOP_PROMOTION  4
 #define ROOK_PROMOTION    5
 #define QUEEN_PROMOTION   6
+#define DOUBLE_PAWN_PUSH  7
 
 typedef struct
 {
