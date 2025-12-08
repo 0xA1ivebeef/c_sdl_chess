@@ -26,23 +26,15 @@ typedef struct
     int king_square[2];
 } Position;
 
-// undo can be adjusted to save only necessary stuff for searches
 typedef struct
 {
-    uint64_t bitboards[12];
-    uint64_t occupancy[3];
-
-    int current_player;
+    int ss_bb_i;
+    int ds_bb_i;
     int castle_rights;
     int enpassant_square;
     int halfmove_clock;
     int fullmove_number;
-
-    Move legal_moves[LEGAL_MOVES_SIZE];
-    int legal_move_count;
-
-    uint64_t attack_bitboards[2];
-
+    int promote_bitboard;
     int king_square[2];
 } Undo;
 

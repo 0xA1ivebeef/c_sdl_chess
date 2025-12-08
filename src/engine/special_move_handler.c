@@ -22,7 +22,7 @@ void handle_pawn_promotion(uint64_t* bitboards, Move* this_move)
 
     // black n, b, r, q 7, 8, 9, 10
     bitboards[start_bb] &= ~(1ULL << startsquare); // delete pawn
-    bitboards[promote_bb] |= (1ULL << destsquare); // place queen`
+    bitboards[promote_bb] |= (1ULL << destsquare); // place queen
 }
 
 // given move, set enpassant square in position (int)

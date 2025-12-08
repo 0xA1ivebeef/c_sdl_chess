@@ -1,31 +1,16 @@
 
 #include "engine/check.h"
 
-int is_check(Position* position, uint64_t attack_bitboard)
+int is_check(int king_square, uint64_t attack_bitboard)
 {
-    // if no attack bitboard, use the one from the position
-    if (attack_bitboard == 0)
-    {
-        int opponent = position->current_player ^ 1;
-        attack_bitboard = position->attack_bitboards[opponent];
-    }
-
-    int king_sq = position->king_square[position->current_player];
-	
-    // Safety: ensure the square is valid
-    if (king_sq < 0 || king_sq >= 64)
-        return 0;
-
-    // Use left shift to create the mask
-    return (attack_bitboard & (1ULL << king_sq)) != 0;
+    // return if enemy attack bitboard has set bit on own king
+    return (attack_bitboard & (1ULL << king_square)) != 0;
 }
 
-/*
 void filter_moves(Position* position)
 {
     Move valid_moves[LEGAL_MOVES_SIZE];
     int valid_move_count = 0;
-
     for (int i = 0; i < position->legal_move_count; i++)
     {
         Move m = position->legal_moves[i];
@@ -41,13 +26,9 @@ void filter_moves(Position* position)
 
         undo_move(position, &m, &undo);           // restore position
     }
-
     memcpy(position->legal_moves, valid_moves, sizeof(Move) * valid_move_count);
     position->legal_move_count = valid_move_count;
 }
-*/
-
-// /*
 
 void filter_moves(Position* position)
 {
@@ -58,19 +39,23 @@ void filter_moves(Position* position)
         Position copy = *position;
         Move m = position->legal_moves[i];
 
-        apply_move(&copy, &m); // calls all special move handlings which might result in undefined behaviour if these are not stateless
+        // calls all special move handlings which might result in undefined behaviour if these are not stateless
+        // make a move of white, current player is switched
+        apply_move(&copy, &m); 
 
         update_occupancy_bitboards(copy.bitboards, copy.occupancy);
 
-        uint64_t attack_bitboard = get_attack_bitboard(!copy.current_player, copy.bitboards, copy.occupancy); // get enemy attack bitboard
+        // get enemy attack bitboard (blacks move now)
+        uint64_t attack_bitboard = get_attack_bitboard(
+                copy.current_player, copy.bitboards, copy.occupancy); 
 
-        if (is_check(&copy, attack_bitboard))
+        // whites king under blacks attack bitboard
+        if (is_check(copy.king_square[!copy.current_player], attack_bitboard))
             continue;
 
         valid_moves[valid_move_count++] = m;
     }
-    memcpy(position->legal_moves, valid_moves, sizeof(Move) * LEGAL_MOVES_SIZE);
+    memcpy(position->legal_moves, valid_moves, sizeof(Move) * valid_move_count);
     position->legal_move_count = valid_move_count;
 }
 
-// */

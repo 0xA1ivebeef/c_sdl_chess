@@ -15,7 +15,7 @@
 #include "utils/legal_move_utils.h"
 #include "utils/bitboard_utils.h"
 
-int is_check(Position* position, uint64_t attack_bitboard);
+int is_check(int king_square, uint64_t attack_bitboard);
 void filter_moves(Position* position);
 
 #endif

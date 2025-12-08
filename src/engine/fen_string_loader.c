@@ -1,7 +1,23 @@
 
 #include "engine/fen_string_loader.h"
 
-static const char* fen_string = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"; // "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+// starting position: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+
+static const char* fen_string = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
+// "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1"; 
+
+// "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"; 
+
+// static const char* fen_string = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1";
+
+// c1e3 "rnbq1k1r/pp1Pbppp/2p5/8/2B5/4B3/PPP1NnPP/RN1QK2R b KQ - 2 8"
+// c1f4 "rnbq1k1r/pp1Pbppp/2p5/8/2B2B2/8/PPP1NnPP/RN1QK2R b KQ - 2 8"
+// c1g5 "rnbq1k1r/pp1Pbppp/2p5/6B1/2B5/8/PPP1NnPP/RN1QK2R b KQ - 2 8"
+// c1h6 "rnbq1k1r/pp1Pbppp/2p4B/8/2B5/8/PPP1NnPP/RN1QK2R b KQ - 2 8"
+// d1d3 "rnbq1k1r/pp1Pbppp/2p5/8/2B5/3Q4/PPP1NnPP/RNB1K2R b KQ - 2 8"
+// d1d5 "rnbq1k1r/pp1Pbppp/2p5/3Q4/2B5/8/PPP1NnPP/RNB1K2R b KQ - 2 8"
+// d1d6 "rnbq1k1r/pp1Pbppp/2pQ4/8/2B5/8/PPP1NnPP/RNB1K2R b KQ - 2 8"
 
 // "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w kq - 4 11";
 
@@ -45,19 +61,32 @@ int get_castle_rights(char* token)
 
 int square_string_to_int(char* square_string)
 {
-    if(square_string[0] < 'a' || square_string[0] > 'h')
+    if (!square_string) 
+        return -1;
+
+    if (square_string[0] < 'a' || square_string[0] > 'h')
+        return -1;
+
+    if (square_string[1] < '1' || square_string[1] > '8')
         return -1;
 
     int col = square_string[0] - 'a';
     int row = 8 - (square_string[1] - '0');
     return row * 8 + col;
-    
+}
+
+int resolve_enpassant(char* token)
+{
+    if (strcmp(token, "-") == 0) 
+        return -1;
+    return square_string_to_int(token);
 }
 
 // TODO: hier eventuell mit raw pointer arbeiten und als array betrachten weil c cool ist
 // allgemein logik optimieren, switch mit index wahrscheinlich nicht noetig
 void resolve_token(Position* position, char* token, int index)
 {
+    // ! token can be '-' for enpassant flag, castle rights 
     switch(index)
     {
         case 0:
@@ -66,14 +95,18 @@ void resolve_token(Position* position, char* token, int index)
         case 1:
             position->castle_rights = get_castle_rights(token);
             break;
-        case 2:
-            position->enpassant_square = square_string_to_int(token);
+        case 2: 
+            position->enpassant_square = resolve_enpassant(token);
             break;
         case 3:
+            position->halfmove_clock = 0;
             position->halfmove_clock = atoi(token);
             break;
         case 4:
-            position->fullmove_number = atoi(token);
+            if (atoi(token))
+                position->fullmove_number = atoi(token);
+            else
+                position->fullmove_number = 1;
             break;
         default:
             printf("undefined behaviour token resolve fen string\n");
@@ -90,8 +123,7 @@ void resolve_game_flags(Position* position, int fen_string_index)
     char* token = strtok(buff, " ");
     while(token != NULL)
     {
-        if(token[0] != '-')
-            resolve_token(position, token, index);
+        resolve_token(position, token, index);
         ++index;
         token = strtok(NULL, " ");
     }

@@ -20,7 +20,7 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
             break;
         case SDL_MOUSEBUTTONDOWN:
             ui_context->selected_square = handle_mouse_event(mouse_x, mouse_y, ~(position->occupancy[current_player]));
-            render_legal_moves(ui_context->selected_square, position->legal_moves);
+            render_legal_moves(position, ui_context->selected_square);
             break;
         case SDL_MOUSEBUTTONUP:
             destsquare = handle_mouse_event(mouse_x, mouse_y, position->occupancy[current_player]);

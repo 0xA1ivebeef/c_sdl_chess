@@ -1,24 +1,36 @@
 
 #include "engine/perft.h"
 
-void update_child(Position* child)
+int get_nodes(Position* position, int depth) 
 {
-    // no player context:
-    update_occupancy_bitboards(child->bitboards, child->occupancy);
-    generate_attack_bitboards(child);
+    if (depth == 1) 
+        return position->legal_move_count;
 
-    // flip current player
-    child->current_player ^= 1;
+    if (position->legal_move_count == 0)
+        return 0;
+
+    int nodes = 0;
+    for (int i = 0; i < position->legal_move_count; ++i) 
+    {
+        Undo undo = {0};
+        Move m = position->legal_moves[i];
+
+        apply_move(position, &m, &undo);
+        update_gamestate(position);
+
+        nodes += get_nodes(position, depth - 1);
+
+        undo_move(position, &m, &undo);
+    }
+    return nodes;
 }
 
+/*
 // given max depth return the total number of nodes to that depth
 int get_nodes(Position* position, int depth) 
 {
     if (depth == 0)
         return 1;
-
-    generate_legal_moves(position);      
-    filter_moves(position);        
 
     // no moves = dead end
     if (position->legal_move_count == 0)
@@ -31,11 +43,10 @@ int get_nodes(Position* position, int depth)
         Position child = *position;   // copy parent position
         Move m = position->legal_moves[i]; // pick out the move
 
-        apply_move(&child, &m);  // apply the move to the copy
-        
-        update_child(&child); // update the copy position
-         
-        // recurse
+        // apply the move to the copy and switch current_player
+        apply_move(&child, &m);  
+        update_gamestate(&child);
+
         nodes += get_nodes(&child, depth - 1); 
         // generate legal moves, create another copy do all 
         // again till depth is 0 then the node is a leaf and is counted as 1
@@ -43,33 +54,29 @@ int get_nodes(Position* position, int depth)
 
     return nodes;
 }
+*/
+
+/*
 
 void perft_divide(Position* position, int depth)
 {
-    /* 
-    print nodes after each move of depth 1
-    nodes of depth 1 are legal moves
-
-    for each legal move
-    calc its line to given depth, output the nodes of the line
-
-    for each legal move at highest depth
-    print that move and do get_nodes for the position after that move till the depth 
-    print out the nodes after each move
-
-    so basically treat each move as a new get_nodes() with depth -1 and print each move and its nodes
-    */
-    
+    int res = 0;
+    printf("starting perft divide at depth %d: \n", depth);
     for (int i = 0; i < position->legal_move_count; ++i)
     {
         Position copy = *position;
         Move m = position->legal_moves[i];
         apply_move(&copy, &m);
-        update_child(&copy);
+        update_gamestate(&copy);
         int nodes = get_nodes(&copy, depth-1);
-        printf("move %s, %s: NODES: %d\n", square_to_notation(m.startsquare), square_to_notation(m.destsquare), nodes);
+        res += nodes;
+        printf("%s%s: %d\n", square_to_notation(m.startsquare), 
+                square_to_notation(m.destsquare), nodes);
     }
+    printf("Nodes searched: %d\n", res);
 }
+
+*/
 
 /* second approach
 

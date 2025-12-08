@@ -69,19 +69,14 @@ int can_castle(Position* position, int bit_index)
 {
 	uint64_t bitmask = CASTLING_MASKS[bit_index];
 
+    // squares under attack
 	if (position->attack_bitboards[!position->current_player] & bitmask)
-	{
-		// printf("CAN CASTLE: %s square is under attack\n", CASTLE_STRINGS[bit_index]);
 		return 0;	
-	}
 
-	// correct bitmask to handle occupancy
+	// correct the bitmask to handle occupancy
 	bitmask &= ~((1ULL << 4) | (1ULL << 60));
 	if (position->occupancy[2] & bitmask) 
-	{
-		// printf("CAN CASTLE: %s occupied by piece\n", CASTLE_STRINGS[bit_index]);
 		return 0;
-	}
 
 	return 1;
 }

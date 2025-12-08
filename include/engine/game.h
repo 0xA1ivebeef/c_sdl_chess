@@ -31,6 +31,7 @@
 
 
 int get_king_square(uint64_t bitboard);
+void update_gamestate(Position* position);
 int setup(Position* position);
 void game_loop(Position* position, UIContext* ui_context);
 

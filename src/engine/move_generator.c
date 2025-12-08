@@ -206,25 +206,14 @@ void resolve_bitboard(Position* position, int bitboard_index)
 
 void generate_legal_moves(Position* position)
 {
-    int current_player = position->current_player;
-    
-    /* printf("LEGAL MOVE GENERATION: current player is ");
-    printf("%s", (current_player ? "WHITE" : "BLACK"));
-    printf("\n");
-    */
-    
-    /*
-    uint64_t enemy_attack_bitboard = position->attack_bitboards[!current_player];
-    printf("Enemy attack bitboard is: \n");
-    log_bitboard(&enemy_attack_bitboard);
-    printf("\n");
-    */
-    
+    // clear array
+    memset(position->legal_moves, 0, sizeof(Move) * LEGAL_MOVES_SIZE);
+
     // reset this and use it for indexing, appending legal_moves 
     position->legal_move_count = 0; 
 
     // index => only white or black bitboards then resolve these bitboards
-    int bitboard_start_index = current_player*6; 
+    int bitboard_start_index = position->current_player*6; 
     for(int i = bitboard_start_index; i < bitboard_start_index + 6; i++)
     {
         resolve_bitboard(position, i);
@@ -235,5 +224,3 @@ void generate_legal_moves(Position* position)
     add_enpassant(position);
 }
 
-// if pawn reaches last rank -> add promotion moves to each piece so the user can pick
-// ! each promotion move is a different move to each piece

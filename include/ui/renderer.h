@@ -15,6 +15,6 @@ int load_pieces_images();
 int load_renderer(SDL_Renderer* r);
 void clear_renderer();
 void render(uint64_t* bitboards);
-void render_legal_moves(int startsquare, Move* legal_moves);
+void render_legal_moves(Position* position, int startsquare);
 
 #endif

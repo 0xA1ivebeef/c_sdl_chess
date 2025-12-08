@@ -25,6 +25,8 @@ int setup(Position* position)
     }
 
     load_fen_string(position);
+    printf("enpassant after fen string: %d\n", position->enpassant_square);
+
     update_occupancy_bitboards(position->bitboards, position->occupancy);
 
     load_bitmasks(); // external function for bitmask_loader.c
@@ -56,25 +58,32 @@ int setup(Position* position)
     return 0;
 }
 
-void update(Position* position, UIContext* ui_context)
+void update_gamestate(Position* position)
 {
-    printf("UPDATE IS CALLED\n");
+    /* update position after a move was made (current_player already switched 
+     by engine/move_handler:apply_move()) */
 
-	position->current_player ^= 1;
     update_occupancy_bitboards(position->bitboards, position->occupancy);
 
     generate_attack_bitboards(position);
  
     // clear and generate legal moves filter illegal moves
-    memset(position->legal_moves, -1, sizeof(Move) * LEGAL_MOVES_SIZE); 
     generate_legal_moves(position); 
     filter_moves(position);
+}
+
+void update(Position* position, UIContext* ui_context)
+{
+    update_gamestate(position);
     log_legal_moves(position->legal_moves);
 
+    int king_square = position->king_square[position->current_player];
+    uint64_t enemy_attack_bitboard = position->attack_bitboards[!position->current_player];
+        
     // check
     if (ui_context)
     {
-        if (is_check(position, 0))
+        if (is_check(king_square, enemy_attack_bitboard))
         {   
             printf("CHECK!\n");
             if (position->legal_move_count == 0) 
@@ -101,15 +110,16 @@ void update(Position* position, UIContext* ui_context)
 
 void perft(Position* position)
 {
-    perft_divide(position, 5);
+    int depth = 3;
+    int nodes = get_nodes(position, depth);
+    printf("depth: %d, nodes: %d \n", depth); 
 }
 
 void game_loop(Position* position, UIContext* ui_context)
 {
     SDL_Event event;
 
-    // perft(position);
-    // return;
+    perft(position); return;
 
     while (ui_context->running)
     {

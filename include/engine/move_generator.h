@@ -2,6 +2,7 @@
 #ifndef MOVE_GENERATOR_H
 #define MOVE_GENERATOR_H
 
+#include <string.h>
 #include <stdint.h>
 
 #include "engine/constants.h"
