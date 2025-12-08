@@ -69,7 +69,7 @@ void handle_enpassant(int current_player, uint64_t* bitboards, int enpassant_squ
 {
     int i = !current_player * 6;
     int d = (enpassant_square + (16 * current_player - 8));
-    printf("handling enpassant: game flag: %d, index = %d, square: %d\n", enpassant_square, i, d);
+    // printf("handling enpassant: game flag: %d, index = %d, square: %d\n", enpassant_square, i, d);
     bitboards[i] &= ~(1ULL << d); // capture enpassanted pawn
 }
 

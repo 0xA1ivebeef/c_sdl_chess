@@ -37,20 +37,20 @@ void update_castle_rights(Position* position, Move* this_move)
 	if (this_move->startsquare == 4) // black king
 	{
     	position->castle_rights &= ~((1ULL << 0) | (1ULL << 1)); // clear BLACK_QS and BLACK_KS
-		printf("UPDATE CASTLE RIGHTS removing black castling\n");
+		// printf("UPDATE CASTLE RIGHTS removing black castling\n");
 	}
 
 	if (this_move->startsquare == 60) // white king
 	{
     	position->castle_rights &= ~((1ULL << 2) | (1ULL << 3)); // clear WHITE_QS and WHITE_KS
-		printf("UPDATE CASTLE RIGHTS removing white castling\n");
+		// printf("UPDATE CASTLE RIGHTS removing white castling\n");
 	}
 
 	for (int i = 0; i < 4; ++i)
 	{
 		if(this_move->startsquare == ROOK_SQUARES[i] || this_move->destsquare == ROOK_SQUARES[i]) 
 		{
-			printf("removing castle rights for %s\n", CASTLE_STRINGS[i]);
+			// printf("removing castle rights for %s\n", CASTLE_STRINGS[i]);
     		position->castle_rights &= ~(1 << i);
 		}
 	}
@@ -61,7 +61,7 @@ void add_castling_move(Position* position, int startsquare, int destsquare)
 {
     Move m = {startsquare, destsquare, 1};
 	position->legal_moves[position->legal_move_count++] = m;
-    printf("castling move added: %d, %d\n", startsquare, destsquare);
+    // printf("castling move added: %d, %d\n", startsquare, destsquare);
 }	
 
 // called seperatly for kingside, queenside each (twice for one player)
@@ -71,7 +71,7 @@ int can_castle(Position* position, int bit_index)
 
 	if (position->attack_bitboards[!position->current_player] & bitmask)
 	{
-		printf("CAN CASTLE: %s square is under attack\n", CASTLE_STRINGS[bit_index]);
+		// printf("CAN CASTLE: %s square is under attack\n", CASTLE_STRINGS[bit_index]);
 		return 0;	
 	}
 
@@ -79,7 +79,7 @@ int can_castle(Position* position, int bit_index)
 	bitmask &= ~((1ULL << 4) | (1ULL << 60));
 	if (position->occupancy[2] & bitmask) 
 	{
-		printf("CAN CASTLE: %s occupied by piece\n", CASTLE_STRINGS[bit_index]);
+		// printf("CAN CASTLE: %s occupied by piece\n", CASTLE_STRINGS[bit_index]);
 		return 0;
 	}
 

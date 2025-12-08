@@ -71,7 +71,7 @@ void apply_move(Position* position, Move* m)
 // if given move is legal, return its address
 Move* is_legal_move(Position* position, int startsquare, int destsquare)
 {
-    printf("IS_LEGAL_MOVE validating move: %d, %d\n", startsquare, destsquare);
+    // printf("IS_LEGAL_MOVE validating move: %d, %d\n", startsquare, destsquare);
     for(int i = 0; i < position->legal_move_count; ++i)
     {
         if((position->legal_moves[i].startsquare == startsquare) && (position->legal_moves[i].destsquare == destsquare))
@@ -85,7 +85,7 @@ Move* is_legal_move(Position* position, int startsquare, int destsquare)
 // TODO: adjust to only whats needed 
 void save_state(Position* position, Undo* undo)
 {
-    printf("SAVE_STATE is called in Move handler\n");
+    // printf("SAVE_STATE is called in Move handler\n");
     memcpy(undo->bitboards, position->bitboards, sizeof(position->bitboards));
     memcpy(undo->occupancy, position->occupancy, sizeof(position->occupancy));
     
@@ -109,7 +109,7 @@ int handle_move(Position* position, int startsquare, int destsquare, Undo* undo)
     if(startsquare == -1 || destsquare == -1)
         return 0;
 
-    printf("HANDLE MOVE: %d, %d\n", startsquare, destsquare);
+    // printf("HANDLE MOVE: %d, %d\n", startsquare, destsquare);
     Move* this_move = is_legal_move(position, startsquare, destsquare);
     if (!this_move)
     {

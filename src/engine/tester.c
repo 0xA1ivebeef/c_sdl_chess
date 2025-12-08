@@ -1,19 +1,64 @@
 
 #include "engine/tester.h"
 
+void update_child(Position* child)
+{
+    // no player context:
+    update_occupancy_bitboards(child->bitboards, child->occupancy);
+    generate_attack_bitboards(child);
+
+    // flip current player
+    child->current_player ^= 1;
+}
+
 int get_nodes(Position* position, int depth)
 {
-    if(depth == 0)
+    if (depth == 0)
         return 1;
 
-    int num_positions = 0;
+    // generate legal moves for this position
+    generate_legal_moves(position);      // fills position->legal_moves + count (pseudo-legal)
+    filter_moves(position);        // removes illegal moves (your function)
 
-    for(int i = 0; i < position->legal_move_count; ++i) 
+    // No moves = dead end
+    if (position->legal_move_count == 0)
+        return 0;
+
+    int nodes = 0;
+
+    for (int i = 0; i < position->legal_move_count; ++i)
     {
-        Position next = *position; // copy parent 
-        Undo undo = {};
-        handle_move(&next, position->legal_moves[i].startsquare, position->legal_moves[i].destsquare, &undo);
-        num_positions += get_nodes(&next, depth-1);
+        Position child = *position;   // copy parent position
+        Move m = position->legal_moves[i];
+
+        apply_move(&child, &m); // implicit: handle_special_move()
+        
+        update_child(&child);
+        
+        // recurse
+        nodes += get_nodes(&child, depth - 1);
     }
-    return num_positions;
+
+    return nodes;
 }
+
+/* second approach
+
+    for (int i = 0; i < position->legal_move_count; ++i)
+    {
+        Move m = position->legal_moves[i];
+        Undo undo;
+
+        apply_move(position, &m, &undo);
+
+        update_child(position);
+
+        nodes += get_nodes(position, depth - 1);
+
+        undo_move(position, &m, &undo);
+    }
+
+    return nodes;
+}
+
+*/

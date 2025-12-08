@@ -32,14 +32,18 @@ int count_set_bits(uint64_t num)
 
 void update_occupancy_bitboards(uint64_t* bitboards, uint64_t* occupancy_bitboards)
 {
+    // clear
     for(int i = 0; i < 3; ++i)
         occupancy_bitboards[i] = 0;
     
+    // black pieces
     for(int i = 0; i < 6; ++i)
-        occupancy_bitboards[0] |= bitboards[i];
-    
+        occupancy_bitboards[BLACK] |= bitboards[i];
+ 
+    // white pieces
     for(int i = 6; i < 12; ++i)
-        occupancy_bitboards[1] |= bitboards[i];
+        occupancy_bitboards[WHITE] |= bitboards[i];
     
-    occupancy_bitboards[2] |= occupancy_bitboards[0] | occupancy_bitboards[1];
+    // occ
+    occupancy_bitboards[2] |= occupancy_bitboards[BLACK] | occupancy_bitboards[WHITE];
 }

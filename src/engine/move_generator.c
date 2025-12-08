@@ -30,7 +30,7 @@ void add_enpassant(Position* position)
                 Move this_move = {current_bit, position->enpassant_square, 2};
                 position->legal_moves[position->legal_move_count++] = this_move; // append to legal_moves post increment
 
-                printf("added enpassant move %d, %d\n", current_bit, position->enpassant_square);
+                // printf("added enpassant move %d, %d\n", current_bit, position->enpassant_square);
             }
         }
         pawn_bb >>= 1;
@@ -191,15 +191,19 @@ void resolve_bitboard(Position* position, int bitboard_index)
 void generate_legal_moves(Position* position)
 {
     int current_player = position->current_player;
-    printf("LEGAL MOVE GENERATION: current player is ");
+    
+    /* printf("LEGAL MOVE GENERATION: current player is ");
     printf("%s", (current_player ? "WHITE" : "BLACK"));
     printf("\n");
-
+    */
+    
+    /*
     uint64_t enemy_attack_bitboard = position->attack_bitboards[!current_player];
     printf("Enemy attack bitboard is: \n");
     log_bitboard(&enemy_attack_bitboard);
     printf("\n");
-
+    */
+    
     // reset this and use it for indexing, appending legal_moves 
     position->legal_move_count = 0; 
 
