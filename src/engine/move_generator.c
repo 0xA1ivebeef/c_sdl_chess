@@ -282,37 +282,37 @@ int square_under_attack(uint64_t* bitboards, uint64_t* occ, int sq, int by_side)
     uint64_t bishop_attacking_bitboard = bishop_attacks_naive(sq, occ[2]);
     uint64_t rook_attacking_bitboard = rook_attacks_naive(sq, occ[2]);
 
-    printf("SQUARE UNDER ATTACK bishop and rook attack bitboard form kingsquare\n");
-    log_bitboard(&bishop_attacking_bitboard);
-    log_bitboard(&rook_attacking_bitboard);
+    // printf("SQUARE UNDER ATTACK bishop and rook attack bitboard form kingsquare\n");
+    // log_bitboard(&bishop_attacking_bitboard);
+    // log_bitboard(&rook_attacking_bitboard);
 
-    printf("SQUARE UNDER ATTACK checking if square %d is under attack by %s\n", 
-            sq, by_side ? "WHITE" : "BLACK");
+    // printf("SQUARE UNDER ATTACK checking if square %d is under attack by %s\n", 
+       //     sq, by_side ? "WHITE" : "BLACK");
 
     if (pawn_attacks(sq, by_side) & bitboards[pawn_bb_i]) 
     {
-        printf("SQUARE UNDER ATTACK: pawn attacks square %d\n", sq);
+        // printf("SQUARE UNDER ATTACK: pawn attacks square %d\n", sq);
         return 1;
     }
     if (bitmasks[KNIGHT_ATTACKS][sq] & bitboards[knight_bb_i]) 
     {
-        printf("SQUARE UNDER ATTACK: knight attacks square %d\n", sq);
+        // printf("SQUARE UNDER ATTACK: knight attacks square %d\n", sq);
         return 1;
     } 
     if (bitmasks[KING_ATTACKS][sq] & bitboards[king_bb_i]) 
     {
-        printf("SQUARE UNDER ATTACK: king attacks square %d\n", sq);
+        // printf("SQUARE UNDER ATTACK: king attacks square %d\n", sq);
         return 1;
     }
     if (bishop_attacking_bitboard & ((bitboards[bishop_bb_i] | bitboards[queen_bb_i]))) 
     {
-        printf("SQUARE UNDER ATTACK: bishop or queen attacks square %d\n", sq);
+        // printf("SQUARE UNDER ATTACK: bishop or queen attacks square %d\n", sq);
         return 1;
     }
     
     if (rook_attacking_bitboard & ((bitboards[rook_bb_i] | bitboards[queen_bb_i]))) 
     {
-        printf("SQUARE UNDER ATTACK: rook or queen attacks square %d\n", sq);
+        // printf("SQUARE UNDER ATTACK: rook or queen attacks square %d\n", sq);
         return 1;
     }
     return 0;

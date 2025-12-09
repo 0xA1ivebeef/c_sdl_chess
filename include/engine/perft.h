@@ -17,6 +17,6 @@
 #include "utils/legal_move_utils.h"
 
 int get_nodes(Position* position, int depth);
-// void perft_divide(Position* position, int depth);
+void perft_divide(Position* pos, int depth);
 
 #endif

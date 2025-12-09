@@ -16,13 +16,9 @@ int get_king_square(uint64_t king_bitboard)
 
 int setup(Position* position)
 {
-    // do everything as normal since starting position can be different starting gamestate is loaded (from fen string)
-    
     printf("SETUP IS CALLED\n");
-   if (load_pieces_images() != 0)
-    {
+    if (load_pieces_images() != 0)
         return 1;
-    }
 
     load_fen_string(position);
     printf("enpassant after fen string: %d\n", position->enpassant_square);
@@ -106,20 +102,17 @@ void update(Position* position, UIContext* ui_context)
     log_gamestate(position);
 }
 
-/*
 void perft(Position* position)
 {
-    int depth = 3;
-    int nodes = get_nodes(position, depth);
-    printf("depth: %d, nodes: %d \n", depth); 
+    int depth = 5;
+    perft_divide(position, depth);
 }
-*/
 
 void game_loop(Position* position, UIContext* ui_context)
 {
     SDL_Event event;
 
-    // perft(position); return;
+    perft(position); return;
 
     while (ui_context->running)
     {
