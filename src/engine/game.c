@@ -30,18 +30,9 @@ int setup(Position* position)
     // set position->king_square[2]
     position->king_square[BLACK] = get_king_square(position->bitboards[BLACK_KING]);
     position->king_square[WHITE] = get_king_square(position->bitboards[WHITE_KING]);
+	
+	printf("king squares after fen load: %d, %d\n", position->king_square[0], position->king_square[1]);
 
-    generate_attack_bitboards(position); // attack bitboards first since they are used in move generation
-    
-    printf("SETUP: logging attack bitboards: \n");
-    printf("BLACK:\n");
-    log_bitboard(&position->attack_bitboards[BLACK]);
-    printf("\n");
-    
-    printf("WHITE:\n");
-    log_bitboard(&position->attack_bitboards[WHITE]);
-    printf("\n");
-                                         
     generate_legal_moves(position);
     filter_moves(position); 
 
@@ -58,8 +49,6 @@ void update_gamestate(Position* position)
 {
     /* update position after a move was made (current_player already switched 
      by engine/move_handler:apply_move()) */
-
-    generate_attack_bitboards(position);
  
     // clear and generate legal moves filter illegal moves
     generate_legal_moves(position); 
@@ -72,7 +61,8 @@ void update(Position* position, UIContext* ui_context)
     log_legal_moves(position->legal_moves);
 
     int king_square = position->king_square[position->current_player];
-    uint64_t enemy_attack_bitboard = position->attack_bitboards[!position->current_player];
+    uint64_t enemy_attack_bitboard = get_attack_bitboard(
+		!position->current_player, position->bitboards, position->occupancy);
         
     // check
     if (ui_context)
@@ -104,15 +94,19 @@ void update(Position* position, UIContext* ui_context)
 
 void perft(Position* position)
 {
-    int depth = 5;
-    perft_divide(position, depth);
+	for (int i = 2; i < 5; ++i)
+	{
+		perft_divide(position, i);
+		printf("\n\n\n");
+	}
+	
 }
 
 void game_loop(Position* position, UIContext* ui_context)
 {
     SDL_Event event;
 
-    perft(position); return;
+    // perft(position); return;
 
     while (ui_context->running)
     {

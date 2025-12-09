@@ -2,11 +2,8 @@
 #ifndef PIECES_H
 #define PIECES_H
 
-typedef enum 
-{ 
-    BLACK, 
-    WHITE
-} Color;
+#define BLACK 0
+#define WHITE 1
 
 typedef enum 
 {

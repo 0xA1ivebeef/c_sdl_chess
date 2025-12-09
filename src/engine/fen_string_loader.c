@@ -2,7 +2,7 @@
 
 #include "engine/fen_string_loader.h"
 
-#define FENSTRING 0
+#define FENSTRING 1
 #define fen_string fen_strings[FENSTRING]
 
 static const char *fen_strings[] = 

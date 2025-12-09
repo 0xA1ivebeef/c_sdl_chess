@@ -3,43 +3,69 @@
 
 int get_nodes(Position* position, int depth) 
 {
-    if (depth == 1) 
-        return position->legal_move_count;
+    if (depth == 0)
+        return 1;
 
-    if (position->legal_move_count == 0)
-        return 0;
+    generate_legal_moves(position);
+    filter_moves(position);
+
+    if (depth == 1)
+        return position->legal_move_count;
 
     int nodes = 0;
 
-    for (int i = 0; i < position->legal_move_count; ++i) 
+    // Snapshot move list
+    int move_count = position->legal_move_count;
+    Move moves[256]; // or your max move list size
+
+    for (int i = 0; i < move_count; ++i)
+        moves[i] = position->legal_moves[i];
+
+    for (int i = 0; i < move_count; ++i)
     {
         Undo undo = {0};
 
-        // apply move and handle special moves 
-        apply_move(position, &position->legal_moves[i], &undo);
+        Move m = moves[i];
+
+        apply_move(position, &m, &undo);
 
         nodes += get_nodes(position, depth - 1);
 
-        undo_move(position, &position->legal_moves[i], &undo);
+        undo_move(position, &m, &undo);
     }
+
     return nodes;
 }
 
 void perft_divide(Position* pos, int depth)
 {
-    if (depth < 2) return;
+    generate_legal_moves(pos);
+    filter_moves(pos);
+
+    int move_count = pos->legal_move_count;
+    Move moves[256];
+
+    for (int i = 0; i < move_count; ++i)
+        moves[i] = pos->legal_moves[i];
 
     int total = 0;
-    for (int i = 0; i < pos->legal_move_count; ++i)
+
+    for (int i = 0; i < move_count; ++i)
     {
-        Move m = pos->legal_moves[i];
+        Move m = moves[i];
         Undo u = {0};
 
         apply_move(pos, &m, &u);
+
         int nodes = get_nodes(pos, depth - 1);
+
         undo_move(pos, &m, &u);
 
-        printf("%s%s: %d\n", square_to_notation(m.startsquare), square_to_notation(m.destsquare), nodes);
+        printf("%s%s: %d\n",
+            square_to_notation(m.startsquare),
+            square_to_notation(m.destsquare),
+            nodes);
+
         total += nodes;
     }
 

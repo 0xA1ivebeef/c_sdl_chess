@@ -70,13 +70,20 @@ int can_castle(Position* position, int bit_index)
 	uint64_t bitmask = CASTLING_MASKS[bit_index];
 
     // squares under attack
-	if (position->attack_bitboards[!position->current_player] & bitmask)
+	uint64_t enemy_a_bb = get_attack_bitboard(!position->current_player, position->bitboards, position->occupancy);
+	if (enemy_a_bb & bitmask)
+	{
+		printf("CAN CASTLE square under attack\n");
 		return 0;	
+	}
 
 	// correct the bitmask to handle occupancy
 	bitmask &= ~((1ULL << 4) | (1ULL << 60));
 	if (position->occupancy[2] & bitmask) 
+	{
+		printf("CAN CASTLE square is occupied\n");
 		return 0;
+	}
 
 	return 1;
 }
@@ -84,6 +91,8 @@ int can_castle(Position* position, int bit_index)
 // given position, add castling moves to legal moves if they are legal
 void add_castling(Position* position)
 {
+	printf("ADDING CASTLING\n");
+
     // only add for current player
     // do both sides of course k and q
 	int castle_rights = position->castle_rights;
@@ -94,10 +103,13 @@ void add_castling(Position* position)
         int bit_index = current_player * 2 + side;  // maps to 0..3
         uint8_t castle_flag = 1 << bit_index; // 1 << 0..3 = 1, 2, 4, 8
 
+		printf("checking for castle_rights\n");
         if(castle_rights & castle_flag) 
         {
+			printf("checking if can castle\n");
             if(can_castle(position, bit_index)) // passing bit_index 0..3 to map to bitmasks
             {        
+				printf("adding castling move\n");
                 add_castling_move(position, castle_starts[bit_index], castle_dests[bit_index]);
             }   
         }

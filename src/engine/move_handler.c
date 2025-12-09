@@ -105,8 +105,6 @@ void undo_move(Position* position, Move* m, Undo* undo)
     }
 
     // restore state
-    memcpy(position->king_square, undo->king_square, sizeof(undo->king_square));
-
     position->castle_rights = undo->castle_rights;
     position->enpassant_square = undo->enpassant_square;
         
@@ -114,6 +112,12 @@ void undo_move(Position* position, Move* m, Undo* undo)
     position->fullmove_number = undo->fullmove_number;
 
     update_occupancy_bitboards(position->bitboards, position->occupancy);
+
+	// update king squares 
+    if (ss_bb_i == WHITE_KING) 
+        position->king_square[WHITE] = ds;
+	else if (ss_bb_i == BLACK_KING) 
+	    position->king_square[BLACK] = ds;
 
     position->current_player ^= 1;
 }
@@ -152,7 +156,6 @@ void apply_move(Position* position, Move* m, Undo* undo)
         undo->fullmove_number = position->fullmove_number;
         if (m->flags >= 3 && m->flags <= 6) 
             set_promoted_piece(m, undo);
-        memcpy(undo->king_square, position->king_square, sizeof(undo->king_square));
     }
 
 	// capture

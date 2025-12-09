@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 
+#include "engine/attack_generator.h"
 #include "engine/position.h"
 #include "engine/pieces.h"
 #include "engine/constants.h"

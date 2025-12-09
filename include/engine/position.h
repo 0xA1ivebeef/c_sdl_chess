@@ -21,8 +21,6 @@ typedef struct
     Move legal_moves[LEGAL_MOVES_SIZE];
     int legal_move_count;
 
-    uint64_t attack_bitboards[2];
-
     int king_square[2];
 } Position;
 
@@ -35,7 +33,6 @@ typedef struct
     int halfmove_clock;
     int fullmove_number;
     int promote_bitboard;
-    int king_square[2];
 } Undo;
 
 #endif
