@@ -14,8 +14,6 @@
 
 void handle_pawn_promotion(uint64_t* bitboards, Move* this_move);
 
-void handle_double_pawn_push(int current_player, Move* this_move, int* enpassant_square);
-
 void handle_enpassant(int current_player, uint64_t* bitboards, int enpassant_square);
 void handle_castling(uint64_t* bitboards, Move* this_move, int* castle_rights);
 

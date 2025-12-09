@@ -1,6 +1,27 @@
 
 #include "engine/move_generator.h"
 
+// bitmasks[11][64]
+// 0  white pawn normal
+// 1  black pawn normal
+// 2  white pawn double
+// 3  black pawn double
+// 4  white pawn capture
+// 5  black pawn capture
+// 6  knight
+// 7  bishop
+// 8  rook
+// 9  queen
+// 10 king  
+
+#define WHITE_PAWN_ATTACKS 4
+#define BLACK_PAWN_ATTACKS 5
+#define KNIGHT_ATTACKS 6
+#define BISHOP_ATTACKS 7
+#define ROOK_ATTACKS 8
+#define QUEEN_ATTACKS 9
+#define KING_ATTACKS 10
+
 int PROMOTION_FLAGS[4] = 
 {
     KNIGHT_PROMOTION, // 3..6
@@ -14,6 +35,14 @@ uint64_t PROMOTION_RANK_MASK[2] =
     0xFF00000000000000ULL,  // Black promotion rank (squares 56–63)
     0x00000000000000FFULL // White promotion rank (squares 0–7)
 };
+
+uint64_t pawn_attacks(int ksq, int by_side)
+{
+    int side = by_side ? 1 : -1; // -1 if by_side==black
+    int sq1 = ksq + 7 * side;
+    int sq2 = ksq + 9 * side;
+    return (1ULL << sq1) | (1ULL << sq2);
+}
 
 void add_enpassant(Position* position)
 {
@@ -189,6 +218,106 @@ void get_pieces_moves(Position* position, int bitboard_index, int piece_square)
     }
 }
 
+uint64_t bishop_attacks_naive(int sq, uint64_t occupancy) 
+{
+    uint64_t attacks = 0ULL;
+
+    // Directions: NE (+9), NW (+7), SE (-7), SW (-9)
+    int directions[4] = {9, 7, -7, -9};
+
+    for (int d = 0; d < 4; d++) 
+    {
+        int s = sq;
+        while (1) 
+        {
+            s += directions[d];
+
+            if (s < 0 || s >= 64) break;        // off-board
+            if (abs_int((s % 8) - ((s - directions[d]) % 8)) != 1) break; // file wrap
+
+            attacks |= (1ULL << s);
+
+            if (occupancy & (1ULL << s)) break; // stop at first blocker
+        }
+    }
+
+    return attacks;
+}
+
+uint64_t rook_attacks_naive(int sq, uint64_t occupancy) 
+{
+    uint64_t attacks = 0ULL;
+
+    int directions[4] = {1, -1, 8, -8}; // E, W, N, S
+
+    for (int d = 0; d < 4; d++) 
+    {
+        int s = sq;
+        while (1) 
+        {
+            s += directions[d];
+
+            if (s < 0 || s >= 64) break;
+            if ((directions[d] == 1 || directions[d] == -1) &&
+                s/8 != (s - directions[d])/8) break; // file wrap
+
+            attacks |= (1ULL << s);
+
+            if (occupancy & (1ULL << s)) break;
+        }
+    }
+
+    return attacks;
+}
+
+int square_under_attack(uint64_t* bitboards, uint64_t* occ, int sq, int by_side)
+{
+    int pawn_bb_i   = by_side * 6 + 0; // 6 if white, 0 if black
+    int knight_bb_i = by_side * 6 + 1;
+    int bishop_bb_i = by_side * 6 + 2;
+    int rook_bb_i   = by_side * 6 + 3;
+    int queen_bb_i  = by_side * 6 + 4;
+    int king_bb_i   = by_side * 6 + 5;
+
+    uint64_t bishop_attacking_bitboard = bishop_attacks_naive(sq, occ[2]);
+    uint64_t rook_attacking_bitboard = rook_attacks_naive(sq, occ[2]);
+
+    printf("SQUARE UNDER ATTACK bishop and rook attack bitboard form kingsquare\n");
+    log_bitboard(&bishop_attacking_bitboard);
+    log_bitboard(&rook_attacking_bitboard);
+
+    printf("SQUARE UNDER ATTACK checking if square %d is under attack by %s\n", 
+            sq, by_side ? "WHITE" : "BLACK");
+
+    if (pawn_attacks(sq, by_side) & bitboards[pawn_bb_i]) 
+    {
+        printf("SQUARE UNDER ATTACK: pawn attacks square %d\n", sq);
+        return 1;
+    }
+    if (bitmasks[KNIGHT_ATTACKS][sq] & bitboards[knight_bb_i]) 
+    {
+        printf("SQUARE UNDER ATTACK: knight attacks square %d\n", sq);
+        return 1;
+    } 
+    if (bitmasks[KING_ATTACKS][sq] & bitboards[king_bb_i]) 
+    {
+        printf("SQUARE UNDER ATTACK: king attacks square %d\n", sq);
+        return 1;
+    }
+    if (bishop_attacking_bitboard & ((bitboards[bishop_bb_i] | bitboards[queen_bb_i]))) 
+    {
+        printf("SQUARE UNDER ATTACK: bishop or queen attacks square %d\n", sq);
+        return 1;
+    }
+    
+    if (rook_attacking_bitboard & ((bitboards[rook_bb_i] | bitboards[queen_bb_i]))) 
+    {
+        printf("SQUARE UNDER ATTACK: rook or queen attacks square %d\n", sq);
+        return 1;
+    }
+    return 0;
+}
+
 // might make this async
 void resolve_bitboard(Position* position, int bitboard_index) 
 {
@@ -215,9 +344,7 @@ void generate_legal_moves(Position* position)
     // index => only white or black bitboards then resolve these bitboards
     int bitboard_start_index = position->current_player*6; 
     for(int i = bitboard_start_index; i < bitboard_start_index + 6; i++)
-    {
         resolve_bitboard(position, i);
-    }
 
     // legal move count is updated automatically
     add_castling(position);

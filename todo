@@ -1,0 +1,192 @@
+
+
+MAGIC BITBOARDS:
+
+= ansatz um pseudo legal moves fuer turm und laeufer zu generieren
+
+- basierend auf den normalen bitmasken eines turms auf einem feld
+soll eine mathematische operation zwischen dieser bitmaske und dem occupancy bitboard
+durchgefuehrt werden, sodass man die bitmaske von pseudo legalen zuegen des turms erhaelt
+
+= berechnung der pseudo legal moves fuer jede moegliche kombination von blockenden figuren 
+damit haette man einen lookup table fuer turm und laeufer auf jedem feld fuere jede konstellation
+and blockierenden figuren
+
+- technisch interessiert nur jede erste blockierende figure pro richtung
+damit koennte man diese konstellationen vernachlaessigen und den lookup table um ein vielfaches verkleinern
+damit muesste man aber jedes mal wenn man die legal moves nachschauen will die ersten
+blockierenden figuren in jeder richtung identifizieren aber das will man ja gerade vermeiden
+
+=> 
+
+1. alle kombinationen von figuren in in allen 4 richtungen des turms finden
+= die bitmaske des turms auf einem feld iterieren und jede kombination rausfinden
+
+function get all blocker bitboards for square(movement mask at square of piece)
+1.1 int array der indicies der bitmaske erstellen
+1.2 gesamte anzahl verschiedener bitboards berechnen (also ein fuer jede kombination an figuren)
+    = 2^index count
+
+1.3 array an blocker bitboards laenge gesamter anzahl erstellen
+1.4 das array mit allen moeglichen kombinationen fuellen
+(zb nested for loop over all combinations of indecies)
+for (gesamte anzahl an kombinationen)
+    for (bitindex indicies der bitmaske)
+        
+return array
+
+-> how the fk do i calc the key of a position
+-> how do i calc the legal moves with sq and blocker bitboard ? 
+
+2. create dictionary to look up legal moves from key (startsquare, blocker pattern)
+
+-> dictionary<(startsquare, blocker pattern), blocker bitboard> create rook lookup table
+
+for (square)
+    movement mask = create normal rookmask for square
+    [] blocker patterns = create all blocker bitboards (movement mask)
+
+    for each blocker bitboard in blocker patterns 
+        legal move bitboard = create legal move bitboard (sq, blocker bitboard)
+        rook moves lookup add entry ((sq, blocker bitboard), legal move bitboard)
+
+return rook moves loopup entry 
+
+! treat all blockers like enemy pieces so no need to look at pieces on the edge of the board blocking (last rank/file)
+since the rook can move there anyway
+
+corret with &= friendly pieces in the end
+
+3. how this is called form the move generation
+
+// create lookup key 
+bitboard occupancy[2]
+blocker bitboard = occ2 & rookmasks[startsquare] & check ray mask // so findet man die blocking pieces
+
+// his first approach just using a dictionary
+(int, ulong) key = (startsquare, blocker bitboard);
+
+// the actual approach using
+key = blockerbitboard * rook magic sumber [startsquare] >> rightshifts[startsquare]
+
+look up bitboard of valid move squares 
+movesBitboard = rookMovesLookup[startsquare][key]; // might flatten into one dimension
+&= friendly ~pieces bitboard
+&= getpinmask (startsquarem, friendly king square) // why handle pins here? is he already accounting for checks ?
+
+while (movesBitboard)
+    targetsquare = get index of first non zero bit and then set it to zero
+    move = create move and add to move list
+
+4. the dictionary approach is obviouosly bad and not intended, so there needs to be some kind of hashing going on
+this is where the magic numbers come in 
+mulitply the blockers bitboard by the magic number then right shift the result by some value and the resulting 
+number is the index of the rook looup array which is also unique
+this might also take care of duplicates if were lucky to reduce the size of the table but im not sure
+not dupliucates in the sense that two setups result in the same index but that two constellations 
+result in the same legal moves 
+
+the magic number must be brute forced for my program by multiplying the blocker bitboards with the
+iterated magic number and if there are duplicates the number doesnt work, otherwise its valid
+but there might be a better one reducing the size of the lookup table
+
+and in code you can simply paste the table as source code no need to read a file or something 
+though that might be faster if you read it in binary idk
+
+
+
+
+
+
+
+
+
+
+
+square under attack function (Bitboards[12], int sq, int by_side)
+{
+    // get bitmasks
+    pawns attacks [sq] & enemy pawns ret true
+    knights bitmask[sq] & enemy knights ret true
+    king bitmasks[sq] & enemy king ret true
+
+    sliding pieces [sq] | check for blocking pieces 
+    bishop attacks(sq, occ) & enemy bishops | queen
+    rook attacks (sq, occ) & enemy rooks | queen
+
+    trace rays outward from the king stop at forst blocker
+        if is enemy sliding piece ret true
+    else ret false
+}
+
+optimizations:
+
+!!! in principle - only change whats needed
+
+-> make and undo moves instead of copying and dropping the whole struct
+
+make_move(b, m);
+if (!is_in_check(b, original_side)) 
+{
+    // legal
+}
+unmake_move(b);
+
+
+-> is_check itself does not make moves it only checks king square and 
+attack bitboard
+
+-> in perft dont check legalitiy if its not needed -> two cases:
+A: your not in check only moves that can put your king in check are moving the
+king or discovered checks -> avoid is_check for most moves
+
+if (!in_check) {
+    if (is_king_move(move) ||
+        is_en_passant(move) ||
+        (pin_mask & (1ULL << move.from))) {
+
+        make_move(b, move);
+        if (!is_in_check(b, side))
+            recurse();
+        unmake_move(b);
+    } else {
+        make_move(b, move);
+        recurse();
+        unmake_move(b);
+    }
+} else {
+    make_move(b, move);
+    if (!is_in_check(b, side))
+        recurse();
+    unmake_move(b);
+}
+
+If your position is not in check, a move is illegal only when:
+You moved your king into check (easy to test),
+OR
+You exposed your king by moving a pinned piece.
+
+ALSO always fully legal-check en passant moves and speciale moves in general
+
+need to track pinned pieces:
+uint64_t pinned = 0;
+
+for each direction:
+    seen_friend = -1;
+
+    for (sq = next_square; sq is on board; sq += dir) {
+        if (occ has sq) {
+            if (piece is ours && seen_friend == -1) {
+                seen_friend = sq; // possible pinned piece
+            }
+            else if (piece is enemy slider and seen_friend != -1) {
+                pinned |= (1ULL << seen_friend);
+                break;
+            }
+            else {
+                break;
+            }
+        }
+    }
+}
+

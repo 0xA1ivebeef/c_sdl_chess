@@ -143,10 +143,7 @@ void load_rook_bitmasks(uint64_t* r)
 void load_queen_bitmasks(uint64_t* b, uint64_t* r, uint64_t* q)
 {
     for (int i = 0; i < 64; ++i)
-    {
-	    q[i] |= b[i];
-        q[i] |= r[i];
-    }
+	    q[i] = b[i] | r[i];
 }
 
 void load_king_bitmasks(uint64_t* k)

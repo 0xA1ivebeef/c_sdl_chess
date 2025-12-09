@@ -19,7 +19,7 @@ void handle_special_move(Position* position, Move* this_move)
             handle_pawn_promotion(position->bitboards, this_move); 
             break;
         case DOUBLE_PAWN_PUSH:
-            handle_double_pawn_push(position->current_player, this_move, &position->enpassant_square);
+            position->enpassant_square = this_move->destsquare + 8 * (position->current_player ? 1 : -1);
             break;
         default:
             position->enpassant_square = -1;
@@ -27,58 +27,71 @@ void handle_special_move(Position* position, Move* this_move)
     }
 }
 
-void undo_castling(Position* position, Move* m, Undo* undo)
+void undo_castling(Position* position, Move* m)
 {
-    
+    // move the rook back
+    int bb_index = (m->startsquare == 60) ? WHITE_ROOK : BLACK_ROOK; // rook bitboards
+    if(m->startsquare > m->destsquare)
+    {
+        // qs
+        position->bitboards[bb_index] |= (1ULL << (m->destsquare - 2)); // add rook back on a file
+        position->bitboards[bb_index] &= ~(1ULL << (m->destsquare + 1)); // remove rook
+    }
+    else
+    {
+        // ks
+        position->bitboards[bb_index] |= (1ULL << (m->destsquare + 1)); 
+        position->bitboards[bb_index] &= ~(1ULL << (m->destsquare - 1));
+    }
 }
 
 void undo_enpassant(Position* position, Move* m, Undo* undo)
 {
-    
+    // direction 1 white captured black pawn: -1 black captured white pawn
+    int direction = ((m->startsquare - m->destsquare) ? 1 : -1);   
+
+    // white captured -> blacks pawn bb 0 : black captured -> whites pawn bb 6
+    int restore_bb_i = (direction == 1) ? 0 : 6;    
+
+    int d = undo->enpassant_square + 8 * direction; 
+
+    position->bitboards[restore_bb_i] |= (1ULL << d);
 }
 
 void undo_promotion(Position* position, Move* m, Undo* undo)
 {
-    int startsquare = m->startsquare;
-    int destsquare = m->destsquare;
-
-    // restore capture
-    if (undo->ds_bb_i != -1)
-        position->bitboards[undo->ds_bb_i] |= 1ULL << destsquare; 
-                                                  
-    // black n, b, r, q 7, 8, 9, 10
-    position->bitboards[ss_bb_i] |= 1ULL << startsquare; // restore pawn
-    position->bitboards[undo->promote_bitboard] &= ~(1ULL << destsquare); // delete prom piece
+    // removed promoted piece, pawn move is already undone
+    position->bitboards[undo->promote_bitboard] &= ~(1ULL << m->destsquare); 
 }
 
 // never call undo_move before calling apply_move because it saves the state
 void undo_move(Position* position, Move* m, Undo* undo)
 {
-    int ss = m->startsquare;
+    int sq = m->startsquare;
 	int ds = m->destsquare;
 
     int ss_bb_i = undo->ss_bb_i;
+    int ds_bb_i = undo->ds_bb_i;
 
     // reverse capturing
-    int ds_bb_i = undo->ds_bb_i;
     if (ds_bb_i != -1) 
         position->bitboards[ds_bb_i] |= 1ULL << ds;
 
-    // undo move
-    position->bitboards[ss_bb_i] |= 1ULL << ss;
-    position->bitboards[ss_bb_i] &= ~(1ULL << ds);
+    // restore moved piece on startsquare
+    position->bitboards[ss_bb_i] |= 1ULL << sq;
 
-    // undo king squares 
-    memcpy(position->king_square, undo->king_square, sizeof(undo->king_square));
-    
+    // remove moved piece on destsquare
+    position->bitboards[ss_bb_i] &= ~(1ULL << ds);
+ 
     // undo special moves
     switch (m->flags)
     {
         case 1:
-            undo_castling(position, m, undo);
+            undo_castling(position, m);
             break;
         case 2:
             undo_enpassant(position, m, undo);
+            break;
         case 3:
         case 4:
         case 5:
@@ -91,11 +104,16 @@ void undo_move(Position* position, Move* m, Undo* undo)
             break;
     }
 
+    // restore state
+    memcpy(position->king_square, undo->king_square, sizeof(undo->king_square));
+
     position->castle_rights = undo->castle_rights;
     position->enpassant_square = undo->enpassant_square;
         
     position->halfmove_clock = undo->halfmove_clock;
     position->fullmove_number = undo->fullmove_number;
+
+    update_occupancy_bitboards(position->bitboards, position->occupancy);
 
     position->current_player ^= 1;
 }
@@ -112,10 +130,10 @@ void set_promoted_piece(Move* m, Undo* undo)
 }
 
 void apply_move(Position* position, Move* m, Undo* undo)
-    
-	int ss = m->startsquare;
+{   
+	int sq = m->startsquare;
 	int ds = m->destsquare;
-    int ss_bb_i = get_bitboard_index(position->bitboards, ss);
+    int ss_bb_i = get_bitboard_index(position->bitboards, sq);
     if (ss_bb_i == -1) 
 	{
         fprintf(stderr, "apply_move: no piece on startsquare %d\n", ss_bb_i);
@@ -131,9 +149,9 @@ void apply_move(Position* position, Move* m, Undo* undo)
         undo-> castle_rights = position->castle_rights;
         undo-> enpassant_square = position->enpassant_square;
         undo-> halfmove_clock = position->halfmove_clock;
-        undo-> = fullmove_number = position->fullmove_number;
+        undo->fullmove_number = position->fullmove_number;
         if (m->flags >= 3 && m->flags <= 6) 
-            set_promoted_piece(position, m, undo);
+            set_promoted_piece(m, undo);
         memcpy(undo->king_square, position->king_square, sizeof(undo->king_square));
     }
 
@@ -142,7 +160,7 @@ void apply_move(Position* position, Move* m, Undo* undo)
         position->bitboards[ds_bb_i] &= ~(1ULL << ds);
 
     // move
-    position->bitboards[ss_bb_i] &= ~(1ULL << ss);
+    position->bitboards[ss_bb_i] &= ~(1ULL << sq);
     position->bitboards[ss_bb_i] |=  (1ULL << ds);
 
     // update king squares 
@@ -164,6 +182,8 @@ void apply_move(Position* position, Move* m, Undo* undo)
     if (position->current_player == BLACK) 
         position->fullmove_number++;
 
+    update_occupancy_bitboards(position->bitboards, position->occupancy);
+
     position->current_player ^= 1;
 }
 
@@ -181,7 +201,7 @@ Move* is_legal_move(Position* position, int startsquare, int destsquare)
 }
 
 // if undo is NULL, nothing is saved 
-int handle_move(Position* position, int startsquare, int destsquare, Undo* undo)
+int handle_move(Position* position, int startsquare, int destsquare)
 {
     if(startsquare == -1 || destsquare == -1)
         return 0;
@@ -197,7 +217,7 @@ int handle_move(Position* position, int startsquare, int destsquare, Undo* undo)
     if (this_move->flags >= KNIGHT_PROMOTION && this_move->flags <= QUEEN_PROMOTION)
         *this_move = choose_promotion_move(this_move);
   
-    apply_move(position, this_move);
+    apply_move(position, this_move, NULL);
     return 1;
 }
 

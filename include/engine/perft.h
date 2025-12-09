@@ -16,14 +16,7 @@
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"
 
-typedef struct {
-    int nodes;
-    int castlings;
-    int enpassants;
-    int promotions;
-} NodeStats;
-
-NodeStats get_nodes(Position* position, int depth);
-void perft_divide(Position* position, int depth);
+int get_nodes(Position* position, int depth);
+// void perft_divide(Position* position, int depth);
 
 #endif

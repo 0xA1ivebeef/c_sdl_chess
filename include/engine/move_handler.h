@@ -15,7 +15,8 @@
 #include "utils/utils.h"
 #include "utils/bitboard_utils.h"
 
-void apply_move(Position* position, Move* this_move);
-int handle_move(Position* position, int startsquare, int destsquare, Undo* undo);
+void apply_move(Position* position, Move* this_move, Undo* undo);
+void undo_move(Position* position, Move* m, Undo* undo);
+int handle_move(Position* position, int startsquare, int destsquare);
 
 #endif

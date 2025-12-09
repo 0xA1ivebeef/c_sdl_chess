@@ -24,7 +24,7 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
             break;
         case SDL_MOUSEBUTTONUP:
             destsquare = handle_mouse_event(mouse_x, mouse_y, position->occupancy[current_player]);
-            if (handle_move(position, ui_context->selected_square, destsquare, NULL))  
+            if (handle_move(position, ui_context->selected_square, destsquare))  
             {
                 // move was made
                 ui_context->selected_square = -1;

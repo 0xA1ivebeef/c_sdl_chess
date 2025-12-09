@@ -63,8 +63,6 @@ void update_gamestate(Position* position)
     /* update position after a move was made (current_player already switched 
      by engine/move_handler:apply_move()) */
 
-    update_occupancy_bitboards(position->bitboards, position->occupancy);
-
     generate_attack_bitboards(position);
  
     // clear and generate legal moves filter illegal moves
@@ -108,18 +106,20 @@ void update(Position* position, UIContext* ui_context)
     log_gamestate(position);
 }
 
+/*
 void perft(Position* position)
 {
     int depth = 3;
     int nodes = get_nodes(position, depth);
     printf("depth: %d, nodes: %d \n", depth); 
 }
+*/
 
 void game_loop(Position* position, UIContext* ui_context)
 {
     SDL_Event event;
 
-    perft(position); return;
+    // perft(position); return;
 
     while (ui_context->running)
     {
