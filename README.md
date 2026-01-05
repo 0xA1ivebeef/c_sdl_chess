@@ -1,3 +1,6 @@
+Currently developing an Opponent
+Therefore doing perft comparing to Stockfish
+
 
 0 is black to move, 1 is white to move
 
