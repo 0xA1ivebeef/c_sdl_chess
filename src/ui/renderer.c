@@ -1,71 +1,12 @@
 
 #include "ui/renderer.h"
 
-static SDL_Texture* piece_images[12];
-static SDL_Renderer* renderer;
-
-static char* piece_image_paths[12] = 
+void render_board(AppContext* app)
 {
-    "assets/pieces-basic-png/black-pawn.png",
-    "assets/pieces-basic-png/black-knight.png",
-    "assets/pieces-basic-png/black-bishop.png",
-    "assets/pieces-basic-png/black-rook.png",
-    "assets/pieces-basic-png/black-queen.png",
-    "assets/pieces-basic-png/black-king.png",
-    "assets/pieces-basic-png/white-pawn.png",
-    "assets/pieces-basic-png/white-knight.png",
-    "assets/pieces-basic-png/white-bishop.png",
-    "assets/pieces-basic-png/white-rook.png",
-    "assets/pieces-basic-png/white-queen.png",
-    "assets/pieces-basic-png/white-king.png"
-};
-
-int load_renderer(SDL_Renderer* r)
-{
-    renderer = r; // static
-    if (!renderer)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-int load_pieces_images()
-{
-    SDL_Surface* loaded_surface = NULL;
-    for(int i = 0; i < 12; ++i)
-    {
-        loaded_surface = IMG_Load(piece_image_paths[i]);
-        if(loaded_surface == NULL)
-        {
-            fprintf(stderr, "Image Loading: %s\n", IMG_GetError());
-            SDL_FreeSurface(loaded_surface);
-            return 1;
-        }
-        piece_images[i] = SDL_CreateTextureFromSurface(renderer, loaded_surface);
-        if(piece_images[i] == NULL)
-        {
-            fprintf(stderr, "Texture Loading: %s\n", SDL_GetError());
-            SDL_FreeSurface(loaded_surface);
-            return 1;
-        }
-    }
-    SDL_FreeSurface(loaded_surface);
-    return 0;
-}
-
-void clear_renderer()
-{
-    for(int i = 0; i < 12; ++i)
-        SDL_DestroyTexture(piece_images[i]);
-}
-
-void render_board()
-{
-    SDL_SetRenderDrawColor(renderer, 130, 115, 185, 255);
-    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(app->renderer, 130, 115, 185, 255);
+    SDL_RenderClear(app->renderer);
     
-    SDL_SetRenderDrawColor(renderer, 245, 245, 235, 255);
+    SDL_SetRenderDrawColor(app->renderer, 245, 245, 235, 255);
     SDL_Rect r = { 0, 0, TILESIZE, TILESIZE };
     for(int i = 0; i < 8; ++i)
     {
@@ -75,13 +16,13 @@ void render_board()
             {
                 r.x = i * TILESIZE;
                 r.y = j * TILESIZE;
-                SDL_RenderFillRect(renderer, &r);
+                SDL_RenderFillRect(app->renderer, &r);
             }
         }
     }
 }
 
-void render_pieces(const uint64_t* bitboards)
+void render_pieces(AppContext* app, const uint64_t* bitboards)
 {
     SDL_Rect dstrect = { 0, 0, TILESIZE, TILESIZE };
     for(int i = 0; i < 64; ++i)
@@ -92,37 +33,37 @@ void render_pieces(const uint64_t* bitboards)
             {
                 dstrect.x = i % 8 * TILESIZE;
                 dstrect.y = i / 8 * TILESIZE;
-                SDL_RenderCopy(renderer, piece_images[j], NULL, &dstrect);
+                SDL_RenderCopy(app->renderer, app->textures[j], NULL, &dstrect);
             }
         }
     }
 }
 
-void render_legal_moves(Position* position, int startsquare)
+void render_legal_moves(AppContext* app, Position* pos, int startsquare)
 {
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer, 150, 0, 0, 100);
+    SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(app->renderer, 150, 0, 0, 100);
     SDL_Rect r = {0 , 0, TILESIZE, TILESIZE};
-	for(int i = 0; i < position->legal_move_count; ++i)
+	for(int i = 0; i < pos->legal_move_count; ++i)
     {
-        if (position->legal_moves[i].startsquare == startsquare)
+        if (pos->legal_moves[i].startsquare == startsquare)
         {
-            r.x = position->legal_moves[i].destsquare % 8 * TILESIZE;
-            r.y = position->legal_moves[i].destsquare / 8 * TILESIZE;
-            SDL_RenderFillRect(renderer, &r);
+            r.x = pos->legal_moves[i].destsquare % 8 * TILESIZE;
+            r.y = pos->legal_moves[i].destsquare / 8 * TILESIZE;
+            SDL_RenderFillRect(app->renderer, &r);
         }
     }
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(app->renderer);
 }
 
-void render(uint64_t* bitboards)
+void render(AppContext* app, uint64_t* bitboards)
 {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(app->renderer, 255, 255, 255, 255);
+    SDL_RenderClear(app->renderer);
 
-    render_board();
-    render_pieces(bitboards);
+    render_board(app);
+    render_pieces(app, bitboards);
 
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(app->renderer);
 }
 

@@ -14,11 +14,9 @@ int get_king_square(uint64_t king_bitboard)
     return i - 1;
 }
 
-int setup(Position* position)
+void position_init(Position* position)
 {
     printf("SETUP IS CALLED\n");
-    if (load_pieces_images() != 0)
-        return 1;
 
     load_fen_string(position);
     printf("enpassant after fen string: %d\n", position->enpassant_square);
@@ -38,11 +36,7 @@ int setup(Position* position)
 
     log_legal_moves(position->legal_moves);
 
-    render(position->bitboards);
-
     log_gamestate(position);
-
-    return 0;
 }
 
 void update_gamestate(Position* position)
@@ -102,7 +96,7 @@ void perft(Position* position)
 	
 }
 
-void game_loop(Position* position, UIContext* ui_context)
+void game_loop(AppContext* app, Position* position, UIContext* ui_context)
 {
     SDL_Event event;
 
@@ -118,7 +112,7 @@ void game_loop(Position* position, UIContext* ui_context)
         }
 
         // players move
-        if (handle_event(position, ui_context, &event) == 1)
+        if (handle_event(app, position, ui_context, &event) == 1)
         {
             ui_context->needs_update = 1;
             printf("GAMELOOP: move was made\n");
@@ -137,7 +131,7 @@ void game_loop(Position* position, UIContext* ui_context)
         {
             printf("UPDATE AND RENDER\n");
             update(position, ui_context);
-            render(position->bitboards);
+            render(app, position->bitboards);
             ui_context->needs_update = 0;
         }
     }

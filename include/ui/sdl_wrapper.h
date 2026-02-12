@@ -4,18 +4,13 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#undef main
 
-// needed for clearing the loaded textures in the renderer.c which cleanup() also handles
-#include "renderer.h"
+#include "engine/constants.h"
 
-typedef struct 
-{
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-} AppContext;
+#include "ui/app_context.h" 
 
 int init_sdl(AppContext* app);
+int load_textures(AppContext* app);
 void cleanup(AppContext* app);
 
 #endif

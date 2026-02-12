@@ -12,6 +12,7 @@
 #include "engine/position.h"
 #include "engine/move_handler.h"
 
-int handle_event(Position* position, UIContext* ui_context, SDL_Event* event);
+int handle_event(AppContext* app, Position* position, UIContext* ui_context, 
+        SDL_Event* event);
 
 #endif

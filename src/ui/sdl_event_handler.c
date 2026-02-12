@@ -1,7 +1,8 @@
 
 #include "ui/sdl_event_handler.h"
 
-int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
+int handle_event(AppContext* app, Position* position, UIContext* ui_context, 
+        SDL_Event* event)
 {
     int mouse_x = 0; 
     int mouse_y = 0;
@@ -19,11 +20,13 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
                 ui_context->running = 0;
             break;
         case SDL_MOUSEBUTTONDOWN:
-            ui_context->selected_square = handle_mouse_event(mouse_x, mouse_y, ~(position->occupancy[current_player]));
-            render_legal_moves(position, ui_context->selected_square);
+            ui_context->selected_square = handle_mouse_event(
+                    mouse_x, mouse_y, ~(position->occupancy[current_player]));
+            render_legal_moves(app, position, ui_context->selected_square);
             break;
         case SDL_MOUSEBUTTONUP:
-            destsquare = handle_mouse_event(mouse_x, mouse_y, position->occupancy[current_player]);
+            destsquare = handle_mouse_event(mouse_x, mouse_y, 
+                    position->occupancy[current_player]);
             if (handle_move(position, ui_context->selected_square, destsquare))  
             {
                 // move was made
@@ -32,7 +35,7 @@ int handle_event(Position* position, UIContext* ui_context, SDL_Event* event)
             }
             // no move was made render and unselect square
             ui_context->selected_square = -1;
-            render(position->bitboards);
+            render(app, position->bitboards);
             break;
     }
     return 0;

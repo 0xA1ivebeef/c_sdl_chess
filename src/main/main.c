@@ -4,22 +4,17 @@
 int main()
 {
     srand(time(NULL));  
-    AppContext app = {0}; // sdl components
+
+    AppContext app = {0}; 
     if (init_sdl(&app) != 0) 
-        return 1;
+        return -1;
 
-    if (load_renderer(app.renderer) != 0)
-        return 1;
+    Position pos = {0}; 
+    position_init(&pos);
 
-    Position position = {0}; 
-    if (setup(&position) != 0) 
-        return 1;
-
-    UIContext ui_context = {0};
-    ui_context.running = 1;
-    ui_context.game_over = 0;
-
-    game_loop(&position, &ui_context); // game.h
+    // running, selected_square, needs_update, game_over
+    UIContext ui_context = { 1, -1, 1, 0 };
+    game_loop(&app, &pos, &ui_context); 
  
     cleanup(&app);
     return 0;

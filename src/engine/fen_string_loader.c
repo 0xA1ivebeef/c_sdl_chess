@@ -1,5 +1,4 @@
 
-
 #include "engine/fen_string_loader.h"
 
 #define FENSTRING 1
@@ -75,8 +74,6 @@ int resolve_enpassant(char* token)
     return square_string_to_int(token);
 }
 
-// TODO: hier eventuell mit raw pointer arbeiten und als array betrachten weil c cool ist
-// allgemein logik optimieren, switch mit index wahrscheinlich nicht noetig
 void resolve_token(Position* position, char* token, int index)
 {
     // ! token can be '-' for enpassant flag, castle rights 

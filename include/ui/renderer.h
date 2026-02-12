@@ -9,12 +9,10 @@
 #include "engine/move.h"
 #include "engine/constants.h"
 
+#include "ui/app_context.h"
 #include "ui/console_logger.h"
 
-int load_pieces_images();
-int load_renderer(SDL_Renderer* r);
-void clear_renderer();
-void render(uint64_t* bitboards);
-void render_legal_moves(Position* position, int startsquare);
+void render(AppContext* app, uint64_t* bitboards);
+void render_legal_moves(AppContext* app, Position* position, int startsquare);
 
 #endif
