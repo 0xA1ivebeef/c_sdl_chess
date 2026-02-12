@@ -4,7 +4,9 @@
 int is_check(int king_sq, uint64_t attack_bb)
 {
     // return if attack bitboard has set bit on own king square
-    return ((attack_bb & (1ULL << king_sq)) != 0);
+    return 0;
+
+    // return ((attack_bb & (1ULL << king_sq)) != 0);
 }
 
 int square_under_attack()

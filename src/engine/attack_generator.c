@@ -3,12 +3,12 @@
 
 uint64_t get_pawn_attack_moves(int p, int sq, uint64_t* occ)
 {
-	return bitmasks[5 - p][sq] & occ[!p];
+	return p ? white_pawn_attack_bitmasks[sq] & occ[!p] : black_pawn_attack_bitmasks[sq] & occ[!p];
 }
 
 uint64_t get_knight_attack_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[6][sq] & ~occ[p]);
+    return (knight_bitmasks[sq] & ~occ[p]);
 }
 
 void atk_resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
@@ -56,7 +56,7 @@ uint64_t get_sliding_piece_attack_moves(int p, int sq, int bb_index, uint64_t* o
 
 uint64_t get_king_attack_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[10][sq] & ~occ[p]);
+    return (king_bitmasks[sq] & ~occ[p]);
 }
 
 uint64_t get_attack_moves_bitmask(int p, int sq, int bb_index, uint64_t* occ)

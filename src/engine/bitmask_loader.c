@@ -1,7 +1,17 @@
 
 #include "engine/bitmask_loader.h"
 
-uint64_t bitmasks[11][64] = {0};
+uint64_t white_pawn_normal_bitmasks[64] = {0};
+uint64_t black_pawn_normal_bitmasks[64] = {0};
+uint64_t white_pawn_attack_bitmasks[64] = {0};
+uint64_t black_pawn_attack_bitmasks[64] = {0};
+uint64_t white_pawn_double_bitmasks[64] = {0};
+uint64_t black_pawn_double_bitmasks[64] = {0};
+uint64_t knight_bitmasks[64]            = {0};
+uint64_t bishop_bitmasks[64]            = {0};
+uint64_t rook_bitmasks[64]              = {0};
+uint64_t queen_bitmasks[64]             = {0};
+uint64_t king_bitmasks[64]              = {0};
 
 const int knight_file_offsets[8] = { 2, 2, 1, -1, -2, -2, -1,  1 };
 const int knight_rank_offsets[8] = { -1, 1, 2,  2,  1, -1, -2, -2 };
@@ -11,7 +21,7 @@ int is_on_board(int file, int rank)
 	return (file >= 0 && file < 8 && rank >= 0 && rank < 8);
 }
 
-void load_white_pawn_normal_bitmasks(uint64_t* wpn)
+void load_white_pawn_normal_bitmasks(void)
 {
     int file, rank;
     for (int i = 8; i < 56; ++i)
@@ -19,11 +29,11 @@ void load_white_pawn_normal_bitmasks(uint64_t* wpn)
 	    file = i % 8;
 	    rank = i / 8;
 
-	    wpn[i] |= (1ULL << ((rank - 1) * 8 + file));
+	    white_pawn_normal_bitmasks[i] |= (1ULL << ((rank - 1) * 8 + file));
     }   
 }
 
-void load_black_pawn_normal_bitmasks(uint64_t* bpn)
+void load_black_pawn_normal_bitmasks(void)
 {
     int file, rank;
     for (int i = 8; i < 56; ++i)
@@ -31,23 +41,23 @@ void load_black_pawn_normal_bitmasks(uint64_t* bpn)
 	    file = i % 8;
 	    rank = i / 8;
 
-	    bpn[i] |= (1ULL << ((rank + 1) * 8 + file));
+	    black_pawn_normal_bitmasks[i] |= (1ULL << ((rank + 1) * 8 + file));
     }
 }
 
-void load_white_pawn_double_bitmasks(uint64_t* wpd)
+void load_white_pawn_double_bitmasks(void)
 {
     for (int i = 48; i < 56; ++i)
-	    wpd[i] |= (1ULL << (i - 16));
+	    white_pawn_double_bitmasks[i] |= (1ULL << (i - 16));
 }
 
-void load_black_pawn_double_bitmasks(uint64_t* bpd)
+void load_black_pawn_double_bitmasks(void)
 {
     for (int i = 8; i < 16; ++i)
-	    bpd[i] |= (1ULL << (i + 16));
+	    black_pawn_double_bitmasks[i] |= (1ULL << (i + 16));
 }
 
-void load_white_pawn_capture_bitmasks(uint64_t* wpc)
+void load_white_pawn_attack_bitmasks(void)
 {
     int file, rank;
     for (int i = 8; i < 56; ++i)
@@ -56,14 +66,14 @@ void load_white_pawn_capture_bitmasks(uint64_t* wpc)
 	    rank = i / 8;
 
 	    if (file - 1 >= 0)
-		    wpc[i] |= (1ULL << ((rank - 1) * 8 + file - 1));
+		    white_pawn_attack_bitmasks[i] |= (1ULL << ((rank - 1) * 8 + file - 1));
 
 	    if (file + 1 < 8)
-		    wpc[i] |= (1ULL << ((rank - 1) * 8 + file + 1));
+		    white_pawn_attack_bitmasks[i] |= (1ULL << ((rank - 1) * 8 + file + 1));
     }
 }
 
-void load_black_pawn_capture_bitmasks(uint64_t* bpc)
+void load_black_pawn_attack_bitmasks(void)
 {
     int file, rank;
     for (int i = 8; i < 56; ++i)
@@ -72,14 +82,14 @@ void load_black_pawn_capture_bitmasks(uint64_t* bpc)
 	    rank = i / 8;
 
 	    if (file - 1 >= 0)
-		    bpc[i] |= (1ULL << ((rank + 1) * 8 + file - 1));
+		    black_pawn_attack_bitmasks[i] |= (1ULL << ((rank + 1) * 8 + file - 1));
 
 	    if (file + 1 < 8)
-		    bpc[i] |= (1ULL << ((rank + 1) * 8 + file + 1));
+		    black_pawn_attack_bitmasks[i] |= (1ULL << ((rank + 1) * 8 + file + 1));
     }
 }
 
-void load_knight_bitmasks(uint64_t* n)
+void load_knight_bitmasks(void)
 {
     int file, rank;
     int this_file, this_rank;
@@ -95,12 +105,12 @@ void load_knight_bitmasks(uint64_t* n)
 		    if (!is_on_board(this_file, this_rank))
 			    continue;
 
-		    n[i] |= (1ULL << (this_rank * 8 + this_file));
+		    knight_bitmasks[i] |= (1ULL << (this_rank * 8 + this_file));
 	    }
     }
 }
 
-void load_bishop_bitmasks(uint64_t* b)
+void load_bishop_bitmasks(void)
 {
     int file, rank;
     int this_file, this_rank;
@@ -118,13 +128,13 @@ void load_bishop_bitmasks(uint64_t* b)
 			    if (!is_on_board(this_file, this_rank))
 				    continue;
 
-			    b[i] |= (1ULL << (this_rank * 8 + this_file));
+			    bishop_bitmasks[i] |= (1ULL << (this_rank * 8 + this_file));
 		    }
 	    }
     }
 }
 
-void load_rook_bitmasks(uint64_t* r)
+void load_rook_bitmasks(void)
 {
     int this_file, this_rank;
     for (int i = 0; i < 64; ++i)
@@ -133,20 +143,20 @@ void load_rook_bitmasks(uint64_t* r)
 	    this_rank = i / 8;
 	    for (int j = 0; j < 8; ++j)
 	    {
-		    r[i] |= (1ULL << (this_rank * 8 + j));
-		    r[i] |= (1ULL << (this_file + j * 8));
+		    rook_bitmasks[i] |= (1ULL << (this_rank * 8 + j));
+		    rook_bitmasks[i] |= (1ULL << (this_file * 8 + j));
 	    }
-	    r[i] &= ~(1ULL << i);
+	    rook_bitmasks[i] &= ~(1ULL << i);
     }
 }
 
-void load_queen_bitmasks(uint64_t* b, uint64_t* r, uint64_t* q)
+void load_queen_bitmasks(void)
 {
     for (int i = 0; i < 64; ++i)
-	    q[i] = b[i] | r[i];
+	    queen_bitmasks[i] = bishop_bitmasks[i] | rook_bitmasks[i];
 }
 
-void load_king_bitmasks(uint64_t* k)
+void load_king_bitmasks(void)
 {
     int file, rank;
     int this_file, this_rank;
@@ -162,22 +172,26 @@ void load_king_bitmasks(uint64_t* k)
 		    if (!is_on_board(this_file, this_rank))
 			    continue;
 
-		    k[i] |= (1ULL << (this_rank * 8 + this_file));
+		    king_bitmasks[i] |= (1ULL << (this_rank * 8 + this_file));
 	    }
     }
 }
 
-void load_bitmasks()
+void load_bitmasks(void)
 {
-    load_white_pawn_normal_bitmasks(bitmasks[0]);
-    load_black_pawn_normal_bitmasks(bitmasks[1]);
-    load_white_pawn_double_bitmasks(bitmasks[2]);
-    load_black_pawn_double_bitmasks(bitmasks[3]);
-    load_white_pawn_capture_bitmasks(bitmasks[4]);
-    load_black_pawn_capture_bitmasks(bitmasks[5]);
-    load_knight_bitmasks(bitmasks[6]);
-    load_bishop_bitmasks(bitmasks[7]);
-    load_rook_bitmasks(bitmasks[8]);
-    load_queen_bitmasks(bitmasks[7], bitmasks[8], bitmasks[9]);
-    load_king_bitmasks(bitmasks[10]);
+    load_white_pawn_normal_bitmasks();
+    load_black_pawn_normal_bitmasks();
+
+    load_white_pawn_double_bitmasks();
+    load_black_pawn_double_bitmasks();
+
+    load_white_pawn_attack_bitmasks();
+    load_black_pawn_attack_bitmasks();
+
+    load_knight_bitmasks();
+    load_bishop_bitmasks();
+    load_rook_bitmasks();
+    load_queen_bitmasks();
+    load_king_bitmasks();
 }
+

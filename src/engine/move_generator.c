@@ -1,19 +1,6 @@
 
 #include "engine/move_generator.h"
 
-// bitmasks[11][64]
-// 0  white pawn normal
-// 1  black pawn normal
-// 2  white pawn double
-// 3  black pawn double
-// 4  white pawn capture
-// 5  black pawn capture
-// 6  knight
-// 7  bishop
-// 8  rook
-// 9  queen
-// 10 king  
-
 typedef enum ATTACKS
 {
     WHITE_PAWN_ATTACKS = 4,
@@ -49,6 +36,8 @@ uint64_t pawn_attacks(int king_sq, int by_side)
 
 void add_enpassant(Position* pos)
 {
+    uint64_t* bm = pos->player ? white_pawn_attack_bitmasks : black_pawn_attack_bitmasks;
+
     int current_bit = 0;
     uint64_t pawn_bb = pos->bb[pos->player * 6];
     while(pawn_bb)
@@ -56,7 +45,7 @@ void add_enpassant(Position* pos)
         if(pawn_bb & 1)
         {
             // if enemy pawn on enpassant square
-            if(bitmasks[5 - pos->player][current_bit] & (1ULL << pos->enpassant))
+            if(bm[current_bit] & (1ULL << pos->enpassant))
             {
                 Move m = {current_bit, pos->enpassant, 2};
                 pos->legal_moves[pos->legal_move_count++] = m; // append to legal_moves post increment
@@ -69,25 +58,29 @@ void add_enpassant(Position* pos)
     }
 }
 
-uint64_t get_pawn_attacking_moves(int p, int square, uint64_t* occ)
+uint64_t get_pawn_attacking_moves(int p, int sq, uint64_t* occ)
 {
-	return bitmasks[5 - p][square] & occ[!p];
+    if (!p)
+	    return black_pawn_attack_bitmasks[sq] & occ[!p];
+    return white_pawn_attack_bitmasks[sq] & occ[!p];
 }
 
-uint64_t get_pawn_legal_moves(int p, int square, uint64_t* occ)
+uint64_t get_pawn_legal_moves(int p, int sq, uint64_t* occ)
 {
-    uint64_t normal_bitmask = bitmasks[!p][square];
-    uint64_t double_pawn_push_bitmask = (bitmasks[3-p][square] & ~occ[2]);
-    uint64_t capture_bitmask = bitmasks[5-p][square] & occ[!p];
-    uint64_t normal_legal = (normal_bitmask & ~occ[2]);
-    double_pawn_push_bitmask &= (p ? (normal_legal >> 8) : (normal_legal << 8));
+    uint64_t n_bm = p ? white_pawn_normal_bitmasks[sq] : black_pawn_normal_bitmasks[sq];
+    uint64_t d_bm = p ? white_pawn_double_bitmasks[sq] & ~occ[2] : black_pawn_double_bitmasks[sq] & ~occ[2];
+    uint64_t c_bm = p ? white_pawn_attack_bitmasks[sq] & occ[!p] : black_pawn_attack_bitmasks[sq] & occ[!p];
 
-    return (normal_legal | capture_bitmask | double_pawn_push_bitmask);
+    uint64_t normal_legal = (n_bm & ~occ[2]);
+
+    d_bm &= (p ? (normal_legal >> 8) : (normal_legal << 8));
+
+    return (normal_legal | c_bm | d_bm);
 }
 
 uint64_t get_knight_legal_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[6][sq] & ~occ[p]);
+    return (knight_bitmasks[sq] & ~occ[p]);
 }
 
 void resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
@@ -134,7 +127,7 @@ uint64_t get_sliding_piece_legal_moves(int p, int sq, int piece, uint64_t* occ)
 
 uint64_t get_king_legal_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[10][sq] & ~occ[p]);
+    return (king_bitmasks[sq] & ~occ[p]);
 }
 
 uint64_t get_legal_moves_bitmask(int p, int bbi, int sq, uint64_t* occ)
