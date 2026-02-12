@@ -4,18 +4,16 @@
 
 #include <stdio.h>
 
-#include "engine/attack_generator.h"
-#include "engine/position.h"
-#include "engine/pieces.h"
 #include "engine/constants.h"
-#include "engine/move.h"
+#include "engine/types.h"
+#include "engine/attack_generator.h"
 
 #include "utils/bitboard_utils.h"
 
 #include "ui/console_logger.h"
 
 void add_castling(Position* position);
-void update_castle_rights(Position* position, Move* this_move);
+void update_castle_rights(Position* position, Move* m);
 
 #endif
 

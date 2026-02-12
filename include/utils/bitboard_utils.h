@@ -1,9 +1,10 @@
 
 #include <stdint.h>
 
-#include "engine/pieces.h"
+#include "engine/types.h"
 
-void get_bb_copy(uint64_t* bitboards, uint64_t* occupancy_bitboards, uint64_t* bb_copy, uint64_t* occ_bb_copy);
-void update_occupancy_bitboards(uint64_t* bitboards, uint64_t* occupancy_bitboards);
+int get_king_square(uint64_t king_bitboard);
+void get_bb_copy(uint64_t* bb, uint64_t* occ, uint64_t* bb_copy, uint64_t* occ_bb_copy);
+void update_occ(uint64_t* bb, uint64_t* occ);
 int count_set_bits(uint64_t num);
-int get_bitboard_index(uint64_t* bitboards, int square);
+int get_bb_index(uint64_t* bb, int sq);

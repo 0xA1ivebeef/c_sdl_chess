@@ -7,8 +7,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "engine/position.h"
+#include "engine/types.h"
 
+#include "utils/utils.h"
 #include "utils/char_utils.h"
 
 void load_fen_string(Position* position);

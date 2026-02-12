@@ -39,17 +39,17 @@ void render_pieces(AppContext* app, const uint64_t* bitboards)
     }
 }
 
-void render_legal_moves(AppContext* app, Position* pos, int startsquare)
+void render_legal_moves(AppContext* app, Position* pos, int start)
 {
     SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(app->renderer, 150, 0, 0, 100);
     SDL_Rect r = {0 , 0, TILESIZE, TILESIZE};
 	for(int i = 0; i < pos->legal_move_count; ++i)
     {
-        if (pos->legal_moves[i].startsquare == startsquare)
+        if (pos->legal_moves[i].start == start)
         {
-            r.x = pos->legal_moves[i].destsquare % 8 * TILESIZE;
-            r.y = pos->legal_moves[i].destsquare / 8 * TILESIZE;
+            r.x = pos->legal_moves[i].dest % 8 * TILESIZE;
+            r.y = pos->legal_moves[i].dest / 8 * TILESIZE;
             SDL_RenderFillRect(app->renderer, &r);
         }
     }

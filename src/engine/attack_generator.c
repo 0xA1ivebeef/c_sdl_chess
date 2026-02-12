@@ -1,105 +1,108 @@
 
 #include "engine/attack_generator.h"
 
-uint64_t get_pawn_attack_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_pawn_attack_moves(int p, int sq, uint64_t* occ)
 {
-	return bitmasks[5 - p][square] & occupancy_bitboards[!p];
+	return bitmasks[5 - p][sq] & occ[!p];
 }
 
-uint64_t get_knight_attack_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_knight_attack_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[6][square] & ~occupancy_bitboards[p]);
+    return (bitmasks[6][sq] & ~occ[p]);
 }
 
-void atk_resolve_direction(int p, int square, int dir, uint64_t* result, uint64_t* occupancy_bitboards)
+void atk_resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
 {
-    int file = square % 8;
-    int rank = square / 8;
+    int file = sq % 8;
+    int rank = sq / 8;
     
-    int this_file, this_rank, attacking_square;
+    int x, y;
+    int attacking_sq;
 
     for (int i = 1; i < 8; ++i)
     {
-        this_file = file + i * file_offsets[dir];
-        this_rank = rank + i * rank_offsets[dir];
+        x = file + i * file_offsets[dir];
+        y = rank + i * rank_offsets[dir];
 
-        if (this_file < 0 || this_file > 7 || this_rank < 0 || this_rank > 7)
+        if (x < 0 || x > 7 || y < 0 || y > 7)
             return;
 
-        attacking_square = this_rank * 8 + this_file;
+        attacking_sq = y * 8 + x;
 
-        if (occupancy_bitboards[!p] & (1ULL << attacking_square))
+        if (occ[!p] & (1ULL << attacking_sq))
         {
-            *result |= (1ULL << attacking_square);
+            *res |= (1ULL << attacking_sq);
             return;
         }
-        else if (occupancy_bitboards[p] & (1ULL << attacking_square))
+        else if (occ[p] & (1ULL << attacking_sq))
             return;
         else
-            *result |= (1ULL << attacking_square);
+            *res |= (1ULL << attacking_sq);
     }
 }
 
-uint64_t get_sliding_piece_attack_moves(int p, int square, int bb_index, uint64_t* occupancy_bitboards)
+uint64_t get_sliding_piece_attack_moves(int p, int sq, int bb_index, uint64_t* occ)
 {
-    uint64_t result = 0;
+    uint64_t res = 0;
 
     int startindex = (bb_index == 2 ? 4 : 0);
     int endindex = (bb_index == 3 ? 4 : 8);
 
     for (int dir = startindex; dir < endindex; ++dir)
-        atk_resolve_direction(p, square, dir, &result, occupancy_bitboards);
+        atk_resolve_dir(p, sq, dir, &res, occ);
 
-    return result;
+    return res;
 }
 
-uint64_t get_king_attack_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_king_attack_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[10][square] & ~occupancy_bitboards[p]);
+    return (bitmasks[10][sq] & ~occ[p]);
 }
 
-uint64_t get_attack_moves_bitmask(int p, int square, int bb_index, uint64_t* occupancy_bitboards)
+uint64_t get_attack_moves_bitmask(int p, int sq, int bb_index, uint64_t* occ)
 {
 	bb_index %= 6;
 	switch(bb_index)
 	{
 		case 0:
-			return get_pawn_attack_moves(p, square, occupancy_bitboards);
+			return get_pawn_attack_moves(p, sq, occ);
 		case 1:
-			return get_knight_attack_moves(p, square, occupancy_bitboards);
+			return get_knight_attack_moves(p, sq, occ);
 		case 2:
 		case 3:
 		case 4:
-			return get_sliding_piece_attack_moves(p, square, bb_index, occupancy_bitboards);
+			return get_sliding_piece_attack_moves(p, sq, bb_index, occ);
 		case 5:
-			return get_king_attack_moves(p, square, occupancy_bitboards);
+			return get_king_attack_moves(p, sq, occ);
 		default:
 			return 0;
 	}
 }
 
-uint64_t resolve_attack_bitboard(int p, uint64_t bb, int bb_index, uint64_t* occupancy_bitboards)
+uint64_t resolve_attack_bb(int p, uint64_t bb, int bb_index, uint64_t* occ)
 {
-	uint64_t result = 0;
-	int square = 0;
+	uint64_t res = 0;
+	int sq = 0;
 	while(bb)
 	{
         if(bb & 1)
-		    result |= get_attack_moves_bitmask(p, square, bb_index, occupancy_bitboards);
+		    res |= get_attack_moves_bitmask(p, sq, bb_index, occ);
 		bb >>= 1;
-		++square;
+		++sq;
 	}
-	return result;
+	return res;
 }
 
-uint64_t get_attack_bitboard(int player, uint64_t* bitboards, uint64_t* occupancy_bitboards)
+uint64_t get_attack_bb(Position* pos)
 {
-	uint64_t result = 0;
-	int bb_startindex = player*6;
+	uint64_t res = 0;
+	int bb_startindex = pos->player*6;
 	for(int i = bb_startindex; i < bb_startindex + 6; ++i)
-        result |= resolve_attack_bitboard(player, bitboards[i], i, occupancy_bitboards);; 
-    // TODO maybe result |= square of enpassant but idk
+        res |= resolve_attack_bb(pos->player, pos->bb[i], i, pos->occ);; 
+
+    if (pos->enpassant >= 0 && pos->enpassant <= 63)
+        res |= (1ULL << pos->enpassant);
 	
-    return result;
+    return res;
 }
 

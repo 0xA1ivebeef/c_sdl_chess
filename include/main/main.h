@@ -9,7 +9,7 @@
 #include "ui/sdl_wrapper.h"
 #include "ui/ui_context.h"
 
-#include "engine/position.h"
+#include "engine/types.h"
 #include "engine/game.h"
 
 #endif

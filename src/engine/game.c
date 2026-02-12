@@ -3,136 +3,124 @@
 
 #define AI_COLOR BLACK
 
-int get_king_square(uint64_t king_bitboard)
-{
-    int i = 0;
-    while(king_bitboard)
-    {
-        king_bitboard >>= 1;
-        ++i;
-    }
-    return i - 1;
-}
-
-void position_init(Position* position)
+void position_init(Position* pos)
 {
     printf("SETUP IS CALLED\n");
 
-    load_fen_string(position);
-    printf("enpassant after fen string: %d\n", position->enpassant_square);
+    load_fen_string(pos);
+    printf("enpassant after fen string: %d\n", pos->enpassant);
 
-    update_occupancy_bitboards(position->bitboards, position->occupancy);
+    update_occ(pos->bb, pos->occ);
 
     load_bitmasks(); // external function for bitmask_loader.c
 
-    // set position->king_square[2]
-    position->king_square[BLACK] = get_king_square(position->bitboards[BLACK_KING]);
-    position->king_square[WHITE] = get_king_square(position->bitboards[WHITE_KING]);
+    // set pos->king_sq[2]
+    pos->king_sq[BLACK] = get_king_square(pos->bb[BLACK_KING]);
+    pos->king_sq[WHITE] = get_king_square(pos->bb[WHITE_KING]);
 	
-	printf("king squares after fen load: %d, %d\n", position->king_square[0], position->king_square[1]);
+	printf("king sqs after fen load: %d, %d\n", pos->king_sq[0], pos->king_sq[1]);
 
-    generate_legal_moves(position);
-    filter_moves(position); 
+    generate_legal_moves(pos);
+    filter_moves(pos); 
 
-    log_legal_moves(position->legal_moves);
+    log_legal_moves(pos->legal_moves);
 
-    log_gamestate(position);
+    log_gamestate(pos);
 }
 
-void update_gamestate(Position* position)
+void update_gamestate(Position* pos)
 {
-    /* update position after a move was made (current_player already switched 
+    /* update pos after a move was made (current_player already switched 
      by engine/move_handler:apply_move()) */
  
     // clear and generate legal moves filter illegal moves
-    generate_legal_moves(position); 
-    filter_moves(position);
+    generate_legal_moves(pos); 
+    filter_moves(pos);
 }
 
-void update(Position* position, UIContext* ui_context)
+void update(Position* pos, UIContext* ui)
 {
-    update_gamestate(position);
-    log_legal_moves(position->legal_moves);
+    update_gamestate(pos);
+    log_legal_moves(pos->legal_moves);
 
-    int king_square = position->king_square[position->current_player];
-    uint64_t enemy_attack_bitboard = get_attack_bitboard(
-		!position->current_player, position->bitboards, position->occupancy);
+    int king_sq = pos->king_sq[pos->player];
+    uint64_t enemy_attack_bb = get_attack_bb(pos);
         
     // check
-    if (ui_context)
+    if (ui)
     {
-        if (is_check(king_square, enemy_attack_bitboard))
+        if (is_check(king_sq, enemy_attack_bb))
         {   
             printf("CHECK!\n");
-            if (position->legal_move_count == 0) 
+            if (pos->legal_move_count == 0) 
             {
                 printf("CHECKMATE\n");
-                ui_context->game_over = 1;  
+                ui->game_over = 1;  
             }
         }
-        else if (position->legal_move_count == 0)
+        else if (pos->legal_move_count == 0)
         {
             printf("STALEMATE\n");
-            ui_context->game_over = 1;  
+            ui->game_over = 1;  
         }
     }
 
-	if (position->halfmove_clock == 100)
+    // TODO implement
+	if (pos->halfmove == 100)
 	{
 		printf("50 move draw\n");
-        ui_context->game_over = 1;  
+        ui->game_over = 1;  
 	}
 
-    log_gamestate(position);
+    log_gamestate(pos);
 }
 
-void perft(Position* position)
+void perft(Position* pos)
 {
 	for (int i = 2; i < 5; ++i)
 	{
-		perft_divide(position, i);
+		perft_divide(pos, i);
 		printf("\n\n\n");
 	}
-	
 }
 
-void game_loop(AppContext* app, Position* position, UIContext* ui_context)
+void game_loop(AppContext* app, Position* pos, UIContext* ui)
 {
-    SDL_Event event;
+    SDL_Event e;
 
-    // perft(position); return;
+    // perft(pos); return;
 
-    while (ui_context->running)
+    while (ui->running)
     {
-        SDL_WaitEvent(&event); 
+        SDL_WaitEvent(&e); 
         
-        if (ui_context->game_over)
+        if (ui->game_over)
         {
             continue; // dont take inputs
         }
 
         // players move
-        if (handle_event(app, position, ui_context, &event) == 1)
+        if (handle_event(app, pos, ui, &e) == 1)
         {
-            ui_context->needs_update = 1;
+            ui->needs_update = 1;
             printf("GAMELOOP: move was made\n");
         }
 
         // ai move 
-        if (0) // position->current_player == AI_COLOR)
+        if (0) // pos->current_player == AI_COLOR)
         {
-            opponent_move(position);
-            ui_context->needs_update = 1;
+            opponent_move(pos);
+            ui->needs_update = 1;
             printf("GAMELOOP: ai move was made\n");
         }
     
         // update
-        if (ui_context->needs_update) 
+        if (ui->needs_update) 
         {
             printf("UPDATE AND RENDER\n");
-            update(position, ui_context);
-            render(app, position->bitboards);
-            ui_context->needs_update = 0;
+            update(pos, ui);
+            render(app, pos->bb);
+            ui->needs_update = 0;
         }
     }
 }

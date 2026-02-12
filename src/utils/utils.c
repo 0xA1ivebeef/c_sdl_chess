@@ -26,20 +26,33 @@ Move choose_promotion_move(Move* m)
 {
     printf("Chose promotion piece (N/B/R/Q): ");
     char c = getchar();
-    while (getchar() != '\n'); // flush buffer
-                               //
-    int flag = char_to_promotion_flag(c);
+    while (getchar() != '\n' && !feof(stdin));
 
-    Move this_move = {m->startsquare, m->destsquare, flag};
-    return this_move;
+    int flag = char_to_promotion_flag(c);
+    return (Move){m->start, m->dest, flag};
+}
+
+int square_string_to_int(char* square_string)
+{
+    if (!square_string) 
+        return -1;
+
+    if (square_string[0] < 'a' || square_string[0] > 'h')
+        return -1;
+
+    if (square_string[1] < '1' || square_string[1] > '8')
+        return -1;
+
+    int col = square_string[0] - 'a';
+    int row = 8 - (square_string[1] - '0');
+    return row * 8 + col;
 }
 
 const char* square_to_notation(int sq) 
 {
-    static char bufs[8][3];   // allows up to 8 simultaneous results 
+    static char buff[8][3];   // allows up to 8 simultaneous results 
     static int idx = 0;
-    char *out = bufs[(idx++) & 7];
-
+    char *out = buff[(idx++) & 7];
     if (sq < 0 || sq > 63) 
     {
         out[0] = out[1] = '?';
@@ -49,7 +62,6 @@ const char* square_to_notation(int sq)
     out[0] = 'a' + (sq % 8);
     out[1] = '8' - (sq / 8);
     out[2] = '\0';
-
     return out;
 }
 

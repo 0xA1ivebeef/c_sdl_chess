@@ -43,7 +43,7 @@ void perft_divide(Position* pos, int depth)
     filter_moves(pos);
 
     int move_count = pos->legal_move_count;
-    Move moves[256];
+    Move moves[255];
 
     for (int i = 0; i < move_count; ++i)
         moves[i] = pos->legal_moves[i];
@@ -62,8 +62,8 @@ void perft_divide(Position* pos, int depth)
         undo_move(pos, &m, &u);
 
         printf("%s%s: %d\n",
-            square_to_notation(m.startsquare),
-            square_to_notation(m.destsquare),
+            square_to_notation(m.start),
+            square_to_notation(m.dest),
             nodes);
 
         total += nodes;

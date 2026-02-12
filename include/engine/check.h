@@ -8,15 +8,15 @@
 
 #include "ui/console_logger.h"
 
+#include "engine/types.h"
 #include "engine/move_handler.h"
-#include "engine/position.h"
 #include "engine/attack_generator.h"
 
 #include "utils/legal_move_utils.h"
 #include "utils/bitboard_utils.h"
 
-int is_check(int king_square, uint64_t attack_bitboard);
-void filter_moves(Position* position);
+int is_check(int king_sq, uint64_t attack_bb);
+void filter_moves(Position* pos);
 
 #endif
 

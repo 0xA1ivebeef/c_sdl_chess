@@ -15,11 +15,10 @@
 #include "ui/sdl_event_handler.h"
 #include "ui/mouse_event_handler.h"
 
+#include "engine/types.h"
 #include "engine/fen_string_loader.h"
-#include "engine/pieces.h"
 #include "engine/constants.h"
 #include "engine/move_generator.h"
-#include "engine/move.h"
 #include "engine/check.h"
 #include "engine/attack_generator.h"
 #include "engine/perft.h"

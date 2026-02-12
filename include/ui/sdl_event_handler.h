@@ -8,11 +8,9 @@
 #include "ui/mouse_event_handler.h"
 #include "ui/renderer.h"
 
-#include "engine/move.h"
-#include "engine/position.h"
+#include "engine/types.h"
 #include "engine/move_handler.h"
 
-int handle_event(AppContext* app, Position* position, UIContext* ui_context, 
-        SDL_Event* event);
+int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* event);
 
 #endif

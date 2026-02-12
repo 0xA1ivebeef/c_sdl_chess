@@ -5,18 +5,16 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "engine/position.h"
-#include "engine/move.h"
+#include "engine/types.h"
 #include "engine/castling.h"
 #include "engine/special_move_handler.h"
-#include "engine/pieces.h"
 #include "engine/game.h"
 
 #include "utils/utils.h"
 #include "utils/bitboard_utils.h"
 
-void apply_move(Position* position, Move* this_move, Undo* undo);
-void undo_move(Position* position, Move* m, Undo* undo);
-int handle_move(Position* position, int startsquare, int destsquare);
+void apply_move(Position* pos, Move* m, Undo* undo);
+void undo_move(Position* pos, Move* m, Undo* undo);
+int handle_move(Position* pos, int start, int dest);
 
 #endif

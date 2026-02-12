@@ -6,8 +6,7 @@
 #include <stdint.h>
 
 #include "engine/constants.h"
-#include "engine/pieces.h"
-#include "engine/move.h"
+#include "engine/types.h"
 #include "engine/special_move_handler.h"
 
 #include "utils/bitboard_utils.h"

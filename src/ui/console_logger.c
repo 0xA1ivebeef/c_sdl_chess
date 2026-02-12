@@ -10,30 +10,30 @@ void print_castle_rights(int castle_rights)
     }
     putchar('\n');
 }
-void log_gamestate(Position* position)
+void log_gamestate(Position* pos)
 {
     printf("\n --------------------------------------------\n\n");
     printf("logging GAMESTATE: \n");   
     
-    printf("current player: %s\n", position->current_player ? "WHITE" : "BLACK");
+    printf("current player: %s\n", pos->player ? "WHITE" : "BLACK");
     
     printf("castle_rights: ");
-    print_castle_rights(position->castle_rights);
+    print_castle_rights(pos->castle_rights);
     printf("\n");
 
-    printf("enpassant square: %d = %s\n", position->enpassant_square, square_to_notation(position->enpassant_square));
+    printf("enpassant sq: %d = %s\n", pos->enpassant, square_to_notation(pos->enpassant));
 
-    printf("halfmove clock: %d\n", position->halfmove_clock);
-    printf("fullmove number: %d\n", position->fullmove_number);
+    printf("halfmove clock: %d\n", pos->halfmove);
+    printf("fullmove number: %d\n", pos->fullmove);
 
-    printf("king square: BLACK: %d, WHITE: %d\n", position->king_square[BLACK], position->king_square[WHITE]);
+    printf("king sq: BLACK: %d, WHITE: %d\n", pos->king_sq[BLACK], pos->king_sq[WHITE]);
     printf("\n --------------------------------------------\n\n");
 }
 
-void get_square_string(int square, char* buffer)
+void get_sq_string(int sq, char* buffer)
 {
-    int col = square % 8;
-    int row = square / 8;
+    int col = sq % 8;
+    int row = sq / 8;
     buffer[0] = (char)(col + 97);
     buffer[1] = (char)(8 - row + '0');
     buffer[2] = '\0';
@@ -41,13 +41,13 @@ void get_square_string(int square, char* buffer)
 
 void translate_move(Move* m)
 {
-    char startsquare_str[3];
-    char destsquare_str[3];
+    char start_str[3];
+    char dest_str[3];
 
-    get_square_string(m->startsquare, startsquare_str);
-    get_square_string(m->destsquare, destsquare_str);
+    get_sq_string(m->start, start_str);
+    get_sq_string(m->dest, dest_str);
 
-    printf("%s, %s\n", startsquare_str, destsquare_str);
+    printf("%s, %s\n", start_str, dest_str);
 }
 
 void log_bitboard(uint64_t* n)
@@ -83,7 +83,7 @@ void log_legal_moves(Move* legal_moves)
 {
 	for(int i = 0; i < LEGAL_MOVES_SIZE; ++i)
     {
-        if(legal_moves[i].startsquare == legal_moves[i].destsquare)
+        if(legal_moves[i].start == legal_moves[i].dest)
             return;
 
         printf("%d: ", i+1);

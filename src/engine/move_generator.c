@@ -14,13 +14,16 @@
 // 9  queen
 // 10 king  
 
-#define WHITE_PAWN_ATTACKS 4
-#define BLACK_PAWN_ATTACKS 5
-#define KNIGHT_ATTACKS 6
-#define BISHOP_ATTACKS 7
-#define ROOK_ATTACKS 8
-#define QUEEN_ATTACKS 9
-#define KING_ATTACKS 10
+typedef enum ATTACKS
+{
+    WHITE_PAWN_ATTACKS = 4,
+    BLACK_PAWN_ATTACKS,
+    KNIGHT_ATTACKS,
+    BISHOP_ATTACKS,
+    ROOK_ATTACKS,
+    QUEEN_ATTACKS,
+    KING_ATTACKS,
+} ATTACKS;
 
 int PROMOTION_FLAGS[4] = 
 {
@@ -36,30 +39,29 @@ uint64_t PROMOTION_RANK_MASK[2] =
     0x00000000000000FFULL // White promotion rank (squares 0–7)
 };
 
-uint64_t pawn_attacks(int ksq, int by_side)
+uint64_t pawn_attacks(int king_sq, int by_side)
 {
     int side = by_side ? 1 : -1; // -1 if by_side==black
-    int sq1 = ksq + 7 * side;
-    int sq2 = ksq + 9 * side;
+    int sq1 = king_sq + 7 * side;
+    int sq2 = king_sq + 9 * side;
     return (1ULL << sq1) | (1ULL << sq2);
 }
 
-void add_enpassant(Position* position)
+void add_enpassant(Position* pos)
 {
-    int current_player = position->current_player;
     int current_bit = 0;
-    uint64_t pawn_bb = position->bitboards[current_player * 6];
+    uint64_t pawn_bb = pos->bb[pos->player * 6];
     while(pawn_bb)
     {
         if(pawn_bb & 1)
         {
             // if enemy pawn on enpassant square
-            if(bitmasks[5 - current_player][current_bit] & (1ULL << position->enpassant_square))
+            if(bitmasks[5 - pos->player][current_bit] & (1ULL << pos->enpassant))
             {
-                Move this_move = {current_bit, position->enpassant_square, 2};
-                position->legal_moves[position->legal_move_count++] = this_move; // append to legal_moves post increment
+                Move m = {current_bit, pos->enpassant, 2};
+                pos->legal_moves[pos->legal_move_count++] = m; // append to legal_moves post increment
 
-                // printf("added enpassant move %d, %d\n", current_bit, position->enpassant_square);
+                // printf("added enpassant move %d, %d\n", current_bit, pos->enpassant_square);
             }
         }
         pawn_bb >>= 1;
@@ -67,287 +69,241 @@ void add_enpassant(Position* position)
     }
 }
 
-uint64_t get_pawn_attacking_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_pawn_attacking_moves(int p, int square, uint64_t* occ)
 {
-	return bitmasks[5 - p][square] & occupancy_bitboards[!p];
+	return bitmasks[5 - p][square] & occ[!p];
 }
 
-uint64_t get_pawn_legal_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_pawn_legal_moves(int p, int square, uint64_t* occ)
 {
     uint64_t normal_bitmask = bitmasks[!p][square];
-    uint64_t double_pawn_push_bitmask = (bitmasks[3-p][square] & ~occupancy_bitboards[2]);
-    uint64_t capture_bitmask = bitmasks[5-p][square] & occupancy_bitboards[!p];
-    uint64_t normal_legal = (normal_bitmask & ~occupancy_bitboards[2]);
+    uint64_t double_pawn_push_bitmask = (bitmasks[3-p][square] & ~occ[2]);
+    uint64_t capture_bitmask = bitmasks[5-p][square] & occ[!p];
+    uint64_t normal_legal = (normal_bitmask & ~occ[2]);
     double_pawn_push_bitmask &= (p ? (normal_legal >> 8) : (normal_legal << 8));
 
     return (normal_legal | capture_bitmask | double_pawn_push_bitmask);
 }
 
-uint64_t get_knight_legal_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_knight_legal_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[6][square] & ~occupancy_bitboards[p]);
+    return (bitmasks[6][sq] & ~occ[p]);
 }
 
-void resolve_direction(int p, int square, int dir, uint64_t* result, uint64_t* occupancy_bitboards)
+void resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
 {
-    int file = square % 8;
-    int rank = square / 8;
+    int file = sq % 8;
+    int rank = sq / 8;
     
-    int this_file, this_rank, attacking_square;
+    int x, y, attacking_sq;
 
     for (int i = 1; i < 8; ++i)
     {
-        this_file = file + i * file_offsets[dir];
-        this_rank = rank + i * rank_offsets[dir];
+        x = file + i * file_offsets[dir];
+        y = rank + i * rank_offsets[dir];
 
-        if (this_file < 0 || this_file > 7 || this_rank < 0 || this_rank > 7)
+        if (x < 0 || x > 7 || y < 0 || y > 7)
             return;
 
-        attacking_square = this_rank * 8 + this_file;
+        attacking_sq = y * 8 + x;
 
-        if (occupancy_bitboards[!p] & (1ULL << attacking_square))
+        if (occ[!p] & (1ULL << attacking_sq))
         {
-            *result |= (1ULL << attacking_square);
+            *res |= (1ULL << attacking_sq);
             return;
         }
-        else if (occupancy_bitboards[p] & (1ULL << attacking_square))
+        else if (occ[p] & (1ULL << attacking_sq))
             return;
         else
-            *result |= (1ULL << attacking_square);
+            *res |= (1ULL << attacking_sq);
     }
 }
 
-uint64_t get_sliding_piece_legal_moves(int p, int square, int piece_index, uint64_t* occupancy_bitboards)
+uint64_t get_sliding_piece_legal_moves(int p, int sq, int piece, uint64_t* occ)
 {
     uint64_t result = 0;
 
-    int startindex = (piece_index == 2 ? 4 : 0);
-    int endindex = (piece_index == 3 ? 4 : 8);
+    int start = (piece == 2 ? 4 : 0);
+    int end = (piece == 3 ? 4 : 8);
 
-    for (int dir = startindex; dir < endindex; ++dir)
-        resolve_direction(p, square, dir, &result, occupancy_bitboards);
+    for (int dir = start; dir < end; ++dir)
+        resolve_dir(p, sq, dir, &result, occ);
 
     return result;
 }
 
-uint64_t get_king_legal_moves(int p, int square, uint64_t* occupancy_bitboards)
+uint64_t get_king_legal_moves(int p, int sq, uint64_t* occ)
 {
-    return (bitmasks[10][square] & ~occupancy_bitboards[p]);
+    return (bitmasks[10][sq] & ~occ[p]);
 }
 
-uint64_t get_legal_moves_bitmask(int current_player, int bitboard_index, int piece_square, uint64_t* occupancy_bitboards)
+uint64_t get_legal_moves_bitmask(int p, int bbi, int sq, uint64_t* occ)
 {
     // returns a bitmask that is resolved into move structs with startsquare and destsquare
-    bitboard_index %= 6; // abstract color, keep piecetype
-    switch(bitboard_index)
+    bbi %= 6; // abstract color, keep piecetype
+    switch(bbi)
     {
         case 0:
-            return get_pawn_legal_moves(current_player, piece_square, occupancy_bitboards); 
+            return get_pawn_legal_moves(p, sq, occ); 
         case 1:
-            return get_knight_legal_moves(current_player, piece_square, occupancy_bitboards);
+            return get_knight_legal_moves(p, sq, occ);
         case 2:
         case 3:
         case 4:
-            return get_sliding_piece_legal_moves(current_player, piece_square, bitboard_index, occupancy_bitboards);
+            return get_sliding_piece_legal_moves(p, sq, bbi, occ);
         case 5:
-            return get_king_legal_moves(current_player, piece_square, occupancy_bitboards);
+            return get_king_legal_moves(p, sq, occ);
         default:
             return 0;
     }
 }
 
-int is_promotion(int p, int bitboard_index, int destsquare)
+int is_promotion(int p, int bbi, int ds)
 {
-    if (p * 6 != bitboard_index)
+    if (p * 6 != bbi)
         return 0;
 
-    if ((PROMOTION_RANK_MASK[p] & (1ULL << destsquare)) == 0)
+    if ((PROMOTION_RANK_MASK[p] & (1ULL << ds)) == 0)
         return 0;
 
     return 1;
 }
 
-void add_promotion_moves(Position* position, Move* m)
+void add_promotion_moves(Position* pos, Move* m)
 {
     for (int i = 0; i < 4; ++i)
     {
         m->flags = PROMOTION_FLAGS[i];
         // printf("adding promotion move with %d\n", m->flags);
-        position->legal_moves[position->legal_move_count++] = *m;
+        pos->legal_moves[pos->legal_move_count++] = *m;
     }
 }
 
 // given bitboards and move, return if the move is a double pawn push
-int is_double_pawn_push(Move* this_move, int ss_bb_i)
+int is_double_pawn_push(Move* m, int bbi)
 {
-    int startsquare = this_move->startsquare;
-    int destsquare = this_move->destsquare;
+    int start = m->start;
+    int dest = m->dest;
 	
     // moved piece is not a pawn
-    if(!(ss_bb_i == BLACK_PAWN || ss_bb_i == WHITE_PAWN))
+    if(!(bbi == BLACK_PAWN || bbi == WHITE_PAWN))
         return 0;
 
-    int res = (abs_int(startsquare - destsquare) == 16); // moved two squares 
+    int res = (abs_int(start - dest) == 16); // moved two squares 
     return res;
 }
 
 // called for each piece of the current player by resolve bitboard
-void get_pieces_moves(Position* position, int bitboard_index, int piece_square)
+void get_pieces_moves(Position* pos, int bbi, int sq)
 {
-    uint64_t legal_moves_bitmask = get_legal_moves_bitmask(position->current_player, bitboard_index, piece_square, position->occupancy);
+    uint64_t legal_moves_bitmask = get_legal_moves_bitmask(
+            pos->player, bbi, sq, pos->occ);
     
-    int destsquare = 0;
+    int ds = 0;
     while(legal_moves_bitmask)
     {
         if(legal_moves_bitmask & 1)
         {
-            Move m = {piece_square, destsquare, 0}; 
+            Move m = {sq, ds, 0}; 
 
-            if (is_promotion(position->current_player, bitboard_index, destsquare))
-                add_promotion_moves(position, &m); // add manually cause 4x move
-            else if (is_double_pawn_push(&m, bitboard_index))
+            if (is_promotion(pos->player, bbi, ds))
+                add_promotion_moves(pos, &m); // add manually cause 4x move
+            else if (is_double_pawn_push(&m, bbi))
             {
                 m.flags = DOUBLE_PAWN_PUSH;
-                position->legal_moves[position->legal_move_count++] = m; // set flag and add
+                pos->legal_moves[pos->legal_move_count++] = m; // set flag and add
             }
             else
-                position->legal_moves[position->legal_move_count++] = m; // just add
+                pos->legal_moves[pos->legal_move_count++] = m; // just add
         }
         legal_moves_bitmask >>= 1;
-        destsquare++;
+        ds++;
     }
 }
 
-uint64_t bishop_attacks_naive(int sq, uint64_t occupancy) 
+uint64_t bishop_attacks_naive(int sq, uint64_t occ) 
 {
     uint64_t attacks = 0ULL;
 
     // Directions: NE (+9), NW (+7), SE (-7), SW (-9)
-    int directions[4] = {9, 7, -7, -9};
+    int dir[4] = {9, 7, -7, -9};
 
     for (int d = 0; d < 4; d++) 
     {
         int s = sq;
         while (1) 
         {
-            s += directions[d];
+            s += dir[d];
 
             if (s < 0 || s >= 64) break;        // off-board
-            if (abs_int((s % 8) - ((s - directions[d]) % 8)) != 1) break; // file wrap
+            if (abs_int((s % 8) - ((s - dir[d]) % 8)) != 1) break; // file wrap
 
             attacks |= (1ULL << s);
 
-            if (occupancy & (1ULL << s)) break; // stop at first blocker
+            if (occ & (1ULL << s)) break; // stop at first blocker
         }
     }
 
     return attacks;
 }
 
-uint64_t rook_attacks_naive(int sq, uint64_t occupancy) 
+uint64_t rook_attacks_naive(int sq, uint64_t occ) 
 {
     uint64_t attacks = 0ULL;
 
-    int directions[4] = {1, -1, 8, -8}; // E, W, N, S
+    int dir[4] = {1, -1, 8, -8}; // E, W, N, S
 
     for (int d = 0; d < 4; d++) 
     {
         int s = sq;
         while (1) 
         {
-            s += directions[d];
+            s += dir[d];
 
             if (s < 0 || s >= 64) break;
-            if ((directions[d] == 1 || directions[d] == -1) &&
-                s/8 != (s - directions[d])/8) break; // file wrap
+            if ((dir[d] == 1 || dir[d] == -1) &&
+                s/8 != (s - dir[d])/8) break; // file wrap
 
             attacks |= (1ULL << s);
 
-            if (occupancy & (1ULL << s)) break;
+            if (occ & (1ULL << s)) 
+                break;
         }
     }
 
     return attacks;
 }
 
-int square_under_attack(uint64_t* bitboards, uint64_t* occ, int sq, int by_side)
-{
-    int pawn_bb_i   = by_side * 6 + 0; // 6 if white, 0 if black
-    int knight_bb_i = by_side * 6 + 1;
-    int bishop_bb_i = by_side * 6 + 2;
-    int rook_bb_i   = by_side * 6 + 3;
-    int queen_bb_i  = by_side * 6 + 4;
-    int king_bb_i   = by_side * 6 + 5;
-
-    uint64_t bishop_attacking_bitboard = bishop_attacks_naive(sq, occ[2]);
-    uint64_t rook_attacking_bitboard = rook_attacks_naive(sq, occ[2]);
-
-    // printf("SQUARE UNDER ATTACK bishop and rook attack bitboard form kingsquare\n");
-    // log_bitboard(&bishop_attacking_bitboard);
-    // log_bitboard(&rook_attacking_bitboard);
-
-    // printf("SQUARE UNDER ATTACK checking if square %d is under attack by %s\n", 
-       //     sq, by_side ? "WHITE" : "BLACK");
-
-    if (pawn_attacks(sq, by_side) & bitboards[pawn_bb_i]) 
-    {
-        // printf("SQUARE UNDER ATTACK: pawn attacks square %d\n", sq);
-        return 1;
-    }
-    if (bitmasks[KNIGHT_ATTACKS][sq] & bitboards[knight_bb_i]) 
-    {
-        // printf("SQUARE UNDER ATTACK: knight attacks square %d\n", sq);
-        return 1;
-    } 
-    if (bitmasks[KING_ATTACKS][sq] & bitboards[king_bb_i]) 
-    {
-        // printf("SQUARE UNDER ATTACK: king attacks square %d\n", sq);
-        return 1;
-    }
-    if (bishop_attacking_bitboard & ((bitboards[bishop_bb_i] | bitboards[queen_bb_i]))) 
-    {
-        // printf("SQUARE UNDER ATTACK: bishop or queen attacks square %d\n", sq);
-        return 1;
-    }
-    
-    if (rook_attacking_bitboard & ((bitboards[rook_bb_i] | bitboards[queen_bb_i]))) 
-    {
-        // printf("SQUARE UNDER ATTACK: rook or queen attacks square %d\n", sq);
-        return 1;
-    }
-    return 0;
-}
-
 // might make this async
-void resolve_bitboard(Position* position, int bitboard_index) 
+void resolve_bb(Position* pos, int bbi) 
 {
     int current_bit = 0;
-    uint64_t bitboard = position->bitboards[bitboard_index];
-    while(bitboard)
+    uint64_t bb = pos->bb[bbi];
+    while(bb)
     {
-        if(bitboard & 1)
-            get_pieces_moves(position, bitboard_index, current_bit);
+        if(bb & 1)
+            get_pieces_moves(pos, bbi, current_bit);
         
-        bitboard >>= 1;
+        bb >>= 1;
         ++current_bit;
     }
 }
 
-void generate_legal_moves(Position* position)
+void generate_legal_moves(Position* pos)
 {
     // clear array
-    memset(position->legal_moves, 0, sizeof(Move) * LEGAL_MOVES_SIZE);
+    memset(pos->legal_moves, 0, sizeof(Move) * LEGAL_MOVES_SIZE);
 
     // reset this and use it for indexing, appending legal_moves 
-    position->legal_move_count = 0; 
+    pos->legal_move_count = 0; 
 
     // index => only white or black bitboards then resolve these bitboards
-    int bitboard_start_index = position->current_player*6; 
-    for(int i = bitboard_start_index; i < bitboard_start_index + 6; i++)
-        resolve_bitboard(position, i);
+    int bb_start = pos->player*6; 
+    for(int i = bb_start; i < bb_start + 6; ++i)
+        resolve_bb(pos, i);
 
     // legal move count is updated automatically
-    add_castling(position);
-    add_enpassant(position);
+    add_castling(pos);
+    add_enpassant(pos);
 }
 

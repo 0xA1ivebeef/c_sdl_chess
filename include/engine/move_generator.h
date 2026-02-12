@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 #include "engine/constants.h"
-#include "engine/move.h"
+#include "engine/types.h"
 #include "engine/bitmask_loader.h"
 #include "engine/castling.h"
 
@@ -14,7 +14,6 @@
 
 #include "utils/utils.h"
 
-int square_under_attack(uint64_t* bitboards, uint64_t* occupancy_bitboards, int king_square, int by_side);
-void generate_legal_moves(Position* position);
+void generate_legal_moves(Position* pos);
 
 #endif

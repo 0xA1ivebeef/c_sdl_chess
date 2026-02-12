@@ -4,12 +4,11 @@
 
 #include "ui/console_logger.h"
 
-#include "engine/pieces.h"
-#include "engine/bitmask_loader.h"
 #include "engine/constants.h"
-#include "engine/position.h"
+#include "engine/types.h"
+#include "engine/bitmask_loader.h"
 
-uint64_t get_attack_bitboard(int player, uint64_t* bitboards, uint64_t* occupancy_bitboards);
-void generate_attack_bitboards(Position* position);
+uint64_t get_attack_bb(Position* pos);
+void generate_attack_bb(Position* position);
 
 #endif

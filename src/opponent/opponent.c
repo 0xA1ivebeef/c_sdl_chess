@@ -8,12 +8,11 @@ Move* pick_move(Move* legal_moves)
     return &legal_moves[0];
 }
 
-int opponent_move(Position* position)
+int opponent_move(Position* pos)
 {
-    Move* m = pick_move(position->legal_moves);
-    if (handle_move(position, m->startsquare, m->destsquare))
-    {
+    Move* m = pick_move(pos->legal_moves);
+    if (handle_move(pos, m->start, m->dest))
         return 0;
-    }
+
     return 1;
 }
