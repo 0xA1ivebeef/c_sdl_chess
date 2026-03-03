@@ -1,0 +1,2 @@
+
+adjust enpassant -> uint8_t and INVALID_SQUARE

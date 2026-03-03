@@ -8,3 +8,6 @@ on double pawn push though
 
 enpassant is fixed and works for both sides
 
+attack bitboards now include enpassant correctly
+
+

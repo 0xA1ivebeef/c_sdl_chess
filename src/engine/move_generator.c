@@ -245,7 +245,7 @@ void generate_legal_moves(Position* pos)
 
     // TODO fix this
     // legal move count is updated automatically
-    // add_castling(pos);
+    add_castling(pos);
     add_enpassant(pos);
 }
 

@@ -1,9 +1,11 @@
 
 #include "engine/attack_generator.h"
 
-uint64_t get_pawn_attack_moves(int p, int sq, uint64_t* occ)
+uint64_t get_pawn_attack_moves(int p, int sq, uint64_t* occ, int enpassant)
 {
-	return p ? white_pawn_attack_bitmasks[sq] & occ[!p] : black_pawn_attack_bitmasks[sq] & occ[!p];
+    uint64_t bm = p ? white_pawn_attack_bitmasks[sq] : black_pawn_attack_bitmasks[sq];
+    uint64_t attack_bm = bm & occ[!p];
+	return attack_bm | (bm & (1ULL << enpassant));
 }
 
 uint64_t get_knight_attack_moves(int p, int sq, uint64_t* occ)
@@ -59,13 +61,13 @@ uint64_t get_king_attack_moves(int p, int sq, uint64_t* occ)
     return (king_bitmasks[sq] & ~occ[p]);
 }
 
-uint64_t get_attack_moves_bitmask(int p, int sq, int bb_index, uint64_t* occ)
+uint64_t get_attack_moves_bitmask(int p, int sq, int bb_index, uint64_t* occ, int enpassant)
 {
 	bb_index %= 6;
 	switch(bb_index)
 	{
 		case 0:
-			return get_pawn_attack_moves(p, sq, occ);
+			return get_pawn_attack_moves(p, sq, occ, enpassant);
 		case 1:
 			return get_knight_attack_moves(p, sq, occ);
 		case 2:
@@ -79,14 +81,14 @@ uint64_t get_attack_moves_bitmask(int p, int sq, int bb_index, uint64_t* occ)
 	}
 }
 
-uint64_t resolve_attack_bb(int p, uint64_t bb, int bb_index, uint64_t* occ)
+uint64_t resolve_attack_bb(int p, uint64_t bb, int bb_index, uint64_t* occ, int enpassant)
 {
 	uint64_t res = 0;
 	int sq = 0;
 	while(bb)
 	{
         if(bb & 1)
-		    res |= get_attack_moves_bitmask(p, sq, bb_index, occ);
+		    res |= get_attack_moves_bitmask(p, sq, bb_index, occ, enpassant);
 		bb >>= 1;
 		++sq;
 	}
@@ -98,11 +100,11 @@ uint64_t get_attack_bb(Position* pos)
 	uint64_t res = 0;
 	int bb_startindex = pos->player*6;
 	for(int i = bb_startindex; i < bb_startindex + 6; ++i)
-        res |= resolve_attack_bb(pos->player, pos->bb[i], i, pos->occ);; 
+        res |= resolve_attack_bb(pos->player, pos->bb[i], i, pos->occ, pos->enpassant);
 
-    if (pos->enpassant >= 0 && pos->enpassant <= 63)
-        res |= (1ULL << pos->enpassant);
-	
+    printf("attack_generator logging attack_bitboard\n");
+    log_bitboard(&res);
+
     return res;
 }
 

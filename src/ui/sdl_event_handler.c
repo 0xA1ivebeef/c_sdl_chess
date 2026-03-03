@@ -7,7 +7,7 @@ uint8_t select_piece(int mx, int my, uint64_t occ)
         return INVALID_SQUARE;
 
     int sq = my/TILESIZE * 8 + mx/TILESIZE;
-    if(occ & (1ULL << sq)) 
+    if (occ & (1ULL << sq)) 
         return sq;
 
     return INVALID_SQUARE;
