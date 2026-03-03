@@ -1,6 +1,9 @@
 
 #include "engine/move_generator.h"
 
+#define MOV_GEN_FILE_A 0x0101010101010101ULL
+#define MOV_GEN_FILE_H 0x8080808080808080ULL
+
 int PROMOTION_FLAGS[4] = 
 {
     KNIGHT_PROMOTION, // 3..6
@@ -25,25 +28,27 @@ uint64_t pawn_attacks(int king_sq, int by_side)
 
 void add_enpassant(Position* pos)
 {
-    uint64_t* bm = pos->player ? white_pawn_attack_bitmasks : black_pawn_attack_bitmasks;
-
-    int current_bit = 0;
-    uint64_t pawn_bb = pos->bb[pos->player * 6];
-    while(pawn_bb)
+    if (pos->enpassant < 16 || pos->enpassant > 55)
     {
-        if(pawn_bb & 1)
-        {
-            // if enemy pawn on enpassant square
-            if(bm[current_bit] & (1ULL << pos->enpassant))
-            {
-                Move m = {current_bit, pos->enpassant, 2};
-                pos->legal_moves[pos->legal_move_count++] = m; // append to legal_moves post increment
+        printf("enpassant not possible, square: %d\n", pos->enpassant);
+        return;
+    }
 
-                // printf("added enpassant move %d, %d\n", current_bit, pos->enpassant_square);
-            }
-        }
-        pawn_bb >>= 1;
-        ++current_bit;
+    uint64_t pawns = pos->bb[pos->player*6];
+    if (pos->player)
+    {
+        // white
+        if ((1ULL << (pos->enpassant + 9)) & ~MOV_GEN_FILE_H & pawns) // startsquare has a pawn
+            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant + 9, pos->enpassant, ENPASSANT_FLAG };
+        if ((1ULL << (pos->enpassant + 7)) & ~MOV_GEN_FILE_A & pawns)
+            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant + 7, pos->enpassant, ENPASSANT_FLAG };
+    }
+    else
+    {
+        if ((1ULL << (pos->enpassant - 9)) & ~MOV_GEN_FILE_H & pawns) // startsquare has a pawn
+            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant - 9, pos->enpassant, ENPASSANT_FLAG };
+        if ((1ULL << (pos->enpassant - 7)) & ~MOV_GEN_FILE_A & pawns)
+            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant - 7, pos->enpassant, ENPASSANT_FLAG };
     }
 }
 
@@ -191,15 +196,19 @@ void get_pieces_moves(Position* pos, int bb_i, int sq)
         {
             Move m = {sq, ds, 0}; 
 
-            /* if (is_promotion(pos->player, bb_i, ds))
+            if (is_promotion(pos->player, bb_i, ds))
+            {
                 add_promotion_moves(pos, &m); // add manually cause 4x move
+            }
             else if (is_double_pawn_push(&m, bb_i))
             {
                 m.flags = DOUBLE_PAWN_PUSH;
                 pos->legal_moves[pos->legal_move_count++] = m; // set flag and add
             }
-            else */
+            else 
+            {
                 pos->legal_moves[pos->legal_move_count++] = m; // just add
+            }
         }
         legal_moves_bitmask >>= 1;
         ds++;
@@ -237,6 +246,6 @@ void generate_legal_moves(Position* pos)
     // TODO fix this
     // legal move count is updated automatically
     // add_castling(pos);
-    // add_enpassant(pos);
+    add_enpassant(pos);
 }
 

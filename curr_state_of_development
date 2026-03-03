@@ -6,4 +6,5 @@ comming from undo move, in this case beeing called by filter_moves
 on removing filter moves: bugs disappear for now, enpassant square is not set
 on double pawn push though
 
+enpassant is fixed and works for both sides
 
