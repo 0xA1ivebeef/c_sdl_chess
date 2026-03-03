@@ -3,74 +3,57 @@
 
 #define AI_COLOR BLACK
 
-void position_init(Position* pos)
+void update_king_square(Position* pos)
 {
-    printf("SETUP IS CALLED\n");
-
-    load_fen_string(pos);
-    printf("enpassant after fen string: %d\n", pos->enpassant);
-
-    update_occ(pos->bb, pos->occ);
-
-    load_bitmasks(); // external function for bitmask_loader.c
-
-    // set pos->king_sq[2]
     pos->king_sq[BLACK] = get_king_square(pos->bb[BLACK_KING]);
     pos->king_sq[WHITE] = get_king_square(pos->bb[WHITE_KING]);
-	
-	printf("king sqs after fen load: %d, %d\n", pos->king_sq[0], pos->king_sq[1]);
+}
 
+void position_init(Position* pos)
+{
+    load_fen_string(pos);
+    update_occ(pos);
+    update_king_square(pos);
+	
     generate_legal_moves(pos);
     filter_moves(pos); 
-
-    log_legal_moves(pos->legal_moves);
 
     log_gamestate(pos);
 }
 
-void update_gamestate(Position* pos)
+void update(Position* pos)
 {
-    /* update pos after a move was made (current_player already switched 
-     by engine/move_handler:apply_move()) */
- 
-    // clear and generate legal moves filter illegal moves
+    pos->player ^= 1;
+    update_occ(pos);
+    
+    update_king_square(pos);
+
     generate_legal_moves(pos); 
-    filter_moves(pos);
-}
+    // filter_moves(pos);
 
-void update(Position* pos, UIContext* ui)
-{
-    update_gamestate(pos);
-    log_legal_moves(pos->legal_moves);
-
-    int king_sq = pos->king_sq[pos->player];
-    uint64_t enemy_attack_bb = get_attack_bb(pos);
-        
-    // check
-    if (ui)
-    {
-        if (is_check(king_sq, enemy_attack_bb))
-        {   
-            printf("CHECK!\n");
-            if (pos->legal_move_count == 0) 
-            {
-                printf("CHECKMATE\n");
-                ui->game_over = 1;  
-            }
-        }
-        else if (pos->legal_move_count == 0)
+    /* check
+    if (is_check(king_sq, get_attack_bb(pos)))
+    {   
+        printf("CHECK!\n");
+        if (pos->legal_move_count == 0) 
         {
-            printf("STALEMATE\n");
+            printf("CHECKMATE\n");
             ui->game_over = 1;  
         }
     }
+    else if (pos->legal_move_count == 0)
+    {
+        printf("STALEMATE\n");
+        ui->game_over = 1;  
+    }
 
-    // TODO implement
+    // TODO implement draws
 	if (pos->halfmove == 100)
 	{
 		printf("50 move draw\n");
         ui->game_over = 1;  
 	}
+    */
 
     log_gamestate(pos);
 }
@@ -92,7 +75,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
 
     while (ui->running)
     {
-        SDL_WaitEvent(&e); 
+        SDL_PollEvent(&e); 
         
         if (ui->game_over)
         {
@@ -117,8 +100,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
         // update
         if (ui->needs_update) 
         {
-            printf("UPDATE AND RENDER\n");
-            update(pos, ui);
+            update(pos);
             render(app, pos->bb);
             ui->needs_update = 0;
         }

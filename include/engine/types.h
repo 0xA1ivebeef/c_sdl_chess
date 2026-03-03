@@ -37,6 +37,14 @@ typedef enum Moveflags
     DOUBLE_PAWN_PUSH, 
 } Moveflags;
 
+typedef struct 
+{
+    int running;
+    uint8_t selected_square;
+    int needs_update;
+    int game_over;
+} UIContext;
+
 typedef struct Move
 {
     uint8_t start;
@@ -49,27 +57,28 @@ typedef struct
     uint64_t bb[12];
     uint64_t occ[3];
 
-    int player;
+    uint8_t player;
     int castle_rights;
     int enpassant;
-    int halfmove;
-    int fullmove;
+    uint8_t halfmove;
+    uint16_t fullmove;
 
     Move legal_moves[LEGAL_MOVES_SIZE];
-    int legal_move_count;
+    uint8_t legal_move_count;
 
-    int king_sq[2];
+    uint8_t king_sq[2];
 } Position;
 
 typedef struct
 {
     int ss_bb_i;
     int ds_bb_i;
-    int castle_rights;
+    uint8_t castle_rights;
     int enpassant;
-    int halfmove;
-    int fullmove;
-    int promote_bb;
+    uint8_t halfmove;
+    uint16_t fullmove;
+    int promote_bb_i;
+    uint8_t valid; 
 } Undo;
 
 #endif

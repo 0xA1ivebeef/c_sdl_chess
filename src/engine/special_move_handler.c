@@ -4,22 +4,21 @@
 // TODO fix this
 void handle_pawn_promotion(uint64_t* bb, Move* m)
 {
-    // piece.h 
-    int promote_bb = m->flags - 2; // knight..queen 3..6 
+    assert(m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
+
+    // move flags -> bb_i knight..queen 3..6
+    int promote_bb_i = m->flags - 2; 
+
+    int start_bb = (m->dest <= 7) ? 6 : 0;
+    promote_bb_i += start_bb;
 
     int ds_i = get_bb_index(bb, m->dest);
     if (ds_i != -1)
         bb[ds_i] &= ~(1ULL << m->dest); // capture
                                                   
-    int start_bb = 0;
-    if(m->dest >= 0 && m->dest <= 7)
-        start_bb = 6;
-
-    promote_bb += start_bb;
-
     // black n, b, r, q 7, 8, 9, 10
     bb[start_bb] &= ~(1ULL << m->start); // delete pawn
-    bb[promote_bb] |= (1ULL << m->dest); // place queen
+    bb[promote_bb_i] |= (1ULL << m->dest); // place queen
 }
 
 // TODO fix this

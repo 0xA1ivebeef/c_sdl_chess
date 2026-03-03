@@ -7,7 +7,12 @@
 
 #include "engine/constants.h"
 
-#include "ui/app_context.h" 
+typedef struct AppContext
+{
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* textures[12];
+} AppContext;
 
 int init_sdl(AppContext* app);
 int load_textures(AppContext* app);

@@ -14,6 +14,20 @@
 
 #include "utils/utils.h"
 
+typedef enum ATTACKS
+{
+    WHITE_PAWN_ATTACKS = 4,
+    BLACK_PAWN_ATTACKS,
+    KNIGHT_ATTACKS,
+    BISHOP_ATTACKS,
+    ROOK_ATTACKS,
+    QUEEN_ATTACKS,
+    KING_ATTACKS,
+} ATTACKS;
+
+extern int PROMOTION_FLAGS[4];
+
 void generate_legal_moves(Position* pos);
 
 #endif
+

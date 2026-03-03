@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "engine/constants.h"
 #include "engine/types.h"

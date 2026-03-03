@@ -1,0 +1,9 @@
+
+03-03-26
+major bugs with mutation of Position Struct and random king square updates 
+comming from undo move, in this case beeing called by filter_moves
+
+on removing filter moves: bugs disappear for now, enpassant square is not set
+on double pawn push though
+
+

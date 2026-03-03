@@ -1,0 +1,38 @@
+
+position_init():
+    load_fen_string()
+    update_occ()
+    load_bitmasks()
+    update_king_square()
+    generate_legal_moves()
+    filter_moves()
+
+game_loop():
+    if handle_event
+        handle_move() -> apply_move()
+        update()
+        render()
+
+handle_event():
+    get ui inputs -> move
+    move -> handle_move()
+ 
+handle_move():
+    is_legal_move()
+    handle_promotion()
+    apply_move()
+
+apply_move():
+    
+
+update():
+    player ^= 1
+    update_occ()
+    update_king_square()
+
+    generate_legal_moves()
+    filter_moves()
+
+    TODO CHECK, MATE, DRAW
+
+

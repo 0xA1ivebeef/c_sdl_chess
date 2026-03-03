@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h> 
+#include <assert.h>
 
 #include "ui/console_logger.h"
 

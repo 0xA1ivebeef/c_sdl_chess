@@ -2,8 +2,10 @@
 #ifndef MOVE_HANDLER_H
 #define MOVE_HANDLER_H
 
+#include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "engine/types.h"
 #include "engine/castling.h"
@@ -15,6 +17,6 @@
 
 void apply_move(Position* pos, Move* m, Undo* undo);
 void undo_move(Position* pos, Move* m, Undo* undo);
-int handle_move(Position* pos, int start, int dest);
+int handle_move(Position* pos, Move* m);
 
 #endif

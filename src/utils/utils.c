@@ -13,23 +13,31 @@ int char_to_promotion_flag(char c)
 
     switch(c)
     {
-        case 'N': return 3; // KNGHT_PROMOTION
-        case 'B': return 4; // BISHOP_PROMOTION
-        case 'R': return 5; // ROOK_PROMOTION
-        case 'Q': return 6; // QUEEN_PROMOTION
+        case 'N': return KNIGHT_PROMOTION;
+        case 'B': return BISHOP_PROMOTION;
+        case 'R': return ROOK_PROMOTION;
+        case 'Q': return QUEEN_PROMOTION;
         default:
-            return 6; // default to queen if invalid input
+            return QUEEN_PROMOTION; // default to queen if invalid input
     } 
 }
 
-Move choose_promotion_move(Move* m)
+int is_pawn_promotion(Position* pos, Move* m)
+{
+    int bb_i = get_bb_index(pos->bb, m->start);
+    if ((bb_i == WHITE_PAWN && m->dest <= 7) || 
+        (bb_i == BLACK_PAWN && m->dest >= 56))
+        return 1;
+    return 0;
+}
+
+void choose_promotion_move(Move* m)
 {
     printf("Chose promotion piece (N/B/R/Q): ");
     char c = getchar();
     while (getchar() != '\n' && !feof(stdin));
 
-    int flag = char_to_promotion_flag(c);
-    return (Move){m->start, m->dest, flag};
+    m->flags = char_to_promotion_flag(c);
 }
 
 int square_string_to_int(char* square_string)

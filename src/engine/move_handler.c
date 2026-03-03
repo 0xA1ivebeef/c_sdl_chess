@@ -4,6 +4,7 @@
 // called after every move (through apply_move() !!!)
 void handle_special_move(Position* pos, Move* m)
 {
+    printf("handling special move\n");
     switch (m->flags)
     {
         case CASTLE_FLAG:
@@ -20,6 +21,7 @@ void handle_special_move(Position* pos, Move* m)
             break;
         case DOUBLE_PAWN_PUSH:
             pos->enpassant = m->dest + 8 * (pos->player ? 1 : -1);
+            printf("handling double_pawnpush %d\n", pos->enpassant);
             break;
         default:
             pos->enpassant = -1;
@@ -62,27 +64,27 @@ void undo_enpassant(Position* pos, Move* m, Undo* undo)
 void undo_promotion(Position* pos, Move* m, Undo* undo)
 {
     // removed promoted piece, pawn move is already undone
-    pos->bb[undo->promote_bb] &= ~(1ULL << m->dest); 
+    pos->bb[undo->promote_bb_i] &= ~(1ULL << m->dest); 
 }
 
 // never call undo_move before calling apply_move because it saves the state
+// TODO make sure the state is fully restored
 void undo_move(Position* pos, Move* m, Undo* undo)
 {
-    int sq = m->start;
-	int ds = m->dest;
+    assert(undo->valid);
 
     int ss_bb_i = undo->ss_bb_i;
     int ds_bb_i = undo->ds_bb_i;
 
     // reverse capturing
     if (ds_bb_i != -1) 
-        pos->bb[ds_bb_i] |= 1ULL << ds;
+        pos->bb[ds_bb_i] |= 1ULL << m->dest;
 
     // restore moved piece on start
-    pos->bb[ss_bb_i] |= 1ULL << sq;
+    pos->bb[ss_bb_i] |= 1ULL << m->start;
 
     // remove moved piece on dest
-    pos->bb[ss_bb_i] &= ~(1ULL << ds);
+    pos->bb[ss_bb_i] &= ~(1ULL << m->dest);
  
     // undo special moves
     switch (m->flags)
@@ -100,8 +102,8 @@ void undo_move(Position* pos, Move* m, Undo* undo)
             undo_promotion(pos, m, undo);
             break;
         case 7:
-            // double_pawn_push doesnt need undo since it only sets enpassant 
-            // square and this is already done
+            // TODO double_pawn_push doesnt need undo since it only sets enpassant 
+            // square and this is already done through bitboard undo
             break;
     }
 
@@ -112,41 +114,42 @@ void undo_move(Position* pos, Move* m, Undo* undo)
     pos->halfmove = undo->halfmove;
     pos->fullmove = undo->fullmove;
 
-    update_occ(pos->bb, pos->occ);
+    update_occ(pos);
 
 	// update king squares 
     if (ss_bb_i == WHITE_KING) 
-        pos->king_sq[WHITE] = ds;
+        pos->king_sq[WHITE] = m->dest;
 	else if (ss_bb_i == BLACK_KING) 
-	    pos->king_sq[BLACK] = ds;
+	    pos->king_sq[BLACK] = m->dest;
 
     pos->player ^= 1;
+
+    undo->valid = 0;
 }
 
 void set_promoted_piece(Move* m, Undo* undo)
 {
     // set bb index of promoted piece
-    int promote_bb = m->flags - 2; // knight..queen 3..6
+    int promote_bb_i = m->flags - 2; // knight..queen 3..6
     
-    if(m->dest >= 0 && m->dest <= 7)
-        promote_bb += 6;
+    if(m->dest <= 7) // WHITE
+        promote_bb_i += 6;
 
-    undo->promote_bb = promote_bb;
+    undo->promote_bb_i = promote_bb_i;
 }
 
 void apply_move(Position* pos, Move* m, Undo* undo)
 {   
-	int sq = m->start;
-	int ds = m->dest;
-    int ss_bb_i = get_bb_index(pos->bb, sq);
+    int ss_bb_i = get_bb_index(pos->bb, m->start);
     if (ss_bb_i == -1) 
 	{
         fprintf(stderr, "apply_move: no piece on start %d\n", ss_bb_i);
         abort();
     }
 
-    int ds_bb_i = get_bb_index(pos->bb, ds); // -1 if empty
+    int ds_bb_i = get_bb_index(pos->bb, m->dest); // -1 if empty
 
+    // save old state BEFORE ANY CHANGES
     if (undo)
     {
         undo->ss_bb_i = ss_bb_i;
@@ -157,72 +160,56 @@ void apply_move(Position* pos, Move* m, Undo* undo)
         undo->fullmove = pos->fullmove;
         if (m->flags >= 3 && m->flags <= 6) 
             set_promoted_piece(m, undo);
+        undo->valid = 1;
     }
 
 	// capture
     if (ds_bb_i != -1) 
-        pos->bb[ds_bb_i] &= ~(1ULL << ds);
+        pos->bb[ds_bb_i] &= ~(1ULL << m->dest);
 
     // move
-    pos->bb[ss_bb_i] &= ~(1ULL << sq);
-    pos->bb[ss_bb_i] |=  (1ULL << ds);
+    pos->bb[ss_bb_i] &= ~(1ULL << m->start);
+    pos->bb[ss_bb_i] |=  (1ULL << m->dest);
 
-    // update king squares 
-    if (ss_bb_i == WHITE_KING) 
-        pos->king_sq[WHITE] = ds;
-	else if (ss_bb_i == BLACK_KING) 
-	    pos->king_sq[BLACK] = ds;
-  
-    handle_special_move(pos, m);
-
+    // special move handling
+    handle_special_move(pos, m); // after move was made
     update_castle_rights(pos, m);
 
+    // move clocks
     int is_pawn_move = (ss_bb_i == WHITE_PAWN || ss_bb_i == BLACK_PAWN);
     if (is_pawn_move || ds_bb_i != -1 || (m->flags == ENPASSANT_FLAG)) 
         pos->halfmove = 0;
 	else 
         pos->halfmove++;
 
+    // TODO maybe this is wrong
     if (pos->player == BLACK) 
         pos->fullmove++;
-
-    update_occ(pos->bb, pos->occ);
-
-    pos->player ^= 1;
 }
 
-
-// if given move is legal, return its address
-Move* is_legal_move(Position* pos, int start, int dest)
+// TODO promotion moves
+Move* is_legal_move(Position* pos, Move* m)
 {
-    // printf("IS_LEGAL_MOVE validating move: %d, %d\n", start, dest);
     for(int i = 0; i < pos->legal_move_count; ++i)
     {
-        if((pos->legal_moves[i].start == start) && 
-                (pos->legal_moves[i].dest == dest))
+        if ((pos->legal_moves[i].start == m->start) && 
+            (pos->legal_moves[i].dest  == m->dest))
             return &pos->legal_moves[i];
     }
     return NULL;
 }
 
 // if undo is NULL, nothing is saved 
-int handle_move(Position* pos, int start, int dest)
+int handle_move(Position* pos, Move* m)
 {
-    if(start == -1 || dest == -1)
+    // replace with move from legal moves to get flags
+    Move* legal = is_legal_move(pos, m);
+    if (!legal)
         return 0;
 
-    Move* m = is_legal_move(pos, start, dest);
-    if (!m)
-    {
-        printf("HANDLE MOVE: illegal move\n");
-        return 0;
-    }
+    // normal moves dont need to be undone
+    apply_move(pos, legal, NULL);
 
-    // if promotion, ask human which piece to promote to
-    if (m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION)
-        *m = choose_promotion_move(m);
-  
-    apply_move(pos, m, NULL);
     return 1;
 }
 

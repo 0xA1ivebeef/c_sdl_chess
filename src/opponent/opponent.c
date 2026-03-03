@@ -11,8 +11,6 @@ Move* pick_move(Move* legal_moves)
 int opponent_move(Position* pos)
 {
     Move* m = pick_move(pos->legal_moves);
-    if (handle_move(pos, m->start, m->dest))
-        return 0;
-
-    return 1;
+    // if (handle_move(pos, m->start, m->dest))
+    return 0;
 }
