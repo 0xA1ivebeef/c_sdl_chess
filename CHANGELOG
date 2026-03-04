@@ -1,0 +1,26 @@
+
+03-03-26
+major bugs with mutation of Position Struct and random king square updates 
+comming from undo move, in this case beeing called by filter_moves
+
+on removing filter moves: bugs disappear for now, enpassant square is not set
+on double pawn push though
+
+enpassant is fixed and works for both sides as tested but not with perft
+
+attack bitboards now include enpassant correctly
+
+castling is added back to the game and works as tested but not with perft
+
+enpassant is not uint8_t instead of int 
+
+04-03-2026
+adjusted attack_generator so that both players attack bitboards can be generated 
+given to the function as a parameter, enpassant for both players tested
+
+added is_check back to the game
+
+removed king_sq from Position struct 
+
+added filter moves back to the game but it needs testing and refining
+

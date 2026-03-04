@@ -26,6 +26,7 @@ uint64_t pawn_attacks(int king_sq, int by_side)
     return (1ULL << sq1) | (1ULL << sq2);
 }
 
+// TODO refactor
 void add_enpassant(Position* pos)
 {
     if (pos->enpassant < 16 || pos->enpassant > 55)

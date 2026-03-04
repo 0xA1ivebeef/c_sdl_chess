@@ -3,17 +3,10 @@
 
 #define AI_COLOR BLACK
 
-void update_king_square(Position* pos)
-{
-    pos->king_sq[BLACK] = get_king_square(pos->bb[BLACK_KING]);
-    pos->king_sq[WHITE] = get_king_square(pos->bb[WHITE_KING]);
-}
-
 void position_init(Position* pos)
 {
     load_fen_string(pos);
     update_occ(pos);
-    update_king_square(pos);
 	
     generate_legal_moves(pos);
     filter_moves(pos); 
@@ -21,18 +14,15 @@ void position_init(Position* pos)
     log_gamestate(pos);
 }
 
-void update(Position* pos)
+void update(Position* pos, UIContext* ui)
 {
     pos->player ^= 1;
     update_occ(pos);
     
-    update_king_square(pos);
-
     generate_legal_moves(pos); 
     // filter_moves(pos);
 
-    /* check
-    if (is_check(king_sq, get_attack_bb(pos)))
+    if (is_check(get_king_sq(pos, pos->player), get_attack_bb(pos, !pos->player)))
     {   
         printf("CHECK!\n");
         if (pos->legal_move_count == 0) 
@@ -53,7 +43,6 @@ void update(Position* pos)
 		printf("50 move draw\n");
         ui->game_over = 1;  
 	}
-    */
 
     log_gamestate(pos);
 }
@@ -100,7 +89,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
         // update
         if (ui->needs_update) 
         {
-            update(pos);
+            update(pos, ui);
             render(app, pos->bb);
             ui->needs_update = 0;
         }

@@ -21,8 +21,7 @@ void handle_pawn_promotion(uint64_t* bb, Move* m)
     bb[promote_bb_i] |= (1ULL << m->dest); // place queen
 }
 
-// TODO fix this
-void handle_enpassant(int p, uint64_t* bb, int enpassant)
+void handle_enpassant(int p, uint64_t* bb, uint8_t enpassant)
 {
     int i = !p * 6;
     int d = (enpassant + 16*p - 8); // captured pawns square
@@ -33,7 +32,7 @@ void handle_enpassant(int p, uint64_t* bb, int enpassant)
 
 // TODO: maybe dont set castle_rights here, just move the rook
 // given bb and move and castle_rights, move the rook of the castling move and remove castle_rights
-void handle_castling(uint64_t* bb, Move* m, int* castle_rights)
+void handle_castling(uint64_t* bb, Move* m, uint8_t* castle_rights)
 {
     int bbi = (m->start == 60) ? WHITE_ROOK : BLACK_ROOK; // rook bb
     if(m->start > m->dest)

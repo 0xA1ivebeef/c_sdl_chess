@@ -70,8 +70,8 @@ int can_castle(Position* pos, int bit_index)
 	uint64_t bitmask = CASTLING_MASKS[bit_index];
 
     // squares under attack
-	uint64_t enemy_a_bb = get_attack_bb(pos);
-	if (enemy_a_bb & bitmask)
+	uint64_t enemy_attack_bb = get_attack_bb(pos, !pos->player);
+	if (enemy_attack_bb & bitmask)
 	{
 		printf("CAN CASTLE square under attack\n");
 		return 0;	

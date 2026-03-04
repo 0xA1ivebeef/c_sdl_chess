@@ -1,2 +1,5 @@
 
-adjust enpassant -> uint8_t and INVALID_SQUARE
+maybe move all bitboard indicies to uint8_t 
+add __builtin_ctzll instead of resolving bitboards slow
+perft
+

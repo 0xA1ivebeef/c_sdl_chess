@@ -13,8 +13,7 @@
 #include "utils/bitboard_utils.h"
 
 void handle_pawn_promotion(uint64_t* bitboards, Move* this_move);
-
-void handle_enpassant(int current_player, uint64_t* bitboards, int enpassant_square);
-void handle_castling(uint64_t* bitboards, Move* this_move, int* castle_rights);
+void handle_enpassant(int current_player, uint64_t* bitboards, uint8_t enpassant);
+void handle_castling(uint64_t* bitboards, Move* this_move, uint8_t* castle_rights);
 
 #endif

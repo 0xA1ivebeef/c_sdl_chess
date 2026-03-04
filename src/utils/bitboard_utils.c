@@ -1,12 +1,10 @@
 
 #include "utils/bitboard_utils.h"
 
-int get_king_square(uint64_t bb)
+int get_king_sq(Position* pos, uint8_t player)
 {
-    if (bb == 0)
-        return -1;
-
-    return __builtin_ctzll(bb);
+    uint64_t bb = pos->bb[player ? WHITE_KING : BLACK_KING];
+    return bb ? __builtin_ctzll(bb) : -1;
 }
 
 void get_bb_copy(uint64_t* bb, uint64_t* occ, uint64_t* bb_copy, uint64_t* occ_bb_copy)

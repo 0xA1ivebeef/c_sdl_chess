@@ -24,7 +24,7 @@ void handle_special_move(Position* pos, Move* m)
             printf("handling double_pawnpush %d\n", pos->enpassant);
             break;
         default:
-            pos->enpassant = -1;
+            pos->enpassant = INVALID_SQUARE;
             break;
     }
 }
@@ -115,13 +115,6 @@ void undo_move(Position* pos, Move* m, Undo* undo)
     pos->fullmove = undo->fullmove;
 
     update_occ(pos);
-
-	// update king squares 
-    if (ss_bb_i == WHITE_KING) 
-        pos->king_sq[WHITE] = m->dest;
-	else if (ss_bb_i == BLACK_KING) 
-	    pos->king_sq[BLACK] = m->dest;
-
     pos->player ^= 1;
 
     undo->valid = 0;

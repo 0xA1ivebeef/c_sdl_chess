@@ -8,7 +8,7 @@
 #include "engine/types.h"
 #include "engine/bitmask_loader.h"
 
-uint64_t get_attack_bb(Position* pos);
+uint64_t get_attack_bb(Position* pos, uint8_t player);
 void generate_attack_bb(Position* position);
 
 #endif

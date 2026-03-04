@@ -1,0 +1,21 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-O3",
+      "-march=native",
+      "-flto",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "obj/src/engine/check.o",
+      "src/engine/check.c"
+    ],
+    "directory": "/home/debianlocalhost/development/c_sdl_chess",
+    "file": "/home/debianlocalhost/development/c_sdl_chess/src/engine/check.c",
+    "output": "/home/debianlocalhost/development/c_sdl_chess/obj/src/engine/check.o"
+  }
+]

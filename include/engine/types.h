@@ -58,15 +58,13 @@ typedef struct
     uint64_t occ[3];
 
     uint8_t player;
-    int castle_rights;
-    int enpassant;
+    uint8_t castle_rights;
+    uint8_t enpassant;
     uint8_t halfmove;
     uint16_t fullmove;
 
     Move legal_moves[LEGAL_MOVES_SIZE];
     uint8_t legal_move_count;
-
-    uint8_t king_sq[2];
 } Position;
 
 typedef struct
@@ -74,7 +72,7 @@ typedef struct
     int ss_bb_i;
     int ds_bb_i;
     uint8_t castle_rights;
-    int enpassant;
+    uint8_t enpassant;
     uint8_t halfmove;
     uint16_t fullmove;
     int promote_bb_i;
