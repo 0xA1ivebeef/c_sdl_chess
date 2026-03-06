@@ -108,7 +108,8 @@ void undo_move(Position* pos, Move* m, Undo* undo)
     pos->castle_rights = undo->castle_rights;
     pos->enpassant = undo->enpassant;
         
-    pos->halfmove = undo->halfmove;
+    pos->halfmove = undo->halfmove; 
+    pos->fullmove = undo->fullmove;
 
     pos->player ^= 1;
     update_occ(pos);
@@ -123,6 +124,7 @@ void save_state(Position* pos, Move* m, Undo* undo)
     undo->castle_rights  = pos->castle_rights;
     undo->enpassant      = pos->enpassant;
     undo->halfmove       = pos->halfmove;
+    undo->fullmove       = pos->fullmove;
 }
 
 void apply_move(Position* pos, Move* m)

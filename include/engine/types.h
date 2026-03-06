@@ -54,26 +54,27 @@ typedef struct Move
 
 typedef struct
 {
-    uint64_t bb[12];
-    uint64_t occ[3];
+    uint64_t    bb[12];
+    uint64_t    occ[3];
 
-    uint8_t player;
-    uint8_t castle_rights;
-    uint8_t enpassant;
-    uint8_t halfmove;
-    uint16_t fullmove;
+    uint8_t     player;
+    uint8_t     castle_rights;
+    uint8_t     enpassant;
+    uint8_t     halfmove;
+    uint16_t    fullmove;
 
-    Move legal_moves[LEGAL_MOVES_SIZE];
-    uint8_t legal_move_count;
+    Move        legal_moves[LEGAL_MOVES_SIZE];
+    uint8_t     legal_move_count;
 } Position;
 
 typedef struct
 {
-    int moved_piece; // can be neg
-    int captured_piece; 
-    uint8_t castle_rights;
-    uint8_t enpassant;
-    uint8_t halfmove;
+    int         moved_piece; // can be neg
+    int         captured_piece; 
+    uint8_t     castle_rights;
+    uint8_t     enpassant;
+    uint8_t     halfmove;
+    uint16_t    fullmove;
 } Undo;
 
 #endif
