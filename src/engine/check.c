@@ -8,7 +8,7 @@ int square_under_attack(uint8_t sq, uint64_t attack_bb)
 
 int is_check(int king_sq, uint64_t attack_bb)
 {
-    return square_under_attack(king_sq, attack_bb);
+    return ((attack_bb & (1ULL << king_sq)) != 0);
 }
 
 void filter_moves(Position* pos)
@@ -26,9 +26,16 @@ void filter_moves(Position* pos)
 
         uint8_t king_sq = get_king_sq(pos, !pos->player);
         uint64_t attack_bb = get_attack_bb(pos, pos->player);
-        if (!square_under_attack(king_sq, attack_bb))
-            valid_moves[valid_move_count++] = m;
 
+        printf("filter moves: king square: %d\n", king_sq);
+        printf("attack bitboard\n");
+        log_bitboard(&attack_bb);
+
+        if (!square_under_attack(king_sq, attack_bb))
+        {
+            printf("king is not under attack, adding move %d, %d flag %d\n", m.start, m.dest, m.flags);
+            valid_moves[valid_move_count++] = m;
+        }
         undo_move(pos, &m, &undo); // restore position
     }
 

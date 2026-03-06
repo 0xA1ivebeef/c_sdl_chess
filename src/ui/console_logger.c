@@ -13,7 +13,6 @@ void print_castle_rights(int castle_rights)
 
 void log_bitboard(uint64_t* n)
 {
-    // TODO add square notation
     printf("\n");
     printf("8 ");
 	for (int i = 0; i < 64; ++i)
@@ -44,13 +43,10 @@ void log_bitboards(uint64_t* bitboards, uint64_t* occupancy_bitboards)
         log_bitboard(&occupancy_bitboards[i]);
 }
 
-void log_legal_moves(Move* legal_moves)
+void log_legal_moves(Move* legal_moves, int legal_move_count)
 {
-	for(int i = 0; i < LEGAL_MOVES_SIZE; ++i)
+	for(int i = 0; i < legal_move_count; ++i)
     {
-        if(legal_moves[i].start == legal_moves[i].dest)
-            return;
-
         printf("%d: ", i+1);
         printf("%s, %s\n", square_to_notation(legal_moves[i].start), 
                            square_to_notation(legal_moves[i].dest));
@@ -72,8 +68,6 @@ void log_gamestate(Position* pos)
 
     printf("halfmove clock: %d\n", pos->halfmove);
     printf("fullmove number: %d\n", pos->fullmove);
-
-    log_legal_moves(pos->legal_moves);
 
     printf("\n --------------------------------------------\n\n");
 }

@@ -113,7 +113,6 @@ void attack_add_enpassant(uint64_t* res, uint8_t white, uint64_t pawn_bb, uint8_
     }
 }
 
-// TODO this includes uses enpassant maybe serarate that
 uint64_t get_attack_bb(Position* pos, uint8_t player)
 {
 	uint64_t res = 0;
@@ -121,12 +120,12 @@ uint64_t get_attack_bb(Position* pos, uint8_t player)
 	for(int i = bb_startindex; i < bb_startindex + 6; ++i)
         res |= resolve_attack_bb(player, pos->bb[i], i, pos->occ);
 
-    // enpassant only possible for current player of position
+    // TODO maybe this is causing bugs enpassant only possible for current player of position
     if (player == pos->player)
         attack_add_enpassant(&res, player, pos->bb[player*6], pos->enpassant);
 
-    printf("attack_generator logging attack_bitboard\n");
-    log_bitboard(&res);
+    // printf("attack_generator logging attack_bitboard\n");
+    // log_bitboard(&res);
 
     return res;
 }
