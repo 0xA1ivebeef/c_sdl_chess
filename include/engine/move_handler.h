@@ -10,12 +10,12 @@
 #include "engine/types.h"
 #include "engine/castling.h"
 #include "engine/special_move_handler.h"
-#include "engine/game.h"
 
 #include "utils/utils.h"
 #include "utils/bitboard_utils.h"
 
-void apply_move(Position* pos, Move* m, Undo* undo);
+void save_state(Position* pos, Move* m, Undo* undo);
+void apply_move(Position* pos, Move* m);
 void undo_move(Position* pos, Move* m, Undo* undo);
 int handle_move(Position* pos, Move* m);
 

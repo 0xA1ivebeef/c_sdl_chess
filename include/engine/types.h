@@ -69,14 +69,11 @@ typedef struct
 
 typedef struct
 {
-    int ss_bb_i;
-    int ds_bb_i;
+    int moved_piece; // can be neg
+    int captured_piece; 
     uint8_t castle_rights;
     uint8_t enpassant;
     uint8_t halfmove;
-    uint16_t fullmove;
-    int promote_bb_i;
-    uint8_t valid; 
 } Undo;
 
 #endif

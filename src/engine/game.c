@@ -16,11 +16,10 @@ void position_init(Position* pos)
 
 void update(Position* pos, UIContext* ui)
 {
-    pos->player ^= 1;
     update_occ(pos);
     
     generate_legal_moves(pos); 
-    // filter_moves(pos);
+    filter_moves(pos);
 
     if (is_check(get_king_sq(pos, pos->player), get_attack_bb(pos, !pos->player)))
     {   

@@ -30,9 +30,7 @@ void handle_enpassant(int p, uint64_t* bb, uint8_t enpassant)
     bb[i] &= ~(1ULL << d); // capture enpassanted pawn
 }
 
-// TODO: maybe dont set castle_rights here, just move the rook
-// given bb and move and castle_rights, move the rook of the castling move and remove castle_rights
-void handle_castling(uint64_t* bb, Move* m, uint8_t* castle_rights)
+void handle_castling(uint64_t* bb, Move* m)
 {
     int bbi = (m->start == 60) ? WHITE_ROOK : BLACK_ROOK; // rook bb
     if(m->start > m->dest)
@@ -45,8 +43,5 @@ void handle_castling(uint64_t* bb, Move* m, uint8_t* castle_rights)
         bb[bbi] &= ~(1ULL << (m->dest + 1));
         bb[bbi] |= (1ULL << (m->dest - 1));
     }
-
-    // TODO this might cause bugs (take away castlerights)
-    *castle_rights &= (m->start == 60) ? 3 : 12; 
 }
 

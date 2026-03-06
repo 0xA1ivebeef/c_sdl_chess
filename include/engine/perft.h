@@ -6,10 +6,10 @@
 
 #include "engine/constants.h"
 #include "engine/types.h"
-#include "engine/game.h"
 #include "engine/move_generator.h"
 #include "engine/move_handler.h"
 #include "engine/attack_generator.h"
+#include "engine/check.h"
 
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"

@@ -1,25 +1,25 @@
 
 #include "engine/perft.h"
 
-int get_nodes(Position* position, int depth) 
+int get_nodes(Position* pos, int depth) 
 {
     if (depth == 0)
         return 1;
 
-    generate_legal_moves(position);
-    filter_moves(position);
+    generate_legal_moves(pos);
+    filter_moves(pos);
 
     if (depth == 1)
-        return position->legal_move_count;
+        return pos->legal_move_count;
 
     int nodes = 0;
 
     // Snapshot move list
-    int move_count = position->legal_move_count;
+    int move_count = pos->legal_move_count;
     Move moves[256]; // or your max move list size
 
     for (int i = 0; i < move_count; ++i)
-        moves[i] = position->legal_moves[i];
+        moves[i] = pos->legal_moves[i];
 
     for (int i = 0; i < move_count; ++i)
     {
@@ -27,11 +27,12 @@ int get_nodes(Position* position, int depth)
 
         Move m = moves[i];
 
-        apply_move(position, &m, &undo);
+        save_state(pos, &m, &undo);
+        apply_move(pos, &m);
 
-        nodes += get_nodes(position, depth - 1);
+        nodes += get_nodes(pos, depth - 1);
 
-        undo_move(position, &m, &undo);
+        undo_move(pos, &m, &undo);
     }
 
     return nodes;
@@ -53,13 +54,14 @@ void perft_divide(Position* pos, int depth)
     for (int i = 0; i < move_count; ++i)
     {
         Move m = moves[i];
-        Undo u = {0};
+        Undo undo = {0};
 
-        apply_move(pos, &m, &u);
+        save_state(pos, &m, &undo);
+        apply_move(pos, &m);
 
         int nodes = get_nodes(pos, depth - 1);
 
-        undo_move(pos, &m, &u);
+        undo_move(pos, &m, &undo);
 
         printf("%s%s: %d\n",
             square_to_notation(m.start),

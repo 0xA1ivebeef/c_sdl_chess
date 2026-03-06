@@ -4,11 +4,10 @@
 // called after every move (through apply_move() !!!)
 void handle_special_move(Position* pos, Move* m)
 {
-    printf("handling special move\n");
     switch (m->flags)
     {
         case CASTLE_FLAG:
-            handle_castling(pos->bb, m, &pos->castle_rights);
+            handle_castling(pos->bb, m);
             break;
         case ENPASSANT_FLAG:
             handle_enpassant(pos->player, pos->bb, pos->enpassant);
@@ -31,62 +30,53 @@ void handle_special_move(Position* pos, Move* m)
 
 void undo_castling(Position* pos, Move* m)
 {
-    // move the rook back
-    int bb_i = (m->start == 60) ? WHITE_ROOK : BLACK_ROOK; // rook bitboards
+    assert(m->flags == CASTLE_FLAG);
+
+    int rook = (m->start == 60) ? WHITE_ROOK : BLACK_ROOK; 
+
+    int rook_from, rook_to;
     if(m->start > m->dest)
     {
-        // qs
-        pos->bb[bb_i] |= (1ULL << (m->dest - 2)); // add rook back on a file
-        pos->bb[bb_i] &= ~(1ULL << (m->dest + 1)); // remove rook
+        rook_from = m->dest - 2; // queenside
+        rook_to = m->dest + 1;
     }
     else
     {
-        // ks
-        pos->bb[bb_i] |= (1ULL << (m->dest + 1)); 
-        pos->bb[bb_i] &= ~(1ULL << (m->dest - 1));
+        rook_from = m->dest + 1; // kingside
+        rook_to = m->dest - 1;
     }
+
+    pos->bb[rook] |= (1ULL << rook_from); // add rook back on a file
+    pos->bb[rook] &= ~(1ULL << rook_to); // remove rook
 }
 
-// TODO fix this
 void undo_enpassant(Position* pos, Move* m, Undo* undo)
 {
+    assert(m->flags == ENPASSANT_FLAG);
+
     // direction 1 white captured black pawn: -1 black captured white pawn
-    int dir = ((m->start - m->dest) ? 1 : -1);   
+    int dir = (m->start < m->dest) ? 1 : -1;
 
     // white captured -> blacks pawn bb 0 : black captured -> whites pawn bb 6
-    int restore_bb_i = (dir == 1) ? 0 : 6;    
+    int restore_piece = dir ? BLACK_PAWN : WHITE_PAWN;    
+    int d = undo->enpassant + dir*8; 
 
-    int d = undo->enpassant + 8 * dir; 
-
-    pos->bb[restore_bb_i] |= (1ULL << d);
+    pos->bb[restore_piece] |= (1ULL << d); // restore captured pawn
 }
 
 void undo_promotion(Position* pos, Move* m, Undo* undo)
 {
-    // removed promoted piece, pawn move is already undone
-    pos->bb[undo->promote_bb_i] &= ~(1ULL << m->dest); 
+    assert(m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
+
+    // only remove promoted piece
+    int is_white = undo->moved_piece == WHITE_PAWN;
+    int promoted_piece = m->flags - 2 + is_white*6; // 3..6 -> 1-4 black / 7-10 white
+    pos->bb[promoted_piece] &= ~(1ULL << m->dest);
 }
 
-// never call undo_move before calling apply_move because it saves the state
-// TODO make sure the state is fully restored
 void undo_move(Position* pos, Move* m, Undo* undo)
 {
-    assert(undo->valid);
-
-    int ss_bb_i = undo->ss_bb_i;
-    int ds_bb_i = undo->ds_bb_i;
-
-    // reverse capturing
-    if (ds_bb_i != -1) 
-        pos->bb[ds_bb_i] |= 1ULL << m->dest;
-
-    // restore moved piece on start
-    pos->bb[ss_bb_i] |= 1ULL << m->start;
-
-    // remove moved piece on dest
-    pos->bb[ss_bb_i] &= ~(1ULL << m->dest);
- 
-    // undo special moves
+    // undo special moves before undo normal moves to keep the function inversion order correct
     switch (m->flags)
     {
         case 1:
@@ -102,85 +92,71 @@ void undo_move(Position* pos, Move* m, Undo* undo)
             undo_promotion(pos, m, undo);
             break;
         case 7:
-            // TODO double_pawn_push doesnt need undo since it only sets enpassant 
-            // square and this is already done through bitboard undo
+            // double pawn push already undone through normal move undo
             break;
     }
 
+    // reverse capturing
+    if (undo->captured_piece > -1) 
+        pos->bb[undo->captured_piece] |= (1ULL << m->dest);
+
+    // restore moved piece 
+    pos->bb[undo->moved_piece] |= (1ULL << m->start);
+    pos->bb[undo->moved_piece] &= ~(1ULL << m->dest);
+ 
     // restore state
     pos->castle_rights = undo->castle_rights;
     pos->enpassant = undo->enpassant;
         
     pos->halfmove = undo->halfmove;
-    pos->fullmove = undo->fullmove;
 
-    update_occ(pos);
     pos->player ^= 1;
-
-    undo->valid = 0;
+    update_occ(pos);
 }
 
-void set_promoted_piece(Move* m, Undo* undo)
+void save_state(Position* pos, Move* m, Undo* undo)
 {
-    // set bb index of promoted piece
-    int promote_bb_i = m->flags - 2; // knight..queen 3..6
-    
-    if(m->dest <= 7) // WHITE
-        promote_bb_i += 6;
+    assert(pos && m && undo);
 
-    undo->promote_bb_i = promote_bb_i;
+    undo->moved_piece    = get_bb_index(pos->bb, m->start);
+    undo->captured_piece = get_bb_index(pos->bb, m->dest); 
+    undo->castle_rights  = pos->castle_rights;
+    undo->enpassant      = pos->enpassant;
+    undo->halfmove       = pos->halfmove;
 }
 
-void apply_move(Position* pos, Move* m, Undo* undo)
+void apply_move(Position* pos, Move* m)
 {   
-    int ss_bb_i = get_bb_index(pos->bb, m->start);
-    if (ss_bb_i == -1) 
-	{
-        fprintf(stderr, "apply_move: no piece on start %d\n", ss_bb_i);
-        abort();
-    }
+    int moved_piece = get_bb_index(pos->bb, m->start);
+    assert(moved_piece > -1);
 
-    int ds_bb_i = get_bb_index(pos->bb, m->dest); // -1 if empty
-
-    // save old state BEFORE ANY CHANGES
-    if (undo)
-    {
-        undo->ss_bb_i = ss_bb_i;
-        undo->ds_bb_i = ds_bb_i;
-        undo->castle_rights = pos->castle_rights;
-        undo->enpassant = pos->enpassant;
-        undo->halfmove = pos->halfmove;
-        undo->fullmove = pos->fullmove;
-        if (m->flags >= 3 && m->flags <= 6) 
-            set_promoted_piece(m, undo);
-        undo->valid = 1;
-    }
+    int captured_piece = get_bb_index(pos->bb, m->dest); // -1 if empty
 
 	// capture
-    if (ds_bb_i != -1) 
-        pos->bb[ds_bb_i] &= ~(1ULL << m->dest);
+    if (captured_piece > -1) 
+        pos->bb[captured_piece] &= ~(1ULL << m->dest);
 
     // move
-    pos->bb[ss_bb_i] &= ~(1ULL << m->start);
-    pos->bb[ss_bb_i] |=  (1ULL << m->dest);
+    pos->bb[moved_piece] &= ~(1ULL << m->start);
+    pos->bb[moved_piece] |=  (1ULL << m->dest);
 
-    // special move handling
-    handle_special_move(pos, m); // after move was made
-    update_castle_rights(pos, m);
+    // special move handling after normal move
+    handle_special_move(pos, m); 
+    update_castle_rights(pos, m); 
 
     // move clocks
-    int is_pawn_move = (ss_bb_i == WHITE_PAWN || ss_bb_i == BLACK_PAWN);
-    if (is_pawn_move || ds_bb_i != -1 || (m->flags == ENPASSANT_FLAG)) 
+    int pawn_move = (moved_piece % 6 == 0);
+    if (pawn_move || captured_piece > -1 || (m->flags == ENPASSANT_FLAG)) 
         pos->halfmove = 0;
-	else 
+    else 
         pos->halfmove++;
 
-    // TODO maybe this is wrong
     if (pos->player == BLACK) 
         pos->fullmove++;
+
+    pos->player ^= 1;
 }
 
-// TODO promotion moves
 Move* is_legal_move(Position* pos, Move* m)
 {
     for(int i = 0; i < pos->legal_move_count; ++i)
@@ -192,7 +168,6 @@ Move* is_legal_move(Position* pos, Move* m)
     return NULL;
 }
 
-// if undo is NULL, nothing is saved 
 int handle_move(Position* pos, Move* m)
 {
     // replace with move from legal moves to get flags
@@ -200,8 +175,7 @@ int handle_move(Position* pos, Move* m)
     if (!legal)
         return 0;
 
-    // normal moves dont need to be undone
-    apply_move(pos, legal, NULL);
+    apply_move(pos, legal);
 
     return 1;
 }

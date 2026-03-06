@@ -1,4 +1,6 @@
 
+--------------------------------------------------------------------------------
+
 03-03-26
 major bugs with mutation of Position Struct and random king square updates 
 comming from undo move, in this case beeing called by filter_moves
@@ -14,6 +16,8 @@ castling is added back to the game and works as tested but not with perft
 
 enpassant is not uint8_t instead of int 
 
+--------------------------------------------------------------------------------
+
 04-03-2026
 adjusted attack_generator so that both players attack bitboards can be generated 
 given to the function as a parameter, enpassant for both players tested
@@ -23,4 +27,23 @@ added is_check back to the game
 removed king_sq from Position struct 
 
 added filter moves back to the game but it needs testing and refining
+
+--------------------------------------------------------------------------------
+
+05-03-2026
+fixing make move and undo move, reducing undo move to captured piece enpassant and
+castling the rest is implicit through move and position 
+
+fixed order of apply move and undo move to match inversion and added moved_piece
+to undo move to make it more stable and reduce the risk for bugs
+
+fixed update_castle_rights, removed responsibility from apply castling
+
+fully reintroducing filter_moves causes some weird stuff
+back double pawn pushes that move into actual enpassant are not possible
+the pawn is just moved back, enpassant is still possible but doesnt capture
+the pawn it adds it to the board for some reason 
+-> phantom pawn
+
+--------------------------------------------------------------------------------
 

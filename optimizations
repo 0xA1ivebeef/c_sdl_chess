@@ -1,0 +1,69 @@
+
+--------------------------------------------------------------------------------
+
+i remember implementing a basic linux shell in c according to the instructions 
+of this systems programmer who used an array of function ptrs to avoid large 
+switch statements and call functions based on the value of a single variable
+this can be implemented for the following snippet:
+
+// called after every move (through apply_move() !!!)
+void handle_special_move(Position* pos, Move* m)
+{
+    printf("handling special move\n");
+    switch (m->flags)
+    {
+        case CASTLE_FLAG:
+            handle_castling(pos->bb, m, &pos->castle_rights);
+            break;
+        case ENPASSANT_FLAG:
+            handle_enpassant(pos->player, pos->bb, pos->enpassant);
+            break;
+        case KNIGHT_PROMOTION:
+        case BISHOP_PROMOTION:
+        case ROOK_PROMOTION:
+        case QUEEN_PROMOTION:
+            handle_pawn_promotion(pos->bb, m); 
+            break;
+        case DOUBLE_PAWN_PUSH:
+            pos->enpassant = m->dest + 8 * (pos->player ? 1 : -1);
+            printf("handling double_pawnpush %d\n", pos->enpassant);
+            break;
+        default:
+            pos->enpassant = INVALID_SQUARE;
+            break;
+    }
+}
+
+the flag is just calling one function in each case so this can be mapped onto 
+function pointers turning this code into:
+
+typedef void (*move_handler_t)(Position *pos, Move *m);
+
+void handle_castling(Position *pos, Move *m) 
+{
+    handle_castling_impl(pos->bb, m, &pos->castle_rights);
+}
+
+void handle_enpassant(Position *pos, Move *m) 
+{
+    handle_enpassant_impl(pos->player, pos->bb, pos->enpassant);
+}
+
+... 
+
+move_handler_t move_handlers[] = {
+    [CASTLE_FLAG] = handle_castling,
+    [ENPASSANT_FLAG] = handle_enpassant,
+    [KNIGHT_PROMOTION] = handle_pawn_promotion,
+    [BISHOP_PROMOTION] = handle_pawn_promotion,
+    [ROOK_PROMOTION] = handle_pawn_promotion,
+    [QUEEN_PROMOTION] = handle_pawn_promotion
+};
+
+now the move_handlers array can be called with the move->flag to get the function 
+pointer, however this needs to have the same function signature for every function
+to work (typedef of the function ptr) so a switch statement is probably fine here
+
+--------------------------------------------------------------------------------
+
+
