@@ -206,7 +206,12 @@ Move* is_legal_move(Position* pos, Move* m)
     {
         if ((pos->legal_moves[i].start == m->start) && 
             (pos->legal_moves[i].dest  == m->dest))
+        {
+            if (m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION)
+                return m;
+
             return &pos->legal_moves[i];
+        }
     }
     return NULL;
 }
@@ -214,6 +219,7 @@ Move* is_legal_move(Position* pos, Move* m)
 int handle_move(Position* pos, Move* m)
 {
     // replace with move from legal moves to get flags
+    // assume promotion flags are already set in m
     Move* legal = is_legal_move(pos, m);
     if (!legal)
         return 0;

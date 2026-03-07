@@ -12,6 +12,8 @@ typedef struct AppContext
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Texture* textures[12];
+    SDL_Texture* move_circle;
+    SDL_Texture* capture_circle;
 } AppContext;
 
 int init_sdl(AppContext* app);

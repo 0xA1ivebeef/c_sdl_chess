@@ -57,10 +57,17 @@ implemented a memcpy of backup and position for apply and undo move to make sure
 undo doesnt mutate the position which it does for enpassant thats why this causes
 undefined behaviour
 
+--------------------------------------------------------------------------------
+
+07-03-2026
 FIXED all enpassant bugs, now works properly undo does not mutate the position anymore
 TODO promotion pieces are not as chosen (knight promotion always)
 
---------------------------------------------------------------------------------
+fixed pawn promotions so the selection is right again
 
+render legal moves looks nicer now, not just coloing the destsquare red
+drawing a small circle for normal moves and a large ring for captures
+
+--------------------------------------------------------------------------------
 
 

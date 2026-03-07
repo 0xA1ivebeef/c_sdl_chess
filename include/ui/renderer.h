@@ -3,6 +3,7 @@
 #define RENDERER_H
 
 #include <stdint.h>
+#include <math.h>
 
 #include "engine/constants.h"
 #include "engine/types.h"

@@ -1,6 +1,6 @@
 
 CC = gcc
-CFLAGS = -O3 -march=native -flto -Wall -Wextra -g -Iinclude
+CFLAGS = -O3 -march=native -flto -Wall -Wextra -g -Iinclude 
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -16,7 +16,7 @@ all: main
 
 # Link all object files into the final executable
 main: $(OBJ_FILES)
-	$(CC) $(OBJ_FILES) -lSDL2 -lSDL2_image -o main
+	$(CC) $(OBJ_FILES) -lSDL2 -lSDL2_image -lm -o main
 
 # Compile .c to .o, preserving directory structure inside obj/
 $(OBJ_DIR)/%.o: %.c
