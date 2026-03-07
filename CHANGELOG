@@ -49,3 +49,18 @@ the pawn it adds it to the board for some reason
 
 --------------------------------------------------------------------------------
 
+06-03-2026
+moved special move handler functions into move_handler
+and fixed logic in them and combined with undo logic
+
+implemented a memcpy of backup and position for apply and undo move to make sure
+undo doesnt mutate the position which it does for enpassant thats why this causes
+undefined behaviour
+
+FIXED all enpassant bugs, now works properly undo does not mutate the position anymore
+TODO promotion pieces are not as chosen (knight promotion always)
+
+--------------------------------------------------------------------------------
+
+
+

@@ -1,16 +1,55 @@
 
 #include "engine/move_handler.h"
 
+void handle_pawn_promotion(uint64_t* bb, Move* m)
+{
+    assert(m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
+
+    int pawn = (m->dest < 8) ? WHITE_PAWN : BLACK_PAWN;
+    int promote_piece = m->flags - 2; // PROMOTION_FLAG -> Bitboard Index
+    promote_piece += pawn; // fixing color 
+
+    // replace pawn with promoted piece
+    bb[pawn] &= ~(1ULL << m->dest);
+    bb[promote_piece] |= (1ULL << m->dest); 
+}
+
+void handle_enpassant(int player, uint64_t* bb, Move* m)
+{
+    int capture_sq = player ? m->dest + 8 : m->dest - 8;
+    int captured_pawn = player ? BLACK_PAWN : WHITE_PAWN;
+
+    assert(capture_sq >= 0 && capture_sq < 64);
+    
+    bb[captured_pawn] &= ~(1ULL << capture_sq); // capture enpassanted pawn
+}
+
+void handle_castling(uint64_t* bb, Move* m)
+{
+    int rook = (m->start > 32) ? WHITE_ROOK : BLACK_ROOK; 
+    if(m->start > m->dest)
+    {
+        bb[rook] &= ~(1ULL << (m->dest - 2));
+        bb[rook] |= (1ULL << (m->dest + 1));
+    }
+    else
+    {
+        bb[rook] &= ~(1ULL << (m->dest + 1));
+        bb[rook] |= (1ULL << (m->dest - 1));
+    }
+}
+
 // called after every move (through apply_move() !!!)
 void handle_special_move(Position* pos, Move* m)
 {
+    pos->enpassant = INVALID_SQUARE;
     switch (m->flags)
     {
         case CASTLE_FLAG:
             handle_castling(pos->bb, m);
             break;
         case ENPASSANT_FLAG:
-            handle_enpassant(pos->player, pos->bb, pos->enpassant);
+            handle_enpassant(pos->player, pos->bb, m);
             break;
         case KNIGHT_PROMOTION:
         case BISHOP_PROMOTION:
@@ -19,11 +58,7 @@ void handle_special_move(Position* pos, Move* m)
             handle_pawn_promotion(pos->bb, m); 
             break;
         case DOUBLE_PAWN_PUSH:
-            pos->enpassant = m->dest + 8 * (pos->player ? 1 : -1);
-            printf("handling double_pawnpush %d\n", pos->enpassant);
-            break;
-        default:
-            pos->enpassant = INVALID_SQUARE;
+            pos->enpassant = m->dest + 8*(pos->player ? 1 : -1);
             break;
     }
 }
@@ -32,7 +67,7 @@ void undo_castling(Position* pos, Move* m)
 {
     assert(m->flags == CASTLE_FLAG);
 
-    int rook = (m->start == 60) ? WHITE_ROOK : BLACK_ROOK; 
+    int rook = (m->start > 32 ) ? WHITE_ROOK : BLACK_ROOK; 
 
     int rook_from, rook_to;
     if(m->start > m->dest)
@@ -53,15 +88,17 @@ void undo_castling(Position* pos, Move* m)
 void undo_enpassant(Position* pos, Move* m, Undo* undo)
 {
     assert(m->flags == ENPASSANT_FLAG);
+    
+    int capture_sq = m->dest - 8;
+    int restore_piece = WHITE_PAWN;
 
-    // direction 1 white captured black pawn: -1 black captured white pawn
-    int dir = (m->start < m->dest) ? 1 : -1;
+    if (undo->moved_piece == WHITE_PAWN)
+    {
+        capture_sq = m->dest + 8;
+        restore_piece = BLACK_PAWN;
+    }
 
-    // white captured -> blacks pawn bb 0 : black captured -> whites pawn bb 6
-    int restore_piece = dir ? BLACK_PAWN : WHITE_PAWN;    
-    int d = undo->enpassant + dir*8; 
-
-    pos->bb[restore_piece] |= (1ULL << d); // restore captured pawn
+    pos->bb[restore_piece] |= (1ULL << capture_sq); // restore captured pawn
 }
 
 void undo_promotion(Position* pos, Move* m, Undo* undo)
@@ -147,7 +184,7 @@ void apply_move(Position* pos, Move* m)
     update_castle_rights(pos, m); 
 
     // move clocks
-    int pawn_move = (moved_piece % 6 == 0);
+    int pawn_move = (moved_piece % WHITE_PAWN == 0);
     if (pawn_move || captured_piece > -1 || (m->flags == ENPASSANT_FLAG)) 
         pos->halfmove = 0;
     else 
@@ -157,6 +194,10 @@ void apply_move(Position* pos, Move* m)
         pos->fullmove++;
 
     pos->player ^= 1;
+    update_occ(pos);
+
+    printf("logging bitboards after apply move\n");
+    log_occ(pos->occ);
 }
 
 Move* is_legal_move(Position* pos, Move* m)

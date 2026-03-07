@@ -29,18 +29,31 @@ void log_bitboard(uint64_t* n)
     printf("\n\n");
 }
 
-void log_bitboards(uint64_t* bitboards, uint64_t* occupancy_bitboards)
+void log_occ(uint64_t* occ)
 {
+    printf("logging occupancy bitboards\n");
+    for(int i = 0; i < 3; ++i)
+        log_bitboard(&occ[i]);
+}
+
+void log_bitboards(uint64_t* bitboards, uint64_t* occ)
+{
+    if (!bitboards)
+    {
+        log_occ(occ);
+        return;
+    }
+
     printf("bitboards:\n");
     for(int i = 0; i < 12; ++i)
         log_bitboard(&bitboards[i]);
 
-    if(!occupancy_bitboards)
+    if (!occ)
         return;
 
     printf("occupancy_bitboards:\n");
     for(int i = 0; i < 3; ++i)
-        log_bitboard(&occupancy_bitboards[i]);
+        log_bitboard(&occ[i]);
 }
 
 void log_legal_moves(Move* legal_moves, int legal_move_count)

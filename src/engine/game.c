@@ -54,14 +54,15 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
     SDL_Event e;
     while (ui->running)
     {
-        SDL_PollEvent(&e); 
-        
-        if (ui->game_over)
-            continue; // dont take inputs
-
-        // players move
-        if (handle_event(app, pos, ui, &e))
-            ui->needs_update = 1;
+        while(SDL_PollEvent(&e))
+        {
+            if (ui->game_over)
+                continue; // dont take inputs
+            
+            // players move
+            if (handle_event(app, pos, ui, &e))
+                ui->needs_update = 1;
+        }
 
         if (ui->needs_update) 
         {
@@ -71,4 +72,4 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
         }
     }
 }
-                                                                 
+
