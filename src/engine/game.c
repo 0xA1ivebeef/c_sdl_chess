@@ -14,35 +14,33 @@ void position_init(Position* pos)
 
 void update(Position* pos, UIContext* ui)
 {
-    update_occ(pos);
-    
     generate_legal_moves(pos); 
-    printf("LOGGING LEGAL_MOVES:\n");
-    log_legal_moves(pos->legal_moves, pos->legal_move_count);
+    // printf("LOGGING LEGAL_MOVES:\n");
+    // log_legal_moves(pos->legal_moves, pos->legal_move_count);
         
     filter_moves(pos);
-    printf("LOGGING VALID MOVES\n");
+    // printf("LOGGING VALID MOVES\n");
     log_legal_moves(pos->legal_moves, pos->legal_move_count);
 
     if (is_check(get_king_sq(pos, pos->player), get_attack_bb(pos, !pos->player)))
     {   
-        printf("CHECK!\n");
+        // printf("CHECK!\n");
         if (pos->legal_move_count == 0)
         {
-            printf("CHECKMATE\n");
+            // printf("CHECKMATE\n");
             // ui->game_over = 1;  
         }
     }
     else if (pos->legal_move_count == 0)
     {
-        printf("STALEMATE\n");
+        // printf("STALEMATE\n");
         // ui->game_over = 1;  
     }
 
     // TODO implement draws
 	if (pos->halfmove == 100)
 	{
-		printf("50 move draw\n");
+		// printf("50 move draw\n");
         // ui->game_over = 1;  
 	}
 
@@ -52,6 +50,10 @@ void update(Position* pos, UIContext* ui)
 void game_loop(AppContext* app, Position* pos, UIContext* ui)
 {
     SDL_Event e;
+
+    perft(pos, 3);
+    return;
+
     while (ui->running)
     {
         while(SDL_PollEvent(&e))

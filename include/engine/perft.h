@@ -14,7 +14,6 @@
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"
 
-int get_nodes(Position* pos, int depth);
-void perft_divide(Position* pos, int depth);
+void perft(Position* pos, int depth);
 
 #endif

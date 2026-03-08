@@ -196,8 +196,8 @@ void apply_move(Position* pos, Move* m)
     pos->player ^= 1;
     update_occ(pos);
 
-    printf("logging bitboards after apply move\n");
-    log_occ(pos->occ);
+    // TODO printf("logging bitboards after apply move\n");
+    // log_occ(pos->occ);
 }
 
 Move* is_legal_move(Position* pos, Move* m)

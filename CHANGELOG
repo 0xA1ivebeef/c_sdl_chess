@@ -70,4 +70,9 @@ drawing a small circle for normal moves and a large ring for captures
 
 --------------------------------------------------------------------------------
 
+08-03-2026
+reintroducing perft and running tests on different positions
+perft is one move off at depth 3 a2a4 421 instead of 420
+
+--------------------------------------------------------------------------------
 

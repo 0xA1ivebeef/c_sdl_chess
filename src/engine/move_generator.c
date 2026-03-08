@@ -31,7 +31,7 @@ void add_enpassant(Position* pos)
 {
     if (pos->enpassant < 16 || pos->enpassant > 55)
     {
-        printf("enpassant not possible, square: %d\n", pos->enpassant);
+        // printf("enpassant not possible, square: %d\n", pos->enpassant);
         return;
     }
 
@@ -109,7 +109,6 @@ void resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
 
 uint64_t get_sliding_piece_legal_moves(int p, int sq, int piece, uint64_t* occ)
 {
-    printf("getting sliding piece legal moves\n");
     uint64_t result = 0;
 
     int start = (piece == 2 ? 4 : 0); // bishop
@@ -126,13 +125,13 @@ uint64_t get_king_legal_moves(int p, int sq, uint64_t* occ)
     return (king_bitmasks[sq] & ~occ[p]);
 }
 
-uint64_t get_legal_moves_bitmask(int p, int bb_i, int sq, uint64_t* occ)
+uint64_t get_legal_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
 {
     // returns a bitmask that is resolved into move structs with startsquare and destsquare
 
-    bb_i %= 6; // abstract color, keep piecetype
+    piece %= 6; // abstract color, keep piecetype
                
-    switch(bb_i)
+    switch(piece)
     {
         case 0:
             return get_pawn_legal_moves(p, sq, occ); 
@@ -141,7 +140,7 @@ uint64_t get_legal_moves_bitmask(int p, int bb_i, int sq, uint64_t* occ)
         case 2:
         case 3:
         case 4:
-            return get_sliding_piece_legal_moves(p, sq, bb_i, occ);
+            return get_sliding_piece_legal_moves(p, sq, piece, occ);
         case 5:
             return get_king_legal_moves(p, sq, occ);
         default:
@@ -149,9 +148,9 @@ uint64_t get_legal_moves_bitmask(int p, int bb_i, int sq, uint64_t* occ)
     }
 }
 
-int is_promotion(int p, int bb_i, int ds)
+int is_promotion(int p, int piece, int ds)
 {
-    if (p * 6 != bb_i)
+    if (p * 6 != piece)
         return 0;
 
     if ((PROMOTION_RANK_MASK[p] & (1ULL << ds)) == 0)
@@ -171,13 +170,13 @@ void add_promotion_moves(Position* pos, Move* m)
 }
 
 // given bitboards and move, return if the move is a double pawn push
-int is_double_pawn_push(Move* m, int bb_i)
+int is_double_pawn_push(Move* m, int piece)
 {
     int start = m->start;
     int dest = m->dest;
 	
     // moved piece is not a pawn
-    if(!(bb_i == BLACK_PAWN || bb_i == WHITE_PAWN))
+    if(!(piece == BLACK_PAWN || piece == WHITE_PAWN))
         return 0;
 
     int res = (abs_int(start - dest) == 16); // moved two squares 
@@ -185,46 +184,39 @@ int is_double_pawn_push(Move* m, int bb_i)
 }
 
 // called for each piece of the current player by resolve bitboard
-void get_pieces_moves(Position* pos, int bb_i, int sq)
+void get_pieces_moves(Position* pos, int piece, int sq)
 {
-    uint64_t legal_moves_bitmask = get_legal_moves_bitmask(
-            pos->player, bb_i, sq, pos->occ);
+    uint64_t moves = get_legal_moves_bitmask(
+            pos->player, piece, sq, pos->occ);
     
-    int ds = 0;
-    while(legal_moves_bitmask)
+    while(moves)
     {
-        if(legal_moves_bitmask & 1)
-        {
-            Move m = {sq, ds, 0}; 
+        int dest = __builtin_ctzll(moves);
+        Move m = {sq, dest, 0}; 
 
-            if (is_promotion(pos->player, bb_i, ds))
-            {
-                add_promotion_moves(pos, &m); // add manually cause 4x move
-            }
-            else if (is_double_pawn_push(&m, bb_i))
-            {
-                m.flags = DOUBLE_PAWN_PUSH;
-                pos->legal_moves[pos->legal_move_count++] = m; // set flag and add
-            }
-            else 
-            {
-                pos->legal_moves[pos->legal_move_count++] = m; // just add
-            }
+        if (is_promotion(pos->player, piece, dest))
+            add_promotion_moves(pos, &m); // add manually cause 4x move
+        else if (is_double_pawn_push(&m, piece))
+        {
+            m.flags = DOUBLE_PAWN_PUSH;
+            pos->legal_moves[pos->legal_move_count++] = m; // set flag and add
         }
-        legal_moves_bitmask >>= 1;
-        ds++;
+        else 
+            pos->legal_moves[pos->legal_move_count++] = m; // just add
+        
+        moves &= moves - 1;
     }
 }
 
 // might make this async
-void resolve_bb(Position* pos, int bb_i) 
+void resolve_bb(Position* pos, int piece) 
 {
     int current_bit = 0;
-    uint64_t bb = pos->bb[bb_i];
+    uint64_t bb = pos->bb[piece];
     while(bb)
     {
         if(bb & 1)
-            get_pieces_moves(pos, bb_i, current_bit);
+            get_pieces_moves(pos, piece, current_bit);
         
         bb >>= 1;
         ++current_bit;
