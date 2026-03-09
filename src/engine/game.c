@@ -51,7 +51,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
 {
     SDL_Event e;
 
-    perft(pos, 3);
+    perft(pos, 6);
     return;
 
     while (ui->running)

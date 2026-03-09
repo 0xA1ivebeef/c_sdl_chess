@@ -23,12 +23,22 @@ int get_nodes(Position* pos, int depth)
         Undo undo = {0};
         Move m = moves[i];
 
+        // Position backup = *pos;
         save_state(pos, &m, &undo);
         apply_move(pos, &m);
 
         nodes += get_nodes(pos, depth - 1);
 
         undo_move(pos, &m, &undo);
+
+        /* legal move generation is done somewhere in apply move or undo move
+        if (memcmp(&backup, pos, sizeof(Position)))
+        {
+            fprintf(stderr, "get_nodes mutated position\n");
+            printf("move: %s, %s\n", square_to_notation(m.start), square_to_notation(m.dest));
+            log_position_diff(pos, &backup);
+            exit(-1);
+        } */
     }
 
     return nodes;
@@ -55,7 +65,7 @@ void perft_divide(Position* pos, int depth, move_node* move_nodes)
         Move m = moves[i];
         Undo undo = {0};
 
-        Position backup = *pos;
+        // Position backup = *pos;
         save_state(pos, &m, &undo);
         apply_move(pos, &m);
 
@@ -63,13 +73,14 @@ void perft_divide(Position* pos, int depth, move_node* move_nodes)
 
         undo_move(pos, &m, &undo);
 
+        /*
         if (memcmp(&backup, pos, sizeof(Position)))
         {
             fprintf(stderr, "MEMCMP RETURNED 1\n");
             printf("move: %s, %s\n", square_to_notation(m.start), square_to_notation(m.dest));
             log_position_diff(pos, &backup);
             exit(-1);
-        }
+        } */
 
         total += move_nodes[i].nodes;
     }
@@ -78,13 +89,13 @@ void perft_divide(Position* pos, int depth, move_node* move_nodes)
 
 void perft(Position* pos, int depth)
 {
-    move_node move_nodes[255] = {0};
+    move_node move_nodes[LEGAL_MOVES_SIZE] = {0};
     perft_divide(pos, depth, move_nodes);
 
     int i = 0;
     while(move_nodes[i].nodes)
     {
-        printf("%d: %s, %s | %d NODES\n", i+1, square_to_notation(move_nodes[i].move.start), square_to_notation(move_nodes[i].move.dest), move_nodes[i].nodes);
+        printf("%s%s: %d\n", square_to_notation(move_nodes[i].move.start), square_to_notation(move_nodes[i].move.dest), move_nodes[i].nodes);
         ++i;
     }
 }

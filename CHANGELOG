@@ -73,6 +73,16 @@ drawing a small circle for normal moves and a large ring for captures
 08-03-2026
 reintroducing perft and running tests on different positions
 perft is one move off at depth 3 a2a4 421 instead of 420
+enpassant bug wraparound was causing this
+at depth 5 it reappears double pawn pushes are one move off
+todo fix enpassant logic in move_generator
+
+--------------------------------------------------------------------------------
+
+09-03-2026
+all perft results from https://www.chessprogramming.org/Perft_Results are met
+engine is in a "correct" state 
+replaced bitboard resolving with __builtin_ctzll
 
 --------------------------------------------------------------------------------
 

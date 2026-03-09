@@ -1,8 +1,5 @@
 
+implement draws
 add sounds
-fix i can put my king in check
-implement assert that undo move doesnt mutate the position
 maybe move all bitboard indicies to uint8_t 
-add __builtin_ctzll instead of resolving bitboards slow
-perft
 

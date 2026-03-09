@@ -4,32 +4,32 @@
 #define BLACK_CASTLE_RIGHTS  3 // 0011b
 #define WHITE_CASTLE_RIGHTS 12 // 1100b
 
-// index 0 = BLACK_QUEENSIDE, 1 = BLACK_KINGSIDE, 2 = WHITE_QUEENSIDE, 3 = WHITE_KINGSIDE
+// index 0 = BLACK_QUEENSIDE, 
+//       1 = BLACK_KINGSIDE, 
+//       2 = WHITE_QUEENSIDE, 
+//       3 = WHITE_KINGSIDE
+
 const int castle_starts[4] = {4, 4, 60, 60};   // e8, e8, e1, e1
 const int castle_dests[4]  = {2, 6, 58, 62};   // c8, g8, c1, g1
 
 const int ROOK_SQUARES[4] = {0, 7, 56, 63};
 
-const uint64_t BLACK_QUEENSIDE_MASK = (1ULL << 4) | (1ULL << 3) | (1ULL << 2);
-const uint64_t BLACK_KINGSIDE_MASK  = (1ULL << 4) | (1ULL << 5) | (1ULL << 6);
-
-const uint64_t WHITE_QUEENSIDE_MASK = (1ULL << 60) | (1ULL << 59) | (1ULL << 58);
-const uint64_t WHITE_KINGSIDE_MASK  = (1ULL << 60) | (1ULL << 61) | (1ULL << 62);
-
-const uint64_t CASTLING_MASKS[4] = 
+const uint64_t CASTLING_OCC_MASKS[4] = 
 {
-	BLACK_QUEENSIDE_MASK,
-	BLACK_KINGSIDE_MASK,
-	WHITE_QUEENSIDE_MASK,
-	WHITE_KINGSIDE_MASK
+	(1ULL << 3) | (1ULL << 2) | (1ULL << 1), 
+    (1ULL << 5) | (1ULL << 6), 
+
+    (1ULL << 59) | (1ULL << 58) | (1ULL << 57), 
+    (1ULL << 61) | (1ULL << 62) 
 };
 
-const char* CASTLE_STRINGS[4] =
+const uint64_t CASTLING_ATTACK_MASKS[4] = 
 {
-	"BLACK_QUEENSIDE",
-	"BLACK_KINGSIDE",
-	"WHITE_QUEENSIDE",
-	"WHITE_KINGSIDE"	
+	(1ULL << 4) | (1ULL << 3) | (1ULL << 2), // black qs
+    (1ULL << 4) | (1ULL << 5) | (1ULL << 6), // black ks
+
+    (1ULL << 60) | (1ULL << 59) | (1ULL << 58), // white qs
+    (1ULL << 60) | (1ULL << 61) | (1ULL << 62), // white ks
 };
 
 void update_castle_rights(Position* pos, Move* m)
@@ -62,19 +62,21 @@ void update_castle_rights(Position* pos, Move* m)
 // called seperatly for kingside, queenside each (twice for one player)
 int can_castle(Position* pos, int bit_index)
 {
-	uint64_t bitmask = CASTLING_MASKS[bit_index];
+	uint64_t attack_mask = CASTLING_ATTACK_MASKS[bit_index];
+    uint64_t occ_mask = CASTLING_OCC_MASKS[bit_index];
+        
+	uint64_t atk = get_castling_attack_bitboard(pos);
 
-    // squares under attack
-	uint64_t enemy_attack_bb = get_attack_bb(pos, !pos->player);
-	if (enemy_attack_bb & bitmask)
+    // printf("castling logging castle-attack\n");
+    // log_bitboard(&atk);
+    
+	if (atk & attack_mask)
 	{
 		// printf("CAN CASTLE square under attack\n");
 		return 0;	
 	}
 
-	// correct the bitmask to handle occ
-	bitmask &= ~((1ULL << 4) | (1ULL << 60));
-	if (pos->occ[2] & bitmask) 
+	if (pos->occ[2] & occ_mask) 
 	{
 		// printf("CAN CASTLE square is occupied\n");
 		return 0;

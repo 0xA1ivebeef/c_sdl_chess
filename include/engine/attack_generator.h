@@ -10,5 +10,6 @@
 
 uint64_t get_attack_bb(Position* pos, uint8_t player);
 void generate_attack_bb(Position* position);
+uint64_t get_castling_attack_bitboard(Position* pos);
 
 #endif

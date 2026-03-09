@@ -26,17 +26,6 @@ int get_bb_index(uint64_t* bb, int sq)
     return -1;
 }
 
-int count_set_bits(uint64_t num) 
-{
-    int c = 0;
-    while(num) 
-    {
-        num &= (num - 1);
-        ++c;
-    }
-    return c;
-}
-
 void update_occ(Position* pos)
 {
     // clear

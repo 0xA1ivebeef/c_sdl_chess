@@ -1,9 +1,6 @@
 
 #include "engine/move_generator.h"
 
-#define MOV_GEN_FILE_A 0x0101010101010101ULL
-#define MOV_GEN_FILE_H 0x8080808080808080ULL
-
 int PROMOTION_FLAGS[4] = 
 {
     KNIGHT_PROMOTION, // 3..6
@@ -26,7 +23,11 @@ uint64_t pawn_attacks(int king_sq, int by_side)
     return (1ULL << sq1) | (1ULL << sq2);
 }
 
-// TODO refactor
+void add_move(Position* pos, int start, int dest, int flag)
+{
+    pos->legal_moves[pos->legal_move_count++] = (Move) { start, dest, flag };
+}
+
 void add_enpassant(Position* pos)
 {
     if (pos->enpassant < 16 || pos->enpassant > 55)
@@ -35,22 +36,42 @@ void add_enpassant(Position* pos)
         return;
     }
 
-    uint64_t pawns = pos->bb[pos->player*6];
-    if (pos->player)
+    uint64_t own_pawns = pos->bb[pos->player*6];
+
+    int left_start;
+    int right_start;
+                                    
+    if (pos->player == WHITE)
     {
-        // white
-        if ((1ULL << (pos->enpassant + 9)) & ~MOV_GEN_FILE_H & pawns) // startsquare has a pawn
-            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant + 9, pos->enpassant, ENPASSANT_FLAG };
-        if ((1ULL << (pos->enpassant + 7)) & ~MOV_GEN_FILE_A & pawns)
-            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant + 7, pos->enpassant, ENPASSANT_FLAG };
+        left_start = pos->enpassant + 7;
+        right_start = pos->enpassant + 9;
     }
     else
     {
-        if ((1ULL << (pos->enpassant - 9)) & ~MOV_GEN_FILE_H & pawns) // startsquare has a pawn
-            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant - 9, pos->enpassant, ENPASSANT_FLAG };
-        if ((1ULL << (pos->enpassant - 7)) & ~MOV_GEN_FILE_A & pawns)
-            pos->legal_moves[pos->legal_move_count++] = (Move) { pos->enpassant - 7, pos->enpassant, ENPASSANT_FLAG };
+        left_start = pos->enpassant - 9;
+        right_start = pos->enpassant - 7;
     }
+
+    int ep_file = pos->enpassant % 8;
+    if (ep_file == 0)
+    {
+        // A FILE
+        // printf("enpassant invalidating left square for A FILE\n");
+        left_start = INVALID_SQUARE;
+    }
+    else if (ep_file == 7)
+    {
+        // H FILE
+        // printf("enpassant invalidating left square for H FILE\n");
+        right_start = INVALID_SQUARE;
+    }
+
+    if (left_start != INVALID_SQUARE && own_pawns & (1ULL << left_start))
+        add_move(pos, left_start, pos->enpassant, ENPASSANT_FLAG);
+
+    if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
+        add_move(pos, right_start, pos->enpassant, ENPASSANT_FLAG);
+
 }
 
 uint64_t get_pawn_attacking_moves(int p, int sq, uint64_t* occ)
