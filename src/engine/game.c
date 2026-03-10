@@ -14,27 +14,21 @@ void position_init(Position* pos)
 
 void update(Position* pos, UIContext* ui)
 {
-    generate_legal_moves(pos); 
-    // printf("LOGGING LEGAL_MOVES:\n");
-    // log_legal_moves(pos->legal_moves, pos->legal_move_count);
-        
+    generate_legal_moves(pos);
     filter_moves(pos);
-    // printf("LOGGING VALID MOVES\n");
-    log_legal_moves(pos->legal_moves, pos->legal_move_count);
 
-    if (is_check(get_king_sq(pos, pos->player), get_attack_bb(pos, !pos->player)))
-    {   
-        // printf("CHECK!\n");
-        if (pos->legal_move_count == 0)
-        {
-            // printf("CHECKMATE\n");
-            // ui->game_over = 1;  
-        }
-    }
-    else if (pos->legal_move_count == 0)
+    if (pos->legal_move_count == 0)
     {
-        // printf("STALEMATE\n");
-        // ui->game_over = 1;  
+        if (is_check(pos))
+        {
+            ui->game_over = 1;
+            printf("CHECKMATE\n");
+        }
+        else
+        {
+            ui->game_over = 1;
+            printf("STALEMATE"); 
+        }
     }
 
     // TODO implement draws
@@ -51,22 +45,26 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
 {
     SDL_Event e;
 
-    perft(pos, 6);
-    return;
+    // perft(pos, 6);
 
     while (ui->running)
     {
-        while(SDL_PollEvent(&e))
+        while (SDL_PollEvent(&e))
         {
-            if (ui->game_over)
-                continue; // dont take inputs
-            
-            // players move
-            if (handle_event(app, pos, ui, &e))
+            if (pos->player == WHITE)
+            {
+                if (handle_event(app, pos, ui, &e))
+                    ui->needs_update = 1;
+            }
+        }
+
+        if (pos->player == BLACK && !ui->game_over && !ui->needs_update)
+        {
+            if (opponent_move(pos) != -1)
                 ui->needs_update = 1;
         }
 
-        if (ui->needs_update) 
+        if (ui->needs_update)
         {
             update(pos, ui);
             render(app, pos->bb);

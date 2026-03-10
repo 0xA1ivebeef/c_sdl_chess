@@ -23,22 +23,12 @@ int get_nodes(Position* pos, int depth)
         Undo undo = {0};
         Move m = moves[i];
 
-        // Position backup = *pos;
         save_state(pos, &m, &undo);
         apply_move(pos, &m);
 
         nodes += get_nodes(pos, depth - 1);
 
         undo_move(pos, &m, &undo);
-
-        /* legal move generation is done somewhere in apply move or undo move
-        if (memcmp(&backup, pos, sizeof(Position)))
-        {
-            fprintf(stderr, "get_nodes mutated position\n");
-            printf("move: %s, %s\n", square_to_notation(m.start), square_to_notation(m.dest));
-            log_position_diff(pos, &backup);
-            exit(-1);
-        } */
     }
 
     return nodes;
@@ -65,22 +55,12 @@ void perft_divide(Position* pos, int depth, move_node* move_nodes)
         Move m = moves[i];
         Undo undo = {0};
 
-        // Position backup = *pos;
         save_state(pos, &m, &undo);
         apply_move(pos, &m);
 
         move_nodes[i] = (move_node) { get_nodes(pos, depth - 1), moves[i] };
 
         undo_move(pos, &m, &undo);
-
-        /*
-        if (memcmp(&backup, pos, sizeof(Position)))
-        {
-            fprintf(stderr, "MEMCMP RETURNED 1\n");
-            printf("move: %s, %s\n", square_to_notation(m.start), square_to_notation(m.dest));
-            log_position_diff(pos, &backup);
-            exit(-1);
-        } */
 
         total += move_nodes[i].nodes;
     }

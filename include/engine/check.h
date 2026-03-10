@@ -11,14 +11,13 @@
 #include "ui/console_logger.h"
 
 #include "engine/types.h"
-#include "engine/move_handler.h"
 #include "engine/attack_generator.h"
+#include "engine/move_handler.h"
 
 #include "utils/legal_move_utils.h"
 #include "utils/bitboard_utils.h"
 
-void log_position_diff(Position* a, Position* b);
-int is_check(int king_sq, uint64_t attack_bb);
+int is_check(Position* pos);
 void filter_moves(Position* pos);
 
 #endif

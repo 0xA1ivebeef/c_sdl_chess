@@ -9,6 +9,7 @@
 
 #include "engine/types.h"
 #include "engine/castling.h"
+#include "engine/move_generator.h"
 
 #include "utils/utils.h"
 #include "utils/bitboard_utils.h"

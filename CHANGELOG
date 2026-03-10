@@ -86,3 +86,7 @@ replaced bitboard resolving with __builtin_ctzll
 
 --------------------------------------------------------------------------------
 
+10-03-2026
+added small opponent and material based search algorithm
+only works on depth 3 and fails if its in check (finds the right move but fails to play it)
+

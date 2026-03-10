@@ -6,9 +6,12 @@ int square_under_attack(uint8_t sq, uint64_t attack_bb)
     return ((attack_bb & (1ULL << sq)) != 0);
 }
 
-int is_check(int king_sq, uint64_t attack_bb)
+int is_check(Position* pos)
 {
-    return ((attack_bb & (1ULL << king_sq)) != 0);
+    int king_sq = get_king_sq(pos, pos->player);
+    uint64_t atk = get_attack_bb(pos, !pos->player);
+
+    return ((atk & (1ULL << king_sq)) != 0);
 }
 
 void filter_moves(Position* pos)

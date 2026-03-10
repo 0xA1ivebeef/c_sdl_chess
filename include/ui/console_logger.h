@@ -10,6 +10,7 @@
 
 #include "utils/utils.h"
 
+void log_position_diff(Position* a, Position* b);
 void log_gamestate(Position* pos);
 void log_bitboard(uint64_t* bb);
 void log_bitboards(uint64_t* bb, uint64_t* occ);
