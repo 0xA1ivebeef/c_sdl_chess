@@ -17,6 +17,15 @@
 #define RANK_1 0x00000000000000FFULL
 #define RANK_8 0xFF00000000000000ULL
 
+
+extern const int PAWN_VAL;
+extern const int KNIGHT_VAL;
+extern const int BISHOP_VAL;
+extern const int ROOK_VAL;
+extern const int QUEEN_VAL;
+
+extern const int PIECE_VALUES[5];
+
 extern const int file_offsets[8];
 extern const int rank_offsets[8];
 extern const int translation_table[5];

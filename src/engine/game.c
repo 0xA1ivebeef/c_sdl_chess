@@ -21,12 +21,12 @@ void update(Position* pos, UIContext* ui)
     {
         if (is_check(pos))
         {
-            ui->game_over = 1;
+            ui->running = 0;
             printf("CHECKMATE\n");
         }
         else
         {
-            ui->game_over = 1;
+            ui->running = 0;
             printf("STALEMATE"); 
         }
     }
@@ -44,31 +44,30 @@ void update(Position* pos, UIContext* ui)
 void game_loop(AppContext* app, Position* pos, UIContext* ui)
 {
     SDL_Event e;
-
-    // perft(pos, 6);
-
+    int ai_move_pending = 0;
     while (ui->running)
     {
-        while (SDL_PollEvent(&e))
+        if (SDL_WaitEventTimeout(&e, 16))
         {
-            if (pos->player == WHITE)
-            {
-                if (handle_event(app, pos, ui, &e))
-                    ui->needs_update = 1;
+            if (handle_event(app, pos, ui, &e))
+            {  
+                ai_move_pending = 1;
+
+                update(pos, ui);
+                render(app, pos->bb);
             }
         }
-
-        if (pos->player == BLACK && !ui->game_over && !ui->needs_update)
+        
+        if (pos->player == BLACK && ai_move_pending)
         {
-            if (opponent_move(pos) != -1)
-                ui->needs_update = 1;
-        }
+            ai_move_pending = 0;
 
-        if (ui->needs_update)
-        {
+            if (opponent_move(pos) <= 0)
+            {
+                printf("OPPONENT MOVE FAILED\n");
+            }
             update(pos, ui);
             render(app, pos->bb);
-            ui->needs_update = 0;
         }
     }
 }

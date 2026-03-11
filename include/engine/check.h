@@ -17,6 +17,7 @@
 #include "utils/legal_move_utils.h"
 #include "utils/bitboard_utils.h"
 
+void sort_mvv_lva(Position* pos);
 int is_check(Position* pos);
 void filter_moves(Position* pos);
 

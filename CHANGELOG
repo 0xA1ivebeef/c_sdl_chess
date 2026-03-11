@@ -90,3 +90,20 @@ replaced bitboard resolving with __builtin_ctzll
 added small opponent and material based search algorithm
 only works on depth 3 and fails if its in check (finds the right move but fails to play it)
 
+--------------------------------------------------------------------------------
+
+11-03-2026
+chages to the gameloop from pollevent to waiteventtimeout because searches
+which switch the player internally mess with the logic also added a aimovepending
+flag just to make sure
+
+the issue was the search mutated the legal moves so the opponent picked a legal move
+but the engine had mutated leagal moves so just generating moves again after the
+search fixes this
+
+sort moves by descending order of MVV-LVA value in move_generator
+
+zobrist hashing for implementing a openings book in the future and transposition table maybe
+
+--------------------------------------------------------------------------------
+
