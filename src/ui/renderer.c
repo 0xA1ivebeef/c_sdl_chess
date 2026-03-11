@@ -40,20 +40,20 @@ void render_pieces(AppContext* app, const uint64_t* bitboards)
 }
 
 // try to duplicate chess.com 
-void render_legal_moves(AppContext* app, Position* pos, int start)
+void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int start)
 {
     SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(app->renderer, 50, 50, 50, 50);
     int radius = 20;
-	for(int i = 0; i < pos->legal_move_count; ++i)
+	for(int i = 0; i < lm->count; ++i)
     {
-        if (pos->legal_moves[i].start == start)
+        if (lm->moves[i].start == start)
         {
-            int cx = pos->legal_moves[i].dest % 8 * TILESIZE + TILESIZE / 2;
-            int cy = pos->legal_moves[i].dest / 8 * TILESIZE + TILESIZE / 2;
+            int cx = lm->moves[i].dest % 8 * TILESIZE + TILESIZE / 2;
+            int cy = lm->moves[i].dest / 8 * TILESIZE + TILESIZE / 2;
 
 
-            if (get_bb_index(pos->bb, pos->legal_moves[i].dest) > -1)
+            if (get_bb_index(pos->bb, lm->moves[i].dest) > -1)
             {
                 SDL_Rect dest = { cx - radius*3, cy - radius*3, radius*6, radius*6 };
                 SDL_RenderCopy(app->renderer, app->capture_circle, NULL, &dest);

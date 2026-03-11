@@ -43,58 +43,58 @@ int is_promotion_move(Move* m)
     return (m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
 }
 
-void sort_mvv_lva(Position* pos)
+void sort_mvv_lva(Position* pos, LegalMoves* lm)
 {
     MoveScore moves_with_scores[LEGAL_MOVES_SIZE];
-    for (int i = 0; i < pos->legal_move_count; ++i)
+    for (int i = 0; i < lm->count; ++i)
     {
         // enpassant is not included in this but should be fine
         int score = 0;
 
-        if (is_capture_move(pos->bb[get_bb_index(pos->bb, pos->legal_moves[i].start)], &pos->legal_moves[i]))
+        if (is_capture_move(pos->bb[get_bb_index(pos->bb, lm->moves[i].start)], &lm->moves[i]))
         {
-            int victim_val = PIECE_VALUES[get_bb_index(pos->bb, pos->legal_moves[i].dest) % 5];
-            int attacker_val = PIECE_VALUES[get_bb_index(pos->bb, pos->legal_moves[i].start) % 5];
+            int victim_val = PIECE_VALUES[get_bb_index(pos->bb, lm->moves[i].dest) % 5];
+            int attacker_val = PIECE_VALUES[get_bb_index(pos->bb, lm->moves[i].start) % 5];
 
             score += 1000 + (victim_val - attacker_val);
         }
 
-        if (gives_check(pos, &pos->legal_moves[i]))
+        if (gives_check(pos, &lm->moves[i]))
             score += 900;
 
-        if (is_promotion_move(&pos->legal_moves[i]))
+        if (is_promotion_move(&lm->moves[i]))
             score += 1000;
 
-        moves_with_scores[i] = (MoveScore) { pos->legal_moves[i], score } ;
+        moves_with_scores[i] = (MoveScore) { lm->moves[i], score } ;
     }
 
-    qsort(moves_with_scores, pos->legal_move_count, sizeof(struct MoveScore), compare_moves);
+    qsort(moves_with_scores, lm->count, sizeof(struct MoveScore), compare_moves);
 
-    for (int i = 0; i < pos->legal_move_count; ++i)
-        pos->legal_moves[i] = moves_with_scores[i].move;
+    for (int i = 0; i < lm->count; ++i)
+        lm->moves[i] = moves_with_scores[i].move;
 }
 
-void filter_moves(Position* pos)
+void filter_moves(Position* pos, LegalMoves* lm)
 {
     Move valid_moves[LEGAL_MOVES_SIZE] = {0};
     int valid_move_count = 0;
 
-    for (int i = 0; i < pos->legal_move_count; i++)
+    for (int i = 0; i < lm->count; i++)
     {
         Undo undo;  
 
-        save_state(pos, &pos->legal_moves[i], &undo);
-        apply_move(pos, &pos->legal_moves[i]);  
+        save_state(pos, &lm->moves[i], &undo);
+        apply_move(pos, &lm->moves[i]);  
 
         if (!is_check(pos, !pos->player))
-            valid_moves[valid_move_count++] = pos->legal_moves[i];
+            valid_moves[valid_move_count++] = lm->moves[i];
 
-        undo_move(pos, &pos->legal_moves[i], &undo); 
+        undo_move(pos, &lm->moves[i], &undo); 
     }
 
-    memcpy(pos->legal_moves, valid_moves, sizeof(Move) * valid_move_count); 
-    pos->legal_move_count = valid_move_count;
+    memcpy(lm->moves, valid_moves, sizeof(Move) * valid_move_count); 
+    lm->count = valid_move_count;
 
-    sort_mvv_lva(pos);
+    sort_mvv_lva(pos, lm);
 }
 

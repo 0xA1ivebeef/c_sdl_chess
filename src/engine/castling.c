@@ -86,22 +86,20 @@ int can_castle(Position* pos, int bit_index)
 }
 
 // given pos, add castling moves to legal moves if they are legal
-void add_castling(Position* pos)
+void add_castling(Position* pos, LegalMoves* lm)
 {
     for(int side = 0; side < 2; ++side) 
     { // 0=queenside, 1=kingside
         int bit_index = pos->player * 2 + side;  // maps to 0..3
         uint8_t castle_flag = 1 << bit_index; // 1 << 0..3 = 1, 2, 4, 8
 
-		// printf("checking for castle_rights\n");
         if(pos->castle_rights & castle_flag) 
         {
-			// printf("checking if can castle\n");
             if(can_castle(pos, bit_index)) // passing bit_index 0..3 to map to bitmasks
             {        
 				// printf("adding castling move\n");
                 Move m = { castle_starts[bit_index], castle_dests[bit_index], CASTLE_FLAG };
-                pos->legal_moves[pos->legal_move_count++] = m;
+                lm->moves[lm->count++] = m;
             }   
         }
     }

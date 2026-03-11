@@ -3,21 +3,21 @@
 
 #define AI_COLOR BLACK
 
-void position_init(Position* pos)
+void position_init(Position* pos, LegalMoves* lm)
 {
     load_fen_string(pos);
     update_occ(pos);
 	
-    generate_legal_moves(pos); 
+    generate_legal_moves(pos, lm); 
     log_gamestate(pos);
 }
 
-void update(Position* pos, UIContext* ui)
+void update(Position* pos, UIContext* ui, LegalMoves* lm)
 {
-    generate_legal_moves(pos);
-    filter_moves(pos);
+    generate_legal_moves(pos, lm);
+    filter_moves(pos, lm);
 
-    if (pos->legal_move_count == 0)
+    if (lm->count == 0)
     {
         if (is_check(pos, pos->player))
         {
@@ -41,7 +41,7 @@ void update(Position* pos, UIContext* ui)
     log_gamestate(pos);
 }
 
-void game_loop(AppContext* app, Position* pos, UIContext* ui)
+void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
 {
     SDL_Event e;
     int ai_move_pending = 0;
@@ -49,12 +49,12 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
     {
         if (SDL_WaitEventTimeout(&e, 16))
         {
-            if (handle_event(app, pos, ui, &e))
+            if (handle_event(app, pos, ui, &e, lm))
             {  
                 get_zobrist_hash(pos);
                 ai_move_pending = 1;
 
-                update(pos, ui);
+                update(pos, ui, lm);
                 render(app, pos->bb);
             }
         }
@@ -63,11 +63,10 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
         {
             ai_move_pending = 0;
 
-            if (opponent_move(pos) <= 0)
-            {
+            if (opponent_move(pos, lm) <= 0)
                 printf("OPPONENT MOVE FAILED\n");
-            }
-            update(pos, ui);
+
+            update(pos, ui, lm);
             render(app, pos->bb);
         }
     }

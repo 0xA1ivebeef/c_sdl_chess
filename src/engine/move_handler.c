@@ -200,27 +200,27 @@ void apply_move(Position* pos, Move* m)
     // log_occ(pos->occ);
 }
 
-Move* is_legal_move(Position* pos, Move* m)
+Move* is_legal_move(Position* pos, LegalMoves* lm, Move* m)
 {
-    for(int i = 0; i < pos->legal_move_count; ++i)
+    for(int i = 0; i < lm->count; ++i)
     {
-        if ((pos->legal_moves[i].start == m->start) && 
-            (pos->legal_moves[i].dest  == m->dest))
+        if ((lm->moves[i].start == m->start) && 
+            (lm->moves[i].dest  == m->dest))
         {
             if (m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION)
                 return m;
 
-            return &pos->legal_moves[i];
+            return &lm->moves[i];
         }
     }
     return NULL;
 }
 
-int handle_move(Position* pos, Move* m)
+int handle_move(Position* pos, LegalMoves* lm, Move* m)
 {
     // replace with move from legal moves to get flags
     // assume promotion flags are already set in m
-    Move* legal = is_legal_move(pos, m);
+    Move* legal = is_legal_move(pos, lm, m);
     if (!legal)
         return 0;
 

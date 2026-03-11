@@ -23,15 +23,15 @@ int evaluate(Position* pos)
     return pos->player == WHITE ? eval : -eval;
 }
 
-int alphabeta(Position* pos, int depth, int alpha, int beta)
+int alphabeta(Position* pos, LegalMoves* lm, int depth, int alpha, int beta)
 {
     if (depth == 0)
         return evaluate(pos);
 
-    generate_legal_moves(pos);
-    filter_moves(pos);
+    generate_legal_moves(pos, lm);
+    filter_moves(pos, lm);
 
-    if (pos->legal_move_count == 0)
+    if (lm->count == 0)
     {
         if (is_check(pos, pos->player))
             return -MATE;
@@ -43,9 +43,9 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
 
     
     Move legal_moves[LEGAL_MOVES_SIZE];
-    memcpy(legal_moves, pos->legal_moves, sizeof(Move) * pos->legal_move_count);
+    memcpy(legal_moves, lm->moves, sizeof(Move) * lm->count);
     
-    int move_count = pos->legal_move_count;
+    int move_count = lm->count;
 
     for (int i = 0; i < move_count; i++)
     {
@@ -53,7 +53,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
         save_state(pos, &legal_moves[i], &undo);
         apply_move(pos, &legal_moves[i]);
 
-        int score = -alphabeta(pos, depth - 1, -beta, -alpha);
+        int score = -alphabeta(pos, lm, depth - 1, -beta, -alpha);
 
         undo_move(pos, &legal_moves[i], &undo);
 
@@ -72,15 +72,15 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
 
 // negamax always assumes returned score
 // is from the perspective of the player to move
-int search(Position* pos, int depth)
+int search(Position* pos, LegalMoves* lm, int depth)
 {
     if (depth == 0)
         return evaluate(pos);
 
-    generate_legal_moves(pos);
-    filter_moves(pos);
+    generate_legal_moves(pos, lm);
+    filter_moves(pos, lm);
 
-    if (pos->legal_move_count == 0)
+    if (lm->count == 0)
     {
         if (is_check(pos, pos->player))
             return -MATE;
@@ -91,9 +91,9 @@ int search(Position* pos, int depth)
     int best_eval = -INF;
 
     Move legal_moves[LEGAL_MOVES_SIZE];
-    memcpy(legal_moves, pos->legal_moves, sizeof(Move) * pos->legal_move_count);
+    memcpy(legal_moves, lm->moves, sizeof(Move) * lm->count);
     
-    int move_count = pos->legal_move_count;
+    int move_count = lm->count;
 
     for (int i = 0; i < move_count; ++i)
     {
@@ -101,7 +101,7 @@ int search(Position* pos, int depth)
         save_state(pos, &legal_moves[i], &undo);
         apply_move(pos, &legal_moves[i]);
 
-        int eval = -search(pos, depth - 1);
+        int eval = -search(pos, lm, depth - 1);
         best_eval = max(eval, best_eval);
 
         undo_move(pos, &legal_moves[i], &undo);
@@ -110,18 +110,18 @@ int search(Position* pos, int depth)
     return best_eval; 
 }
 
-Move search_root(Position* pos, int depth)
+Move search_root(Position* pos, LegalMoves* lm, int depth)
 {
     // black to move
-    if (pos->legal_move_count == 0)
+    if (lm->count == 0)
         return (Move) {0, 0, 0};
 
     Move best_move = {0};
 
     Move legal_moves[LEGAL_MOVES_SIZE];
-    memcpy(legal_moves, pos->legal_moves, sizeof(Move) * pos->legal_move_count);
+    memcpy(legal_moves, lm->moves, sizeof(Move) * lm->count);
     
-    int move_count = pos->legal_move_count;
+    int move_count = lm->count;
 
     int best_eval = -INF;
 
@@ -134,7 +134,7 @@ Move search_root(Position* pos, int depth)
 
         // negamax so this returns a large number if the position 
         // is good for the player who made the move
-        int eval = -alphabeta(pos, depth - 1, -INF, INF); 
+        int eval = -alphabeta(pos, lm, depth - 1, -INF, INF); 
         if (eval > best_eval)
         {
             best_eval = eval;
@@ -145,22 +145,22 @@ Move search_root(Position* pos, int depth)
         // now black to move
     }
 
-    generate_legal_moves(pos);
-    filter_moves(pos);
+    generate_legal_moves(pos, lm);
+    filter_moves(pos, lm);
 
     return best_move;
 }
 
-int opponent_move(Position* pos)
+int opponent_move(Position* pos, LegalMoves* lm)
 {
     printf("OPPONENTS MOVE\n");
 
-    Move m = search_root(pos, 5);
+    Move m = search_root(pos, lm, 5);
     if (m.start == 0 && m.dest == 0)
         return -1;
         
     printf("picked move: %s%s\n", square_to_notation(m.start), square_to_notation(m.dest));
 
-    return handle_move(pos, &m); 
+    return handle_move(pos, lm, &m); 
 }
 

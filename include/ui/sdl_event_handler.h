@@ -8,6 +8,6 @@
 #include "ui/sdl_wrapper.h"
 #include "ui/renderer.h"
 
-int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* event);
+int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, LegalMoves* lm);
 
 #endif

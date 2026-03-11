@@ -52,6 +52,12 @@ typedef struct Move
     uint8_t flags;
 } Move;
 
+typedef struct LegalMoves
+{
+    Move moves[LEGAL_MOVES_SIZE];
+    uint8_t count;
+} LegalMoves;
+
 typedef struct
 {
     uint64_t    bb[12];
@@ -62,9 +68,6 @@ typedef struct
     uint8_t     enpassant;
     uint8_t     halfmove;
     uint16_t    fullmove;
-
-    Move        legal_moves[LEGAL_MOVES_SIZE];
-    uint8_t     legal_move_count;
 } Position;
 
 typedef struct

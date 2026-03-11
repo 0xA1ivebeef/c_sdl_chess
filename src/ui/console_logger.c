@@ -23,9 +23,6 @@ void log_position_diff(Position* a, Position* b)
         }
     }
 
-    if (b->legal_move_count != a->legal_move_count)
-        printf("legal_move_count changed: backup = %d, current = %d\n", b->legal_move_count, a->legal_move_count);
-
     if (a->player != b->player)
         printf("player changed: backup = %d, current = %d\n", a->player, b->player);
 
@@ -40,16 +37,6 @@ void log_position_diff(Position* a, Position* b)
 
     if (a->fullmove != b->fullmove)
         printf("fullmove changed: backup = %d, current = %d\n", a->fullmove, b->fullmove);
-
-    for (int i = 0; i < LEGAL_MOVES_SIZE; i++) 
-    {
-        if (a->legal_moves[i].start != b->legal_moves[i].start || a->legal_moves[i].dest != b->legal_moves[i].dest) 
-        {
-            printf("legal_moves[%d] changed: backup = %s->%s | %d, current = %s->%s | %d\n",
-                i, square_to_notation(b->legal_moves[i].start), square_to_notation(b->legal_moves[i].dest), b->legal_moves[i].flags,
-                   square_to_notation(a->legal_moves[i].start), square_to_notation(a->legal_moves[i].dest), a->legal_moves[i].flags);
-        }
-    }
 }
 
 void print_castle_rights(int castle_rights) 
@@ -107,13 +94,13 @@ void log_bitboards(uint64_t* bitboards, uint64_t* occ)
         log_bitboard(&occ[i]);
 }
 
-void log_legal_moves(Move* legal_moves, int legal_move_count)
+void log_legal_moves(LegalMoves* lm)
 {
-	for(int i = 0; i < legal_move_count; ++i)
+	for(int i = 0; i < lm->count; ++i)
     {
         printf("%d: ", i+1);
-        printf("%s, %s\n", square_to_notation(legal_moves[i].start), 
-                           square_to_notation(legal_moves[i].dest));
+        printf("%s, %s\n", square_to_notation(lm->moves[i].start), 
+                           square_to_notation(lm->moves[i].dest));
     }
 }
 

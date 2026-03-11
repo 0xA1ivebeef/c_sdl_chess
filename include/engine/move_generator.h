@@ -25,9 +25,9 @@ typedef enum ATTACKS
     KING_ATTACKS,
 } ATTACKS;
 
-extern int PROMOTION_FLAGS[4];
+extern const int PROMOTION_FLAGS[4];
 
-void generate_legal_moves(Position* pos);
+void generate_legal_moves(Position* pos, LegalMoves* legal_moves);
 
 #endif
 

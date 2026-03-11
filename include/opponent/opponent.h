@@ -12,6 +12,6 @@
 #include "engine/check.h"
 
 int evaluate(Position* pos);
-int opponent_move(Position* pos);
+int opponent_move(Position* pos, LegalMoves* lm);
 
 #endif

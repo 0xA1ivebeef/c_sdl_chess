@@ -12,8 +12,8 @@
 
 #include "ui/console_logger.h"
 
-void add_castling(Position* position);
-void update_castle_rights(Position* position, Move* m);
+void add_castling(Position* pos, LegalMoves* lm);
+void update_castle_rights(Position* pos, Move* m);
 
 #endif
 

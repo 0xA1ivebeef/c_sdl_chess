@@ -14,6 +14,6 @@
 #include "utils/bitboard_utils.h"
 #include "utils/legal_move_utils.h"
 
-void perft(Position* pos, int depth);
+void perft(Position* pos, LegalMoves* lm, int depth);
 
 #endif

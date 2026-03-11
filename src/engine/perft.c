@@ -1,22 +1,22 @@
 
 #include "engine/perft.h"
 
-int get_nodes(Position* pos, int depth) 
+int get_nodes(Position* pos, int depth, LegalMoves* lm) 
 {
     if (depth == 0)
         return 1;
 
-    generate_legal_moves(pos);
-    filter_moves(pos);
+    generate_legal_moves(pos, lm);
+    filter_moves(pos, lm);
 
     if (depth == 1)
-        return pos->legal_move_count;
+        return lm->count;
 
     int nodes = 0;
 
-    int move_count = pos->legal_move_count;
+    int move_count = lm->count;
     Move moves[LEGAL_MOVES_SIZE];
-    memcpy(moves, pos->legal_moves, sizeof(Move) * move_count);
+    memcpy(moves, lm->moves, sizeof(Move) * move_count);
 
     for (int i = 0; i < move_count; ++i)
     {
@@ -26,7 +26,7 @@ int get_nodes(Position* pos, int depth)
         save_state(pos, &m, &undo);
         apply_move(pos, &m);
 
-        nodes += get_nodes(pos, depth - 1);
+        nodes += get_nodes(pos, depth - 1, lm);
 
         undo_move(pos, &m, &undo);
     }
@@ -40,14 +40,14 @@ typedef struct
     Move move;
 } move_node;
 
-void perft_divide(Position* pos, int depth, move_node* move_nodes)
+void perft_divide(Position* pos, LegalMoves* lm, int depth, move_node* move_nodes)
 {
-    generate_legal_moves(pos);
-    filter_moves(pos);
+    generate_legal_moves(pos, lm);
+    filter_moves(pos, lm);
 
-    int move_count = pos->legal_move_count;
+    int move_count = lm->count;
     Move moves[LEGAL_MOVES_SIZE];
-    memcpy(moves, pos->legal_moves, sizeof(Move) * move_count);
+    memcpy(moves, lm->moves, sizeof(Move) * move_count);
 
     int total = 0;
     for (int i = 0; i < move_count; ++i)
@@ -58,7 +58,7 @@ void perft_divide(Position* pos, int depth, move_node* move_nodes)
         save_state(pos, &m, &undo);
         apply_move(pos, &m);
 
-        move_nodes[i] = (move_node) { get_nodes(pos, depth - 1), moves[i] };
+        move_nodes[i] = (move_node) { get_nodes(pos, depth - 1, lm), moves[i] };
 
         undo_move(pos, &m, &undo);
 
@@ -67,10 +67,10 @@ void perft_divide(Position* pos, int depth, move_node* move_nodes)
     printf("total: %d\n", total);
 }
 
-void perft(Position* pos, int depth)
+void perft(Position* pos, LegalMoves* lm, int depth)
 {
     move_node move_nodes[LEGAL_MOVES_SIZE] = {0};
-    perft_divide(pos, depth, move_nodes);
+    perft_divide(pos, lm, depth, move_nodes);
 
     int i = 0;
     while(move_nodes[i].nodes)

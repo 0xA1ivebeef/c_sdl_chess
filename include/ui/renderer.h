@@ -12,6 +12,6 @@
 #include "ui/console_logger.h"
 
 void render(AppContext* app, uint64_t* bb);
-void render_legal_moves(AppContext* app, Position* pos, int start);
+void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int start);
 
 #endif

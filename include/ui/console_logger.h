@@ -14,7 +14,7 @@ void log_position_diff(Position* a, Position* b);
 void log_gamestate(Position* pos);
 void log_bitboard(uint64_t* bb);
 void log_bitboards(uint64_t* bb, uint64_t* occ);
-void log_legal_moves(Move* legal_moves, int legal_move_count);
+void log_legal_moves(LegalMoves* lm);
 void log_occ(uint64_t* occ);
 
 #endif

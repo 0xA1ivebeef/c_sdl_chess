@@ -13,7 +13,7 @@ uint8_t select_piece(int mx, int my, uint64_t occ)
     return INVALID_SQUARE;
 }
 
-int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e)
+int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, LegalMoves* lm)
 {
     switch (e->type)
     {
@@ -32,7 +32,7 @@ int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e)
             if (sq != INVALID_SQUARE) 
             {
                 ui->selected_square = sq;
-                render_legal_moves(app, pos, ui->selected_square);
+                render_legal_moves(app, pos, lm, ui->selected_square);
             }
             break;
         }
@@ -57,7 +57,7 @@ int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e)
             if (is_pawn_promotion(pos, &tmp)) 
                 choose_promotion_move(&tmp);
 
-            if (handle_move(pos, &tmp)) 
+            if (handle_move(pos, lm, &tmp)) 
             {
                 ui->selected_square = INVALID_SQUARE;
                 return 1; // move applied

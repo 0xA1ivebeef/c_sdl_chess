@@ -17,9 +17,9 @@
 #include "utils/legal_move_utils.h"
 #include "utils/bitboard_utils.h"
 
-void sort_mvv_lva(Position* pos);
+void sort_mvv_lva(Position* pos, LegalMoves* lm);
 int is_check(Position* pos, uint8_t player);
-void filter_moves(Position* pos);
+void filter_moves(Position* pos, LegalMoves* lm);
 
 #endif
 

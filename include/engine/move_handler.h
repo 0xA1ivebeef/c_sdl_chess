@@ -17,6 +17,6 @@
 void save_state(Position* pos, Move* m, Undo* undo);
 void apply_move(Position* pos, Move* m);
 void undo_move(Position* pos, Move* m, Undo* undo);
-int handle_move(Position* pos, Move* m);
+int handle_move(Position* pos, LegalMoves* lm, Move* m);
 
 #endif

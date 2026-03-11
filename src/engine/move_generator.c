@@ -1,7 +1,7 @@
 
 #include "engine/move_generator.h"
 
-int PROMOTION_FLAGS[4] = 
+const int PROMOTION_FLAGS[4] = 
 {
     KNIGHT_PROMOTION, // 3..6
     BISHOP_PROMOTION, 
@@ -9,10 +9,10 @@ int PROMOTION_FLAGS[4] =
     QUEEN_PROMOTION
 };
 
-uint64_t PROMOTION_RANK_MASK[2] = 
+const uint64_t PROMOTION_RANK_MASK[2] = 
 {
-    0xFF00000000000000ULL,  // Black promotion rank (squares 56–63)
-    0x00000000000000FFULL // White promotion rank (squares 0–7)
+    0xFF00000000000000ULL, // black  
+    0x00000000000000FFULL  // white 
 };
 
 uint64_t pawn_attacks(int king_sq, int by_side)
@@ -23,12 +23,12 @@ uint64_t pawn_attacks(int king_sq, int by_side)
     return (1ULL << sq1) | (1ULL << sq2);
 }
 
-void add_move(Position* pos, int start, int dest, int flag)
+void add_move(Position* pos, LegalMoves* lm, int start, int dest, int flag)
 {
-    pos->legal_moves[pos->legal_move_count++] = (Move) { start, dest, flag };
+    lm->moves[lm->count++] = (Move) { start, dest, flag };
 }
 
-void add_enpassant(Position* pos)
+void add_enpassant(Position* pos, LegalMoves* lm)
 {
     if (pos->enpassant < 16 || pos->enpassant > 55)
     {
@@ -54,24 +54,15 @@ void add_enpassant(Position* pos)
 
     int ep_file = pos->enpassant % 8;
     if (ep_file == 0)
-    {
-        // A FILE
-        // printf("enpassant invalidating left square for A FILE\n");
         left_start = INVALID_SQUARE;
-    }
     else if (ep_file == 7)
-    {
-        // H FILE
-        // printf("enpassant invalidating left square for H FILE\n");
         right_start = INVALID_SQUARE;
-    }
 
     if (left_start != INVALID_SQUARE && own_pawns & (1ULL << left_start))
-        add_move(pos, left_start, pos->enpassant, ENPASSANT_FLAG);
+        add_move(pos, lm, left_start, pos->enpassant, ENPASSANT_FLAG);
 
     if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
-        add_move(pos, right_start, pos->enpassant, ENPASSANT_FLAG);
-
+        add_move(pos, lm, right_start, pos->enpassant, ENPASSANT_FLAG);
 }
 
 uint64_t get_pawn_attacking_moves(int p, int sq, uint64_t* occ)
@@ -180,13 +171,13 @@ int is_promotion(int p, int piece, int ds)
     return 1;
 }
 
-void add_promotion_moves(Position* pos, Move* m)
+void add_promotion_moves(Position* pos, LegalMoves* lm, Move* m)
 {
     for (int i = 0; i < 4; ++i)
     {
-        m->flags = PROMOTION_FLAGS[i];
         // printf("adding promotion move with %d\n", m->flags);
-        pos->legal_moves[pos->legal_move_count++] = *m;
+        m->flags = PROMOTION_FLAGS[i];
+        lm->moves[lm->count++] = *m;
     }
 }
 
@@ -205,7 +196,7 @@ int is_double_pawn_push(Move* m, int piece)
 }
 
 // called for each piece of the current player by resolve bitboard
-void get_pieces_moves(Position* pos, int piece, int sq)
+void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
 {
     uint64_t moves = get_legal_moves_bitmask(
             pos->player, piece, sq, pos->occ);
@@ -216,50 +207,45 @@ void get_pieces_moves(Position* pos, int piece, int sq)
         Move m = {sq, dest, 0}; 
 
         if (is_promotion(pos->player, piece, dest))
-            add_promotion_moves(pos, &m); // add manually cause 4x move
+            add_promotion_moves(pos, lm, &m); // add manually cause 4x move
         else if (is_double_pawn_push(&m, piece))
         {
             m.flags = DOUBLE_PAWN_PUSH;
-            pos->legal_moves[pos->legal_move_count++] = m; // set flag and add
+            lm->moves[lm->count++] = m; // set flag and add
         }
         else 
-            pos->legal_moves[pos->legal_move_count++] = m; // just add
+            lm->moves[lm->count++] = m; // just add
         
         moves &= moves - 1;
     }
 }
 
-// might make this async
-void resolve_bb(Position* pos, int piece) 
+void resolve_bb(Position* pos, LegalMoves* lm, int piece) 
 {
     int current_bit = 0;
     uint64_t bb = pos->bb[piece];
     while(bb)
     {
         if(bb & 1)
-            get_pieces_moves(pos, piece, current_bit);
+            get_pieces_moves(pos, lm, piece, current_bit);
         
         bb >>= 1;
         ++current_bit;
     }
 }
 
-void generate_legal_moves(Position* pos)
+void generate_legal_moves(Position* pos, LegalMoves* lm)
 {
-    // clear array
-    memset(pos->legal_moves, 0, sizeof(Move) * LEGAL_MOVES_SIZE);
-
-    // reset this and use it for indexing, appending legal_moves 
-    pos->legal_move_count = 0; 
+    memset(lm->moves, 0, sizeof(Move) * LEGAL_MOVES_SIZE);
+    lm->count = 0; 
 
     // index => only white or black bitboards then resolve these bitboards
-    int bb_start = pos->player*6; 
-    for(int i = bb_start; i < bb_start + 6; ++i)
-        resolve_bb(pos, i);
+    int start = pos->player*6; 
+    for(int i = start; i < start + 6; ++i)
+        resolve_bb(pos, lm, i);
 
-    // TODO fix this
     // legal move count is updated automatically
-    add_castling(pos);
-    add_enpassant(pos);
+    add_castling(pos, lm);
+    add_enpassant(pos, lm);
 }
 
