@@ -19,7 +19,7 @@ void update(Position* pos, UIContext* ui)
 
     if (pos->legal_move_count == 0)
     {
-        if (is_check(pos))
+        if (is_check(pos, pos->player))
         {
             ui->running = 0;
             printf("CHECKMATE\n");
@@ -51,6 +51,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui)
         {
             if (handle_event(app, pos, ui, &e))
             {  
+                get_zobrist_hash(pos);
                 ai_move_pending = 1;
 
                 update(pos, ui);

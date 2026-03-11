@@ -4,6 +4,7 @@
 int main()
 {
     srand(time(NULL));  
+    init_zobrist();
 
     AppContext app = {0}; 
     if (init_sdl(&app) != 0) 

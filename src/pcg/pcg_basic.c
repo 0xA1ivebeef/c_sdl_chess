@@ -28,7 +28,7 @@
  * your project.
  */
 
-#include "pcg_basic.h"
+#include "pcg/pcg_basic.h"
 
 // state for global RNGs
 

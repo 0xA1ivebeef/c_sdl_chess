@@ -9,5 +9,6 @@
 
 #include "engine/types.h"
 #include "engine/game.h"
+#include "engine/zobrist.h"
 
 #endif

@@ -10,8 +10,9 @@ perft fully working tested at multiple depths of multiple positions
 
 negamax opponent algorithm with alpha beta pruning and move ordering
 
+basic zobrist hashing to get the hash of a single position
+
 not yet implemented:
-zobrist hasing 
 transposition tables
 opening book
 magic bitboards

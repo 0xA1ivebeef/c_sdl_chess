@@ -19,12 +19,20 @@ int is_capture_move(uint64_t bb, Move* m)
     return ((bb & (1ULL << m->dest)) > 0);
 }
 
+int is_check(Position* pos, uint8_t player)
+{
+    int king_sq = get_king_sq(pos, player);
+    uint64_t atk = get_attack_bb(pos, !player);
+
+    return ((atk & (1ULL << king_sq)) != 0);
+}
+
 int gives_check(Position* pos, Move* m)
 {
     Undo undo;
     save_state(pos, m, &undo); 
     apply_move(pos, m);
-    int check = is_check(pos);  
+    int check = is_check(pos, pos->player);  
     undo_move(pos, m, &undo);
 
     return check;
@@ -66,19 +74,6 @@ void sort_mvv_lva(Position* pos)
         pos->legal_moves[i] = moves_with_scores[i].move;
 }
 
-int square_under_attack(uint8_t sq, uint64_t attack_bb)
-{
-    return ((attack_bb & (1ULL << sq)) != 0);
-}
-
-int is_check(Position* pos)
-{
-    int king_sq = get_king_sq(pos, pos->player);
-    uint64_t atk = get_attack_bb(pos, !pos->player);
-
-    return ((atk & (1ULL << king_sq)) != 0);
-}
-
 void filter_moves(Position* pos)
 {
     Move valid_moves[LEGAL_MOVES_SIZE] = {0};
@@ -86,38 +81,15 @@ void filter_moves(Position* pos)
 
     for (int i = 0; i < pos->legal_move_count; i++)
     {
-        Undo undo = {0};  
-        Move m = pos->legal_moves[i];
+        Undo undo;  
 
-        save_state(pos, &m, &undo);
-        
-        Position backup = *pos;
+        save_state(pos, &pos->legal_moves[i], &undo);
+        apply_move(pos, &pos->legal_moves[i]);  
 
-        apply_move(pos, &m);  
+        if (!is_check(pos, !pos->player))
+            valid_moves[valid_move_count++] = pos->legal_moves[i];
 
-        uint8_t king_sq = get_king_sq(pos, !pos->player);
-        uint64_t attack_bb = get_attack_bb(pos, pos->player);
-
-        /* printf("filter moves: king square: %d\n", king_sq);
-        printf("attack bitboard\n");
-        log_bitboard(&attack_bb);
-        */
-
-        if (!square_under_attack(king_sq, attack_bb))
-        {
-            // printf("king is not under attack, adding move %d, %d flag %d\n", m.start, m.dest, m.flags);
-            valid_moves[valid_move_count++] = m;
-        }
-
-        undo_move(pos, &m, &undo); // restore position
-
-        if (memcmp(&backup, pos, sizeof(Position)))
-        {
-            fprintf(stderr, "MEMCMP RETURNED 1\n");
-            printf("move: %s, %s\n", square_to_notation(m.start), square_to_notation(m.dest));
-            log_position_diff(pos, &backup);
-            exit(-1);
-        }
+        undo_move(pos, &pos->legal_moves[i], &undo); 
     }
 
     memcpy(pos->legal_moves, valid_moves, sizeof(Move) * valid_move_count); 

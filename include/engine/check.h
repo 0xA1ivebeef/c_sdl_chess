@@ -18,7 +18,7 @@
 #include "utils/bitboard_utils.h"
 
 void sort_mvv_lva(Position* pos);
-int is_check(Position* pos);
+int is_check(Position* pos, uint8_t player);
 void filter_moves(Position* pos);
 
 #endif

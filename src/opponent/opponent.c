@@ -33,7 +33,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
 
     if (pos->legal_move_count == 0)
     {
-        if (is_check(pos))
+        if (is_check(pos, pos->player))
             return -MATE;
         else 
             return 0;
@@ -82,7 +82,7 @@ int search(Position* pos, int depth)
 
     if (pos->legal_move_count == 0)
     {
-        if (is_check(pos))
+        if (is_check(pos, pos->player))
             return -MATE;
         else 
             return 0;
