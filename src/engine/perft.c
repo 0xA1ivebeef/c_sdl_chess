@@ -23,8 +23,7 @@ int get_nodes(Position* pos, int depth, LegalMoves* lm)
         Undo undo = {0};
         Move m = moves[i];
 
-        save_state(pos, &m, &undo);
-        apply_move(pos, &m);
+        apply_move(pos, &m, &undo);
 
         nodes += get_nodes(pos, depth - 1, lm);
 
@@ -53,10 +52,9 @@ void perft_divide(Position* pos, LegalMoves* lm, int depth, move_node* move_node
     for (int i = 0; i < move_count; ++i)
     {
         Move m = moves[i];
-        Undo undo = {0};
+        Undo undo;
 
-        save_state(pos, &m, &undo);
-        apply_move(pos, &m);
+        apply_move(pos, &m, &undo);
 
         move_nodes[i] = (move_node) { get_nodes(pos, depth - 1, lm), moves[i] };
 

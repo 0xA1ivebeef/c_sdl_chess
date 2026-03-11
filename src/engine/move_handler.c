@@ -162,22 +162,32 @@ void save_state(Position* pos, Move* m, Undo* undo)
     undo->enpassant      = pos->enpassant;
     undo->halfmove       = pos->halfmove;
     undo->fullmove       = pos->fullmove;
+    undo->zobrist_hash   = pos->zobrist_hash;
 }
 
-void apply_move(Position* pos, Move* m)
+void apply_move(Position* pos, Move* m, Undo* undo)
 {   
+    save_state(pos, m, undo);
+
     int moved_piece = get_bb_index(pos->bb, m->start);
     assert(moved_piece > -1);
+
+    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + m->start];
 
     int captured_piece = get_bb_index(pos->bb, m->dest); // -1 if empty
 
 	// capture
     if (captured_piece > -1) 
+    {
         pos->bb[captured_piece] &= ~(1ULL << m->dest);
+        pos->zobrist_hash ^= zobrist_table[captured_piece * 64 + m->dest];
+    }
 
     // move
     pos->bb[moved_piece] &= ~(1ULL << m->start);
     pos->bb[moved_piece] |=  (1ULL << m->dest);
+
+    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + m->dest];
 
     // special move handling after normal move
     handle_special_move(pos, m); 
@@ -195,12 +205,9 @@ void apply_move(Position* pos, Move* m)
 
     pos->player ^= 1;
     update_occ(pos);
-
-    // TODO printf("logging bitboards after apply move\n");
-    // log_occ(pos->occ);
 }
 
-Move* is_legal_move(Position* pos, LegalMoves* lm, Move* m)
+Move* is_legal_move(LegalMoves* lm, Move* m)
 {
     for(int i = 0; i < lm->count; ++i)
     {
@@ -220,11 +227,12 @@ int handle_move(Position* pos, LegalMoves* lm, Move* m)
 {
     // replace with move from legal moves to get flags
     // assume promotion flags are already set in m
-    Move* legal = is_legal_move(pos, lm, m);
+    Move* legal = is_legal_move(lm, m);
     if (!legal)
         return 0;
 
-    apply_move(pos, legal);
+    Undo undo;
+    apply_move(pos, legal, &undo);
 
     return 1;
 }

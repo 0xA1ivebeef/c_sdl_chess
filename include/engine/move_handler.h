@@ -8,14 +8,14 @@
 #include <assert.h>
 
 #include "engine/types.h"
+#include "engine/zobrist.h"
 #include "engine/castling.h"
 #include "engine/move_generator.h"
 
 #include "utils/utils.h"
 #include "utils/bitboard_utils.h"
 
-void save_state(Position* pos, Move* m, Undo* undo);
-void apply_move(Position* pos, Move* m);
+void apply_move(Position* pos, Move* m, Undo* undo);
 void undo_move(Position* pos, Move* m, Undo* undo);
 int handle_move(Position* pos, LegalMoves* lm, Move* m);
 

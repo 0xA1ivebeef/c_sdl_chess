@@ -30,8 +30,7 @@ int is_check(Position* pos, uint8_t player)
 int gives_check(Position* pos, Move* m)
 {
     Undo undo;
-    save_state(pos, m, &undo); 
-    apply_move(pos, m);
+    apply_move(pos, m, &undo);
     int check = is_check(pos, pos->player);  
     undo_move(pos, m, &undo);
 
@@ -83,8 +82,7 @@ void filter_moves(Position* pos, LegalMoves* lm)
     {
         Undo undo;  
 
-        save_state(pos, &lm->moves[i], &undo);
-        apply_move(pos, &lm->moves[i]);  
+        apply_move(pos, &lm->moves[i], &undo);  
 
         if (!is_check(pos, !pos->player))
             valid_moves[valid_move_count++] = lm->moves[i];

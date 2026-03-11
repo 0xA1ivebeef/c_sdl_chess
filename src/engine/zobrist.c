@@ -56,15 +56,3 @@ uint64_t get_zobrist_hash(Position* pos)
     return hash;
 }
 
-/*
- * for incremental updates of zobrist hash
-    | Change           | What to XOR                                                                       |
-| ---------------- | --------------------------------------------------------------------------------- |
-| **Piece moves**  | XOR the piece out of the old square, XOR it into the new square                   |
-| **Capture**      | XOR the captured piece out of its square                                          |
-| **Promotion**    | XOR the pawn out of the old square, XOR the promoted piece into the new square    |
-| **Castling**     | XOR the old castling rights out, XOR the new castling rights in                   |
-| **En passant**   | XOR the old en passant file out (if any), XOR the new en passant file in (if any) |
-| **Side to move** | XOR `zobrist_black_to_move`                                                       |
-
-*/

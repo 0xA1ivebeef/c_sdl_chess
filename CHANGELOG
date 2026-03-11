@@ -104,6 +104,9 @@ search fixes this
 sort moves by descending order of MVV-LVA value in move_generator
 
 zobrist hashing for implementing a openings book in the future and transposition table maybe
+implemented incremental updating of zobrist in apply_move
+
+save_state is now implicit to apply move and doesnt have to be called before it
 
 --------------------------------------------------------------------------------
 

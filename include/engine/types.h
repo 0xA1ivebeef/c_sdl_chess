@@ -68,6 +68,7 @@ typedef struct
     uint8_t     enpassant;
     uint8_t     halfmove;
     uint16_t    fullmove;
+    uint64_t    zobrist_hash;
 } Position;
 
 typedef struct
@@ -78,6 +79,7 @@ typedef struct
     uint8_t     enpassant;
     uint8_t     halfmove;
     uint16_t    fullmove;
+    uint64_t    zobrist_hash;
 } Undo;
 
 #endif

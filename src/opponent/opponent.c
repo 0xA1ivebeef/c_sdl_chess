@@ -50,8 +50,7 @@ int alphabeta(Position* pos, LegalMoves* lm, int depth, int alpha, int beta)
     for (int i = 0; i < move_count; i++)
     {
         Undo undo;
-        save_state(pos, &legal_moves[i], &undo);
-        apply_move(pos, &legal_moves[i]);
+        apply_move(pos, &legal_moves[i], &undo);
 
         int score = -alphabeta(pos, lm, depth - 1, -beta, -alpha);
 
@@ -98,8 +97,7 @@ int search(Position* pos, LegalMoves* lm, int depth)
     for (int i = 0; i < move_count; ++i)
     {
         Undo undo;
-        save_state(pos, &legal_moves[i], &undo);
-        apply_move(pos, &legal_moves[i]);
+        apply_move(pos, &legal_moves[i], &undo);
 
         int eval = -search(pos, lm, depth - 1);
         best_eval = max(eval, best_eval);
@@ -128,8 +126,7 @@ Move search_root(Position* pos, LegalMoves* lm, int depth)
     for (int i = 0; i < move_count; ++i)
     {
         Undo undo;
-        save_state(pos, &legal_moves[i], &undo);
-        apply_move(pos, &legal_moves[i]);
+        apply_move(pos, &legal_moves[i], &undo);
         // now white to move
 
         // negamax so this returns a large number if the position 
