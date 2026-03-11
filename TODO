@@ -1,5 +1,10 @@
 
-implement draws
+insufficient material draw
+threefold repetition draw
+
+incremental zobrist updates
+
+remove legal moves from position
+
 add sounds
-maybe move all bitboard indicies to uint8_t 
 
