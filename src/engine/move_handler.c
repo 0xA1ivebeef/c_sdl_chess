@@ -178,7 +178,6 @@ void save_state(Position* pos, Move* m, Undo* undo)
     undo->zobrist_hash   = pos->zobrist_hash;
 }
 
-// TODO zobrist updating promotions, castling and enpassant captures
 void apply_move(Position* pos, Move* m, Undo* undo)
 {   
     save_state(pos, m, undo);
@@ -231,6 +230,8 @@ void apply_move(Position* pos, Move* m, Undo* undo)
 
     if (pos->player == BLACK) 
         pos->fullmove++;
+
+    pos->zobrist_hash ^= zobrist_black_to_move;
 
     pos->player ^= 1;
     update_occ(pos);

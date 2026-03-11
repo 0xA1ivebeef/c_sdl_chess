@@ -15,7 +15,7 @@ uint64_t zobrist_black_to_move;
 
 void init_zobrist()
 {
-    pcg32_srandom(time(NULL), 54ULL);
+    pcg32_srandom(0x123456789, 54ULL);
 
     for (int i = 0; i < 12*64; ++i)
         zobrist_table[i] = pcg_r64();

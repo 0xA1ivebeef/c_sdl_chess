@@ -120,6 +120,8 @@ void log_gamestate(Position* pos)
     printf("halfmove clock: %d\n", pos->halfmove);
     printf("fullmove number: %d\n", pos->fullmove);
 
+    printf("zobrist hash: %zu\n", pos->zobrist_hash);
+
     printf("\n --------------------------------------------\n\n");
 }
 
