@@ -108,5 +108,7 @@ implemented incremental updating of zobrist in apply_move
 
 save_state is now implicit to apply move and doesnt have to be called before it
 
+full incremental zobrist hashing with full special move handling
+
 --------------------------------------------------------------------------------
 
