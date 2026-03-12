@@ -70,13 +70,13 @@ void sort_mvv_lva(Position* pos, LegalMoves* lm)
 
 void filter_moves(Position* pos, LegalMoves* lm)
 {
+    printf("FILTER MOVES\n");
     Move valid_moves[LEGAL_MOVES_SIZE] = {0};
     int valid_move_count = 0;
 
     for (int i = 0; i < lm->count; i++)
     {
         Undo undo;  
-
         apply_move(pos, lm->moves[i], &undo);  
 
         if (!is_check(pos, !pos->player))

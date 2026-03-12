@@ -8,7 +8,7 @@ const int BQ_CASTLE = 771;
 
 const int ENPASSANT_BASE = 772;
 
-const int BLACK_TO_MOVE = 780;
+const int WHITE_TO_MOVE = 780;
 
 const uint64_t Random64[781] = 
 {
@@ -283,7 +283,7 @@ uint64_t get_zobrist_hash(Position* pos)
     if (pos->player == WHITE)
     {
         printf("hash logs: xored black to move\n");
-        hash ^= Random64[BLACK_TO_MOVE];
+        hash ^= Random64[WHITE_TO_MOVE];
     }
 
     printf("final hash: 0x%016lx", hash);

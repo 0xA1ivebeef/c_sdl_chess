@@ -164,39 +164,44 @@ void save_state(Position* pos, Move m, Undo* undo)
 
 void apply_move(Position* pos, Move m, Undo* undo)
 {   
+    printf("hash before apply move 0x%016lx\n", pos->zobrist_hash);
     save_state(pos, m, undo);
 
-    int moved_piece = get_bb_index(pos->bb, move_from(m));
-    assert(moved_piece > -1);
-
-    pos->zobrist_hash ^= Random64[my_to_poly(moved_piece) * 64 + polyglot_sq(move_from(m))];
-
-    int captured_piece = get_bb_index(pos->bb, move_to(m)); // -1 if empty
+    assert(undo->moved_piece > -1);
 
 	// capture
-    if (captured_piece > -1) 
+    if (undo->captured_piece > -1) 
     {
-        pos->bb[captured_piece] &= ~(1ULL << move_to(m));
-        pos->zobrist_hash ^= Random64[my_to_poly(captured_piece) * 64 + polyglot_sq(move_to(m))];
+        pos->bb[undo->captured_piece] &= ~(1ULL << move_to(m));
+        pos->zobrist_hash ^= Random64[my_to_poly(undo->captured_piece) * 64 + polyglot_sq(move_to(m))];
+        printf("removing captured piece 0x%016lx\n", pos->zobrist_hash);
     }
 
     // move
-    pos->bb[moved_piece] &= ~(1ULL << move_from(m));
-    pos->bb[moved_piece] |=  (1ULL << move_to(m));
+    pos->bb[undo->moved_piece] &= ~(1ULL << move_from(m));
+    pos->bb[undo->moved_piece] |=  (1ULL << move_to(m));
 
-    pos->zobrist_hash ^= Random64[my_to_poly(moved_piece) * 64 + polyglot_sq(move_to(m))];
+    pos->zobrist_hash ^= Random64[my_to_poly(undo->moved_piece) * 64 + polyglot_sq(move_from(m))];
+    printf("removing moved piece 0x%016lx\n", pos->zobrist_hash);
 
-    // remove old enpassant square do this before enpassant square is updated through this move
+    pos->zobrist_hash ^= Random64[my_to_poly(undo->moved_piece) * 64 + polyglot_sq(move_to(m))];
+    printf("setting moved piece 0x%016lx\n", pos->zobrist_hash);
+
+    /*
+     * TODO only handle enpassant if the capture is a legal move
     if (pos->enpassant != INVALID_SQUARE)
-        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
-
-    // special move handling after normal move
-    // updates enpassant square
-    handle_special_move(pos, m, moved_piece); 
-    update_castle_rights(pos, m, moved_piece); 
-
-    if (undo->castle_rights != pos->castle_rights)
     {
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+        printf("removing old enpassant square 0x%016lx\n", pos->zobrist_hash);
+    }
+    */
+
+    handle_special_move(pos, m, undo->moved_piece); 
+    update_castle_rights(pos, m, undo->moved_piece); 
+
+    if (pos->castle_rights != undo->castle_rights)
+    {
+        printf("updating castle rights 0x%016lx\n", pos->zobrist_hash);
         uint8_t lost_rights = undo->castle_rights & ~pos->castle_rights;
 
         if (lost_rights & 1) pos->zobrist_hash ^= Random64[BQ_CASTLE];
@@ -205,13 +210,18 @@ void apply_move(Position* pos, Move m, Undo* undo)
         if (lost_rights & 8) pos->zobrist_hash ^= Random64[WK_CASTLE];
     }
 
-    // add new enpassant square
+    /*
+     * TODO only handle enpassant if the capture is a legal move
     if (pos->enpassant != INVALID_SQUARE)
+    {
         pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+        printf("setting new enpassant square 0x%016lx\n", pos->zobrist_hash);
+    }
+    */
 
     // move clocks
-    int pawn_move = (moved_piece % WHITE_PAWN == 0);
-    if (pawn_move || captured_piece > -1) 
+    int pawn_move = (undo->moved_piece == WHITE_PAWN || undo->moved_piece == BLACK_PAWN);
+    if (pawn_move || undo->captured_piece > -1) 
         pos->halfmove = 0;
     else 
         pos->halfmove++;
@@ -219,7 +229,8 @@ void apply_move(Position* pos, Move m, Undo* undo)
     if (pos->player == BLACK) 
         pos->fullmove++;
 
-    pos->zobrist_hash ^= Random64[BLACK_TO_MOVE];
+    pos->zobrist_hash ^= Random64[WHITE_TO_MOVE];
+    printf("removing white to move 0x%016lx\n", pos->zobrist_hash);
 
     pos->player ^= 1;
     update_occ(pos);

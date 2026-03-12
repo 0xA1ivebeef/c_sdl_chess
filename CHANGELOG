@@ -159,13 +159,13 @@ of plugin to compute the polyglot hash and just adjust the move to uint16 cause
 this makes sense from a performance perspective but changing eg the square indexing 
 doesnt have any effect on performance
 
-
-
 bitboards_utils and legal_move_utils merged into single file util
 
 implemented full perft suite with multiple positions at depth 5
 MOVE -> 16bit Successfull
 tested with full perft suite
+
+polyglot hashing implemented todo fix to match examples in original doc
 
 --------------------------------------------------------------------------------
 

@@ -5,7 +5,7 @@
 
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 1);
+    load_fen_string(pos, 0);
     update_occ(pos);
 	
     generate_legal_moves(pos, lm); 

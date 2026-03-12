@@ -14,7 +14,7 @@ extern const int BK_CASTLE;
 extern const int BQ_CASTLE; 
 
 extern const int ENPASSANT_BASE;
-extern const int BLACK_TO_MOVE;
+extern const int WHITE_TO_MOVE;
 
 extern const uint64_t Random64[781];
 
