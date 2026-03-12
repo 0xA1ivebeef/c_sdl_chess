@@ -2,8 +2,9 @@
 #ifndef CONSOLE_LOGGER_H
 #define CONSOLE_LOGGER_H
 
-#include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
+#include <stdint.h>
 
 #include "engine/constants.h"
 #include "engine/types.h"

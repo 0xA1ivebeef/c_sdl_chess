@@ -50,9 +50,8 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     // int ai_move_pending = 0;
 
     // perft(pos, lm, 3);
-    
-    full_perft_test(pos, lm);
-    return;
+    // full_perft_test(pos, lm);
+    // return;
 
     while (ui->running)
     {

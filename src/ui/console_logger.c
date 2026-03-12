@@ -121,6 +121,7 @@ void log_gamestate(Position* pos)
     printf("fullmove number: %d\n", pos->fullmove);
 
     printf("zobrist hash: %zu\n", pos->zobrist_hash);
+    printf("hexadecimal: 0x%" PRIX64 "\n", pos->zobrist_hash);
 
     printf("\n --------------------------------------------\n\n");
 }

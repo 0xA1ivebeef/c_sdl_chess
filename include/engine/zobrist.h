@@ -5,18 +5,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <time.h>
-
-#include "pcg/pcg_basic.h"
 
 #include "engine/types.h"
 
-extern uint64_t zobrist_table[12*64];
-extern uint64_t zobrist_castling[16];
-extern uint64_t zobrist_enpassant[8];
-extern uint64_t zobrist_black_to_move;
+extern const int WK_CASTLE;
+extern const int WQ_CASTLE;
+extern const int BK_CASTLE;
+extern const int BQ_CASTLE; 
 
-void init_zobrist();
+extern const int ENPASSANT_BASE;
+extern const int BLACK_TO_MOVE;
+
+extern const uint64_t Random64[781];
+
+int open_book(const char* book_path);
+uint8_t polyglot_sq(uint8_t sq);
+int my_to_poly(int piece);
+int poly_to_my(int poly);
 uint64_t get_zobrist_hash(Position* pos);
 
 #endif

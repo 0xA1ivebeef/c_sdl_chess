@@ -3,8 +3,10 @@
 
 int main()
 {
+    if (open_book("assets/baron30.bin") != 0)
+        return -1;
+
     LegalMoves lm = {0};
-    init_zobrist();
 
     AppContext app = {0}; 
     if (init_sdl(&app) != 0) 

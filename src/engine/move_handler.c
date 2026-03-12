@@ -17,8 +17,8 @@ void handle_pawn_promotion(Position* pos, Move m)
     pos->bb[pawn] &= ~(1ULL << dest);
     pos->bb[promote_piece] |= (1ULL << dest); 
 
-    pos->zobrist_hash ^= zobrist_table[pawn * 64 + dest];
-    pos->zobrist_hash ^= zobrist_table[promote_piece * 64 + dest];
+    pos->zobrist_hash ^= Random64[my_to_poly(pawn) * 64 + polyglot_sq(dest)];
+    pos->zobrist_hash ^= Random64[my_to_poly(promote_piece) * 64 + polyglot_sq(dest)];
 }
 
 void handle_enpassant(Position* pos, Move m)
@@ -30,7 +30,7 @@ void handle_enpassant(Position* pos, Move m)
     
     pos->bb[captured_pawn] &= ~(1ULL << capture_sq); // capture enpassanted pawn
 
-    pos->zobrist_hash ^= zobrist_table[captured_pawn * 64 + capture_sq];
+    pos->zobrist_hash ^= Random64[my_to_poly(captured_pawn) * 64 + polyglot_sq(capture_sq)];
 }
 
 void handle_castling(Position* pos, Move m)
@@ -41,16 +41,16 @@ void handle_castling(Position* pos, Move m)
         pos->bb[rook] &= ~(1ULL << (move_to(m) - 2));
         pos->bb[rook] |= (1ULL << (move_to(m) + 1));
 
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) - 2];
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) + 1];
+        pos->zobrist_hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) - 2)];
+        pos->zobrist_hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) + 1)];
     }
     else
     {
         pos->bb[rook] &= ~(1ULL << (move_to(m) + 1));
         pos->bb[rook] |= (1ULL << (move_to(m) - 1));
         
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) + 1];
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) - 1];
+        pos->zobrist_hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) + 1)];
+        pos->zobrist_hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) - 1)];
     }
 }
 
@@ -169,7 +169,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
     int moved_piece = get_bb_index(pos->bb, move_from(m));
     assert(moved_piece > -1);
 
-    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + move_from(m)];
+    pos->zobrist_hash ^= Random64[my_to_poly(moved_piece) * 64 + polyglot_sq(move_from(m))];
 
     int captured_piece = get_bb_index(pos->bb, move_to(m)); // -1 if empty
 
@@ -177,33 +177,37 @@ void apply_move(Position* pos, Move m, Undo* undo)
     if (captured_piece > -1) 
     {
         pos->bb[captured_piece] &= ~(1ULL << move_to(m));
-        pos->zobrist_hash ^= zobrist_table[captured_piece * 64 + move_to(m)];
+        pos->zobrist_hash ^= Random64[my_to_poly(captured_piece) * 64 + polyglot_sq(move_to(m))];
     }
 
     // move
     pos->bb[moved_piece] &= ~(1ULL << move_from(m));
     pos->bb[moved_piece] |=  (1ULL << move_to(m));
 
-    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + move_to(m)];
+    pos->zobrist_hash ^= Random64[my_to_poly(moved_piece) * 64 + polyglot_sq(move_to(m))];
 
     // remove old enpassant square do this before enpassant square is updated through this move
     if (pos->enpassant != INVALID_SQUARE)
-        pos->zobrist_hash ^= zobrist_enpassant[pos->enpassant % 8];
-
-    // remove old castlerights
-    pos->zobrist_hash ^= zobrist_castling[pos->castle_rights];
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
 
     // special move handling after normal move
     // updates enpassant square
     handle_special_move(pos, m, moved_piece); 
     update_castle_rights(pos, m, moved_piece); 
 
-    // add new castle rights
-    pos->zobrist_hash ^= zobrist_castling[pos->castle_rights];
+    if (undo->castle_rights != pos->castle_rights)
+    {
+        uint8_t lost_rights = undo->castle_rights & ~pos->castle_rights;
+
+        if (lost_rights & 1) pos->zobrist_hash ^= Random64[BQ_CASTLE];
+        if (lost_rights & 2) pos->zobrist_hash ^= Random64[BK_CASTLE];
+        if (lost_rights & 4) pos->zobrist_hash ^= Random64[WQ_CASTLE];
+        if (lost_rights & 8) pos->zobrist_hash ^= Random64[WK_CASTLE];
+    }
 
     // add new enpassant square
     if (pos->enpassant != INVALID_SQUARE)
-        pos->zobrist_hash ^= zobrist_enpassant[pos->enpassant % 8];
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
 
     // move clocks
     int pawn_move = (moved_piece % WHITE_PAWN == 0);
@@ -215,7 +219,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
     if (pos->player == BLACK) 
         pos->fullmove++;
 
-    pos->zobrist_hash ^= zobrist_black_to_move;
+    pos->zobrist_hash ^= Random64[BLACK_TO_MOVE];
 
     pos->player ^= 1;
     update_occ(pos);
