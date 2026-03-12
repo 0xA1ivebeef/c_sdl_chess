@@ -9,13 +9,13 @@ concept of check and checkmate, stalemate
 perft fully working tested at multiple depths of multiple positions
 
 negamax opponent algorithm with alpha beta pruning and move ordering
-
-basic zobrist hashing to get the hash of a single position
+full zobrist hashing and incremental updating
 
 not yet implemented:
 transposition tables
 opening book
 magic bitboards
 positional play, king safety etc.
-draws 
+threefold repetition draw
+insufficient material draw
 

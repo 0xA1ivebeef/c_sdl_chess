@@ -9,6 +9,9 @@ void position_init(Position* pos, LegalMoves* lm)
     update_occ(pos);
 	
     generate_legal_moves(pos, lm); 
+
+    pos->zobrist_hash = get_zobrist_hash(pos);
+
     log_gamestate(pos);
 }
 
@@ -31,11 +34,10 @@ void update(Position* pos, UIContext* ui, LegalMoves* lm)
         }
     }
 
-    // TODO implement draws
 	if (pos->halfmove == 100)
 	{
-		// printf("50 move draw\n");
-        // ui->game_over = 1;  
+		printf("50 move draw\n");
+        ui->game_over = 1;  
 	}
 
     log_gamestate(pos);
@@ -51,7 +53,6 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
         {
             if (handle_event(app, pos, ui, &e, lm))
             {  
-                get_zobrist_hash(pos);
                 ai_move_pending = 1;
 
                 update(pos, ui, lm);
