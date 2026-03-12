@@ -14,8 +14,7 @@
 #include "engine/attack_generator.h"
 #include "engine/move_handler.h"
 
-#include "utils/legal_move_utils.h"
-#include "utils/bitboard_utils.h"
+#include "utils/utils.h"
 
 void sort_mvv_lva(Position* pos, LegalMoves* lm);
 int is_check(Position* pos, uint8_t player);

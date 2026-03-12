@@ -10,10 +10,11 @@
 #include "engine/move_handler.h"
 #include "engine/attack_generator.h"
 #include "engine/check.h"
+#include "fen_string_loader.h"
 
-#include "utils/bitboard_utils.h"
-#include "utils/legal_move_utils.h"
+#include "utils/utils.h"
 
-void perft(Position* pos, LegalMoves* lm, int depth);
+int perft(Position* pos, LegalMoves* lm, int depth);
+void full_perft_test(Position* pos, LegalMoves* lm);
 
 #endif

@@ -1,32 +1,70 @@
 
 #include "utils/utils.h"
 
+int get_king_sq(Position* pos, uint8_t player)
+{
+    uint64_t bb = pos->bb[player ? WHITE_KING : BLACK_KING];
+    return bb ? __builtin_ctzll(bb) : -1;
+}
+
+int get_bb_index(uint64_t* bb, int sq)
+{
+    for(int i = 0; i < 12; ++i)
+    {
+        if(bb[i] & (1ULL << sq))
+            return i;
+    }
+    return -1;
+}
+
+void update_occ(Position* pos)
+{
+    for(int i = 0; i < 3; ++i)
+        pos->occ[i] = 0;
+    
+    for(int i = 0; i < 6; ++i)
+        pos->occ[BLACK] |= pos->bb[i];
+ 
+    for(int i = 6; i < 12; ++i)
+        pos->occ[WHITE] |= pos->bb[i];
+    
+    pos->occ[2] |= pos->occ[BLACK] | pos->occ[WHITE];
+}
+
+uint8_t get_legal_move_count(Move* lm)
+{
+	int i = 0;
+	while(lm[i] != 0)
+		++i;
+	return i;
+}
+
 int abs_int(int x) 
 {
     return x < 0 ? -x : x;
 }
 
-int char_to_promotion_flag(char c)
+uint16_t char_to_promotion_flag(char c)
 {   
     if (c >= 'a' && c <= 'z')
         c -= 32; // 'n' -> 'N', etc.
 
     switch(c)
     {
-        case 'N': return KNIGHT_PROMOTION;
-        case 'B': return BISHOP_PROMOTION;
-        case 'R': return ROOK_PROMOTION;
-        case 'Q': return QUEEN_PROMOTION;
+        case 'N': return PROMOTION_FLAGS[0];
+        case 'B': return PROMOTION_FLAGS[1];
+        case 'R': return PROMOTION_FLAGS[2];
+        case 'Q': return PROMOTION_FLAGS[3];
         default:
-            return QUEEN_PROMOTION; // default to queen if invalid input
+            return PROMOTION_FLAGS[3]; // default to queen if invalid input
     } 
 }
 
-int is_pawn_promotion(Position* pos, Move* m)
+int is_pawn_promotion(Position* pos, Move m)
 {
-    int moved_piece = get_bb_index(pos->bb, m->start);
-    if ((moved_piece == WHITE_PAWN && m->dest < 8) || 
-        (moved_piece == BLACK_PAWN && m->dest > 55))
+    int moved_piece = get_bb_index(pos->bb, move_from(m));
+    if ((moved_piece == WHITE_PAWN && move_to(m) < 8) || 
+        (moved_piece == BLACK_PAWN && move_to(m) > 55))
         return 1;
     return 0;
 }
@@ -37,7 +75,7 @@ void choose_promotion_move(Move* m)
     char c = getchar();
     while (getchar() != '\n' && !feof(stdin));
 
-    m->flags = char_to_promotion_flag(c);
+    *m |= char_to_promotion_flag(c);
 }
 
 int square_string_to_int(char* square_string)
@@ -71,5 +109,47 @@ const char* square_to_notation(int sq)
     out[1] = '8' - (sq / 8);
     out[2] = '\0';
     return out;
+}
+
+int is_enpassant_move(uint8_t enpassant, Move m, int moved_piece)
+{
+    if (moved_piece != WHITE_PAWN && moved_piece != BLACK_PAWN)
+        return 0;
+
+    return enpassant == move_to(m);
+}
+
+const uint16_t CASTLING_MOVES[4] = 
+{
+    // 0000 startsquare destsquare
+    (60 << 6) | 62, // white ks
+    (60 << 6) | 58, // white qs
+    ( 4 << 6) |  6, // black ks
+    ( 4 << 6) |  2  // black qs
+};
+
+int is_castling_move(Move m, int moved_piece)
+{
+    // when handle special move is called moved piece already moved
+    if (moved_piece != WHITE_KING && moved_piece != BLACK_KING)
+        return 0;
+
+    for (int i = 0; i < 4; ++i)
+        if (m == CASTLING_MOVES[i])
+            return 1;
+    return 0;
+}
+
+int is_promotion_move(Move m)
+{
+    return (m >> 12) != 0;
+}
+
+int is_double_pawn_move(Move m, int moved_piece)
+{
+    if (moved_piece != WHITE_PAWN && moved_piece != BLACK_PAWN)
+        return 0;
+
+    return abs_int(move_from(m) - move_to(m)) == 16;
 }
 

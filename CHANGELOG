@@ -112,3 +112,60 @@ full incremental zobrist hashing with full special move handling
 
 --------------------------------------------------------------------------------
 
+12-03-2026
+implementing polyglot openings book
+compatibility:
+square indexing a1 = 0 h8 = 63  (opposite from mine)
+move encoding: 0000 000000 000000
+                 ||  start  dest
+                 \/
+        3 bits promotion piece
+
+promotion values: 
+0       none
+1 << 12 knight 
+2 << 12 bishop
+3 << 12 rook
+4 << 12 queen
+
+castling is just a king move that moves 2 squares
+enpassant is encoded like a normal capture but you have the enpassant square of the position (state)
+enpassant square is only included in the hash if there is an actual enpassant capture otherwise its neglected
+
+zobrist hashing: exact same hash algorithm and constants 781 constants (12 * 64 + 4 + 8 + 1)
+
+piece indicies are reversed: 0-5 white p n b r q k 6-11 black
+
+castline rights indexing: 
+0 white king side
+1 white qs
+2 black ks
+3 black qs
+
+book file format: 16 bytes sorted by key
+uint64_t key
+uint16 move
+uint16 weight
+uint32 learn
+
+algorithm for openings book:
+1. compute polyglot hash
+2. binary search file for hash
+3. collect all entries with the key
+4. choose move (usually weighted random)
+
+-> this is a lot of pretty deep architectural stuff so i might just make some kind
+of plugin to compute the polyglot hash and just adjust the move to uint16 cause
+this makes sense from a performance perspective but changing eg the square indexing 
+doesnt have any effect on performance
+
+
+
+bitboards_utils and legal_move_utils merged into single file util
+
+implemented full perft suite with multiple positions at depth 5
+MOVE -> 16bit Successfull
+tested with full perft suite
+
+--------------------------------------------------------------------------------
+

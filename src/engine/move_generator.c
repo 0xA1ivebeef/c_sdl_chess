@@ -1,14 +1,6 @@
 
 #include "engine/move_generator.h"
 
-const int PROMOTION_FLAGS[4] = 
-{
-    KNIGHT_PROMOTION, // 3..6
-    BISHOP_PROMOTION, 
-    ROOK_PROMOTION,
-    QUEEN_PROMOTION
-};
-
 const uint64_t PROMOTION_RANK_MASK[2] = 
 {
     0xFF00000000000000ULL, // black  
@@ -23,33 +15,25 @@ uint64_t pawn_attacks(int king_sq, int by_side)
     return (1ULL << sq1) | (1ULL << sq2);
 }
 
-void add_move(Position* pos, LegalMoves* lm, int start, int dest, int flag)
+void add_move(LegalMoves* lm, uint8_t start, uint8_t dest, uint8_t flag)
 {
-    lm->moves[lm->count++] = (Move) { start, dest, flag };
+    lm->moves[lm->count++] = dest | (start << 6) | ((flag & 0x7) << 12);
 }
 
 void add_enpassant(Position* pos, LegalMoves* lm)
 {
     if (pos->enpassant < 16 || pos->enpassant > 55)
-    {
-        // printf("enpassant not possible, square: %d\n", pos->enpassant);
         return;
-    }
 
     uint64_t own_pawns = pos->bb[pos->player*6];
 
-    int left_start;
-    int right_start;
+    int left_start = pos->enpassant - 9;
+    int right_start = pos->enpassant - 7;
                                     
     if (pos->player == WHITE)
     {
         left_start = pos->enpassant + 7;
         right_start = pos->enpassant + 9;
-    }
-    else
-    {
-        left_start = pos->enpassant - 9;
-        right_start = pos->enpassant - 7;
     }
 
     int ep_file = pos->enpassant % 8;
@@ -59,10 +43,10 @@ void add_enpassant(Position* pos, LegalMoves* lm)
         right_start = INVALID_SQUARE;
 
     if (left_start != INVALID_SQUARE && own_pawns & (1ULL << left_start))
-        add_move(pos, lm, left_start, pos->enpassant, ENPASSANT_FLAG);
+        add_move(lm, left_start, pos->enpassant, 0);
 
     if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
-        add_move(pos, lm, right_start, pos->enpassant, ENPASSANT_FLAG);
+        add_move(lm, right_start, pos->enpassant, 0);
 }
 
 uint64_t get_pawn_attacking_moves(int p, int sq, uint64_t* occ)
@@ -139,8 +123,6 @@ uint64_t get_king_legal_moves(int p, int sq, uint64_t* occ)
 
 uint64_t get_legal_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
 {
-    // returns a bitmask that is resolved into move structs with startsquare and destsquare
-
     piece %= 6; // abstract color, keep piecetype
                
     switch(piece)
@@ -155,14 +137,14 @@ uint64_t get_legal_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
             return get_sliding_piece_legal_moves(p, sq, piece, occ);
         case 5:
             return get_king_legal_moves(p, sq, occ);
-        default:
-            return 0;
     }
+
+    return 0;
 }
 
 int is_promotion(int p, int piece, int ds)
 {
-    if (p * 6 != piece)
+    if (piece != WHITE_PAWN && piece != BLACK_PAWN)
         return 0;
 
     if ((PROMOTION_RANK_MASK[p] & (1ULL << ds)) == 0)
@@ -171,48 +153,23 @@ int is_promotion(int p, int piece, int ds)
     return 1;
 }
 
-void add_promotion_moves(Position* pos, LegalMoves* lm, Move* m)
+void add_promotion_moves(LegalMoves* lm, Move m)
 {
     for (int i = 0; i < 4; ++i)
-    {
-        // printf("adding promotion move with %d\n", m->flags);
-        m->flags = PROMOTION_FLAGS[i];
-        lm->moves[lm->count++] = *m;
-    }
+        lm->moves[lm->count++] = m | PROMOTION_FLAGS[i];
 }
 
-// given bitboards and move, return if the move is a double pawn push
-int is_double_pawn_push(Move* m, int piece)
-{
-    int start = m->start;
-    int dest = m->dest;
-	
-    // moved piece is not a pawn
-    if(!(piece == BLACK_PAWN || piece == WHITE_PAWN))
-        return 0;
-
-    int res = (abs_int(start - dest) == 16); // moved two squares 
-    return res;
-}
-
-// called for each piece of the current player by resolve bitboard
 void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
 {
-    uint64_t moves = get_legal_moves_bitmask(
-            pos->player, piece, sq, pos->occ);
+    uint64_t moves = get_legal_moves_bitmask(pos->player, piece, sq, pos->occ);
     
     while(moves)
     {
         int dest = __builtin_ctzll(moves);
-        Move m = {sq, dest, 0}; 
+        Move m = (sq << 6) | dest;
 
         if (is_promotion(pos->player, piece, dest))
-            add_promotion_moves(pos, lm, &m); // add manually cause 4x move
-        else if (is_double_pawn_push(&m, piece))
-        {
-            m.flags = DOUBLE_PAWN_PUSH;
-            lm->moves[lm->count++] = m; // set flag and add
-        }
+            add_promotion_moves(lm, m); // add manually cause 4x move
         else 
             lm->moves[lm->count++] = m; // just add
         
@@ -222,15 +179,12 @@ void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
 
 void resolve_bb(Position* pos, LegalMoves* lm, int piece) 
 {
-    int current_bit = 0;
     uint64_t bb = pos->bb[piece];
     while(bb)
     {
-        if(bb & 1)
-            get_pieces_moves(pos, lm, piece, current_bit);
-        
-        bb >>= 1;
-        ++current_bit;
+        int sq = __builtin_ctzll(bb);
+        get_pieces_moves(pos, lm, piece, sq);
+        bb &= bb - 1;
     }
 }
 
@@ -244,7 +198,6 @@ void generate_legal_moves(Position* pos, LegalMoves* lm)
     for(int i = start; i < start + 6; ++i)
         resolve_bb(pos, lm, i);
 
-    // legal move count is updated automatically
     add_castling(pos, lm);
     add_enpassant(pos, lm);
 }

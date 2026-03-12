@@ -50,11 +50,11 @@ int alphabeta(Position* pos, LegalMoves* lm, int depth, int alpha, int beta)
     for (int i = 0; i < move_count; i++)
     {
         Undo undo;
-        apply_move(pos, &legal_moves[i], &undo);
+        apply_move(pos, legal_moves[i], &undo);
 
         int score = -alphabeta(pos, lm, depth - 1, -beta, -alpha);
 
-        undo_move(pos, &legal_moves[i], &undo);
+        undo_move(pos, legal_moves[i], &undo);
 
         if (score > best)
             best = score;
@@ -97,12 +97,12 @@ int search(Position* pos, LegalMoves* lm, int depth)
     for (int i = 0; i < move_count; ++i)
     {
         Undo undo;
-        apply_move(pos, &legal_moves[i], &undo);
+        apply_move(pos, legal_moves[i], &undo);
 
         int eval = -search(pos, lm, depth - 1);
         best_eval = max(eval, best_eval);
 
-        undo_move(pos, &legal_moves[i], &undo);
+        undo_move(pos, legal_moves[i], &undo);
     }
 
     return best_eval; 
@@ -112,9 +112,9 @@ Move search_root(Position* pos, LegalMoves* lm, int depth)
 {
     // black to move
     if (lm->count == 0)
-        return (Move) {0, 0, 0};
+        return 0;
 
-    Move best_move = {0};
+    Move best_move = 0;
 
     Move legal_moves[LEGAL_MOVES_SIZE];
     memcpy(legal_moves, lm->moves, sizeof(Move) * lm->count);
@@ -126,8 +126,7 @@ Move search_root(Position* pos, LegalMoves* lm, int depth)
     for (int i = 0; i < move_count; ++i)
     {
         Undo undo;
-        apply_move(pos, &legal_moves[i], &undo);
-        // now white to move
+        apply_move(pos, legal_moves[i], &undo);
 
         // negamax so this returns a large number if the position 
         // is good for the player who made the move
@@ -138,8 +137,7 @@ Move search_root(Position* pos, LegalMoves* lm, int depth)
             best_move = legal_moves[i];
         }
 
-        undo_move(pos, &legal_moves[i], &undo);
-        // now black to move
+        undo_move(pos, legal_moves[i], &undo);
     }
 
     generate_legal_moves(pos, lm);
@@ -150,14 +148,12 @@ Move search_root(Position* pos, LegalMoves* lm, int depth)
 
 int opponent_move(Position* pos, LegalMoves* lm)
 {
-    printf("OPPONENTS MOVE\n");
-
     Move m = search_root(pos, lm, 5);
-    if (m.start == 0 && m.dest == 0)
+    if (!m)
         return -1;
         
-    printf("picked move: %s%s\n", square_to_notation(m.start), square_to_notation(m.dest));
+    printf("picked move: %s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
 
-    return handle_move(pos, lm, &m); 
+    return handle_move(pos, lm, m); 
 }
 

@@ -1,6 +1,8 @@
 
 #include "ui/sdl_event_handler.h"
 
+// TODO refactor
+
 uint8_t select_piece(int mx, int my, uint64_t occ)
 {
     if (mx < 0 || mx > WINDOW_WIDTH || my < 0 || my > WINDOW_HEIGHT)
@@ -51,13 +53,13 @@ int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, Le
                 break;
             }
 
-            Move tmp = { ui->selected_square, dest, 0 };
+            Move tmp = (ui->selected_square << 6) | dest;
 
             // handle promotion if needed
-            if (is_pawn_promotion(pos, &tmp)) 
+            if (is_pawn_promotion(pos, tmp)) 
                 choose_promotion_move(&tmp);
 
-            if (handle_move(pos, lm, &tmp)) 
+            if (handle_move(pos, lm, tmp)) 
             {
                 ui->selected_square = INVALID_SQUARE;
                 return 1; // move applied

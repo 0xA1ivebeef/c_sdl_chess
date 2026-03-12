@@ -2,6 +2,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include <stdint.h>
+
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 1024
 
@@ -17,6 +19,11 @@
 #define RANK_1 0x00000000000000FFULL
 #define RANK_8 0xFF00000000000000ULL
 
+extern const uint16_t PROMOTION_FLAGS[4];
+
+extern const uint16_t FROM_MASK;
+extern const uint16_t TO_MASK;
+extern const uint16_t PROMO_MASK; 
 
 extern const int PAWN_VAL;
 extern const int KNIGHT_VAL;

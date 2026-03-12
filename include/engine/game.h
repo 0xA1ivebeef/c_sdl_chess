@@ -26,8 +26,6 @@
 #include "opponent/opponent.h"
 
 #include "utils/utils.h"
-#include "utils/bitboard_utils.h"
-#include "utils/legal_move_utils.h"
 
 void position_init(Position* position, LegalMoves* legal_moves);
 void game_loop(AppContext* app, Position* position, UIContext* ui_context, LegalMoves* legal_moves);

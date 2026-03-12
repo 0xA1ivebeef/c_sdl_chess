@@ -25,18 +25,6 @@ typedef enum Piece
     PIECE_COUNT
 } Piece;
 
-typedef enum Moveflags
-{
-    NORMAL_FLAG,
-    CASTLE_FLAG,
-    ENPASSANT_FLAG, 
-    KNIGHT_PROMOTION, 
-    BISHOP_PROMOTION,
-    ROOK_PROMOTION,
-    QUEEN_PROMOTION,
-    DOUBLE_PAWN_PUSH, 
-} Moveflags;
-
 typedef struct 
 {
     int running;
@@ -45,12 +33,12 @@ typedef struct
     int game_over;
 } UIContext;
 
-typedef struct Move
-{
-    uint8_t start;
-    uint8_t dest;
-    uint8_t flags;
-} Move;
+/*  
+ *  POLYGLOT
+    promo start  dest
+    0xxx 000000 000000
+*/
+typedef uint16_t Move;
 
 typedef struct LegalMoves
 {

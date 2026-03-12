@@ -99,8 +99,8 @@ void log_legal_moves(LegalMoves* lm)
 	for(int i = 0; i < lm->count; ++i)
     {
         printf("%d: ", i+1);
-        printf("%s, %s\n", square_to_notation(lm->moves[i].start), 
-                           square_to_notation(lm->moves[i].dest));
+        printf("%s, %s\n", square_to_notation(move_from(lm->moves[i])), 
+                           square_to_notation(move_to(lm->moves[i])));
     }
 }
 

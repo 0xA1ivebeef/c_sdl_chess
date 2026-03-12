@@ -1,25 +1,29 @@
 
 #include "engine/move_handler.h"
 
-void handle_pawn_promotion(Position* pos, Move* m)
-{
-    assert(m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
+// TODO refactor
 
-    int pawn = (m->dest < 8) ? WHITE_PAWN : BLACK_PAWN;
-    int promote_piece = m->flags - 2; // PROMOTION_FLAG -> Bitboard Index
-    promote_piece += pawn; // fixing color 
+void handle_pawn_promotion(Position* pos, Move m)
+{
+    assert((m >> 12) != 0);
+
+    int dest = move_to(m);
+
+    int pawn = pos->player ? WHITE_PAWN : BLACK_PAWN;
+    int promote_piece = m >> 12; 
+    promote_piece += pawn; // setting color 
 
     // replace pawn with promoted piece
-    pos->bb[pawn] &= ~(1ULL << m->dest);
-    pos->bb[promote_piece] |= (1ULL << m->dest); 
+    pos->bb[pawn] &= ~(1ULL << dest);
+    pos->bb[promote_piece] |= (1ULL << dest); 
 
-    pos->zobrist_hash ^= zobrist_table[pawn * 64 + m->dest];
-    pos->zobrist_hash ^= zobrist_table[promote_piece * 64 + m->dest];
+    pos->zobrist_hash ^= zobrist_table[pawn * 64 + dest];
+    pos->zobrist_hash ^= zobrist_table[promote_piece * 64 + dest];
 }
 
-void handle_enpassant(Position* pos, Move* m)
+void handle_enpassant(Position* pos, Move m)
 {
-    int capture_sq = pos->player ? m->dest + 8 : m->dest - 8;
+    int capture_sq = pos->player ? move_to(m) + 8 : move_to(m) - 8;
     int captured_pawn = pos->player ? BLACK_PAWN : WHITE_PAWN;
 
     assert(capture_sq >= 0 && capture_sq < 64);
@@ -29,128 +33,108 @@ void handle_enpassant(Position* pos, Move* m)
     pos->zobrist_hash ^= zobrist_table[captured_pawn * 64 + capture_sq];
 }
 
-void handle_castling(Position* pos, Move* m)
+void handle_castling(Position* pos, Move m)
 {
-    int rook = (m->start > 32) ? WHITE_ROOK : BLACK_ROOK; 
-    if(m->start > m->dest)
+    int rook = (move_from(m) > 32) ? WHITE_ROOK : BLACK_ROOK; 
+    if(move_from(m) > move_to(m))
     {
-        pos->bb[rook] &= ~(1ULL << (m->dest - 2));
-        pos->bb[rook] |= (1ULL << (m->dest + 1));
+        pos->bb[rook] &= ~(1ULL << (move_to(m) - 2));
+        pos->bb[rook] |= (1ULL << (move_to(m) + 1));
 
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + m->dest - 2];
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + m->dest + 1];
+        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) - 2];
+        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) + 1];
     }
     else
     {
-        pos->bb[rook] &= ~(1ULL << (m->dest + 1));
-        pos->bb[rook] |= (1ULL << (m->dest - 1));
+        pos->bb[rook] &= ~(1ULL << (move_to(m) + 1));
+        pos->bb[rook] |= (1ULL << (move_to(m) - 1));
         
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + m->dest + 1];
-        pos->zobrist_hash ^= zobrist_table[rook * 64 + m->dest - 1];
+        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) + 1];
+        pos->zobrist_hash ^= zobrist_table[rook * 64 + move_to(m) - 1];
     }
 }
 
-// called after every move (through apply_move() !!!)
-void handle_special_move(Position* pos, Move* m)
+void handle_special_move(Position* pos, Move m, int moved_piece)
 {
+    if (is_enpassant_move(pos->enpassant, m, moved_piece))
+        handle_enpassant(pos, m);
+
     pos->enpassant = INVALID_SQUARE;
-    switch (m->flags)
-    {
-        case CASTLE_FLAG:
-            handle_castling(pos, m);
-            break;
-        case ENPASSANT_FLAG:
-            handle_enpassant(pos, m);
-            break;
-        case KNIGHT_PROMOTION:
-        case BISHOP_PROMOTION:
-        case ROOK_PROMOTION:
-        case QUEEN_PROMOTION:
-            handle_pawn_promotion(pos, m); 
-            break;
-        case DOUBLE_PAWN_PUSH:
-            pos->enpassant = m->dest + 8*(pos->player ? 1 : -1);
-            break;
-    }
+
+    if (is_castling_move(m, moved_piece))
+        handle_castling(pos, m);
+
+    else if (is_promotion_move(m))
+        handle_pawn_promotion(pos, m); 
+
+    else if (is_double_pawn_move(m, moved_piece))
+        pos->enpassant = move_to(m) + 8 * (pos->player ? 1 : -1);
 }
 
-void undo_castling(Position* pos, Move* m)
+void undo_castling(Position* pos, Move m)
 {
-    assert(m->flags == CASTLE_FLAG);
-
-    int rook = (m->start > 32 ) ? WHITE_ROOK : BLACK_ROOK; 
+    int rook = (move_from(m) > 32 ) ? WHITE_ROOK : BLACK_ROOK; 
 
     int rook_from, rook_to;
-    if(m->start > m->dest)
+    if(move_from(m) > move_to(m))
     {
-        rook_from = m->dest - 2; // queenside
-        rook_to = m->dest + 1;
+        rook_from = move_to(m) - 2; // queenside
+        rook_to = move_to(m) + 1;
     }
     else
     {
-        rook_from = m->dest + 1; // kingside
-        rook_to = m->dest - 1;
+        rook_from = move_to(m) + 1; // kingside
+        rook_to = move_to(m) - 1;
     }
 
     pos->bb[rook] |= (1ULL << rook_from); // add rook back on a file
     pos->bb[rook] &= ~(1ULL << rook_to); // remove rook
 }
 
-void undo_enpassant(Position* pos, Move* m, Undo* undo)
+void undo_enpassant(Position* pos, Move m, Undo* undo)
 {
-    assert(m->flags == ENPASSANT_FLAG);
-    
-    int capture_sq = m->dest - 8;
+    int capture_sq = move_to(m) - 8;
     int restore_piece = WHITE_PAWN;
 
     if (undo->moved_piece == WHITE_PAWN)
     {
-        capture_sq = m->dest + 8;
+        capture_sq = move_to(m) + 8;
         restore_piece = BLACK_PAWN;
     }
 
     pos->bb[restore_piece] |= (1ULL << capture_sq); // restore captured pawn
 }
 
-void undo_promotion(Position* pos, Move* m, Undo* undo)
+void undo_promotion(Position* pos, Move m, Undo* undo)
 {
-    assert(m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
+    assert((m >> 12) != 0);
 
     // only remove promoted piece
     int is_white = undo->moved_piece == WHITE_PAWN;
-    int promoted_piece = m->flags - 2 + is_white*6; // 3..6 -> 1-4 black / 7-10 white
-    pos->bb[promoted_piece] &= ~(1ULL << m->dest);
+    int promoted_piece = (m >> 12) + is_white*6; 
+
+    pos->bb[promoted_piece] &= ~(1ULL << move_to(m));
 }
 
-void undo_move(Position* pos, Move* m, Undo* undo)
+void undo_move(Position* pos, Move m, Undo* undo)
 {
     // undo special moves before undo normal moves to keep the function inversion order correct
-    switch (m->flags)
-    {
-        case 1:
-            undo_castling(pos, m);
-            break;
-        case 2:
-            undo_enpassant(pos, m, undo);
-            break;
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-            undo_promotion(pos, m, undo);
-            break;
-        case 7:
-            // double pawn push already undone through normal move undo
-            break;
-    }
+    if (is_castling_move(m, undo->moved_piece))
+        undo_castling(pos, m);
+
+    if (is_enpassant_move(undo->enpassant, m, undo->moved_piece))
+        undo_enpassant(pos, m, undo);
+    
+    if (is_promotion_move(m))
+        undo_promotion(pos, m, undo);
 
     // reverse capturing
     if (undo->captured_piece > -1) 
-        pos->bb[undo->captured_piece] |= (1ULL << m->dest);
+        pos->bb[undo->captured_piece] |= (1ULL << move_to(m));
 
     // restore moved piece 
-    pos->bb[undo->moved_piece] |= (1ULL << m->start);
-    pos->bb[undo->moved_piece] &= ~(1ULL << m->dest);
+    pos->bb[undo->moved_piece] |= (1ULL << move_from(m));
+    pos->bb[undo->moved_piece] &= ~(1ULL << move_to(m));
  
     // restore state
     pos->castle_rights = undo->castle_rights;
@@ -165,12 +149,12 @@ void undo_move(Position* pos, Move* m, Undo* undo)
     update_occ(pos);
 }
 
-void save_state(Position* pos, Move* m, Undo* undo)
+void save_state(Position* pos, Move m, Undo* undo)
 {
-    assert(pos && m && undo);
+    assert(pos && undo);
 
-    undo->moved_piece    = get_bb_index(pos->bb, m->start);
-    undo->captured_piece = get_bb_index(pos->bb, m->dest); 
+    undo->moved_piece    = get_bb_index(pos->bb, move_from(m));
+    undo->captured_piece = get_bb_index(pos->bb, move_to(m)); 
     undo->castle_rights  = pos->castle_rights;
     undo->enpassant      = pos->enpassant;
     undo->halfmove       = pos->halfmove;
@@ -178,29 +162,29 @@ void save_state(Position* pos, Move* m, Undo* undo)
     undo->zobrist_hash   = pos->zobrist_hash;
 }
 
-void apply_move(Position* pos, Move* m, Undo* undo)
+void apply_move(Position* pos, Move m, Undo* undo)
 {   
     save_state(pos, m, undo);
 
-    int moved_piece = get_bb_index(pos->bb, m->start);
+    int moved_piece = get_bb_index(pos->bb, move_from(m));
     assert(moved_piece > -1);
 
-    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + m->start];
+    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + move_from(m)];
 
-    int captured_piece = get_bb_index(pos->bb, m->dest); // -1 if empty
+    int captured_piece = get_bb_index(pos->bb, move_to(m)); // -1 if empty
 
 	// capture
     if (captured_piece > -1) 
     {
-        pos->bb[captured_piece] &= ~(1ULL << m->dest);
-        pos->zobrist_hash ^= zobrist_table[captured_piece * 64 + m->dest];
+        pos->bb[captured_piece] &= ~(1ULL << move_to(m));
+        pos->zobrist_hash ^= zobrist_table[captured_piece * 64 + move_to(m)];
     }
 
     // move
-    pos->bb[moved_piece] &= ~(1ULL << m->start);
-    pos->bb[moved_piece] |=  (1ULL << m->dest);
+    pos->bb[moved_piece] &= ~(1ULL << move_from(m));
+    pos->bb[moved_piece] |=  (1ULL << move_to(m));
 
-    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + m->dest];
+    pos->zobrist_hash ^= zobrist_table[moved_piece * 64 + move_to(m)];
 
     // remove old enpassant square do this before enpassant square is updated through this move
     if (pos->enpassant != INVALID_SQUARE)
@@ -211,8 +195,8 @@ void apply_move(Position* pos, Move* m, Undo* undo)
 
     // special move handling after normal move
     // updates enpassant square
-    handle_special_move(pos, m); 
-    update_castle_rights(pos, m); 
+    handle_special_move(pos, m, moved_piece); 
+    update_castle_rights(pos, m, moved_piece); 
 
     // add new castle rights
     pos->zobrist_hash ^= zobrist_castling[pos->castle_rights];
@@ -223,7 +207,7 @@ void apply_move(Position* pos, Move* m, Undo* undo)
 
     // move clocks
     int pawn_move = (moved_piece % WHITE_PAWN == 0);
-    if (pawn_move || captured_piece > -1 || (m->flags == ENPASSANT_FLAG)) 
+    if (pawn_move || captured_piece > -1) 
         pos->halfmove = 0;
     else 
         pos->halfmove++;
@@ -237,32 +221,24 @@ void apply_move(Position* pos, Move* m, Undo* undo)
     update_occ(pos);
 }
 
-Move* is_legal_move(LegalMoves* lm, Move* m)
+int is_legal_move(LegalMoves* lm, Move m)
 {
     for(int i = 0; i < lm->count; ++i)
     {
-        if ((lm->moves[i].start == m->start) && 
-            (lm->moves[i].dest  == m->dest))
-        {
-            if (m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION)
-                return m;
-
-            return &lm->moves[i];
-        }
+        if ((move_from(lm->moves[i]) == move_from(m)) && 
+            (move_to(lm->moves[i])  == move_to(m)))
+            return 1;
     }
-    return NULL;
+    return 0;
 }
 
-int handle_move(Position* pos, LegalMoves* lm, Move* m)
+int handle_move(Position* pos, LegalMoves* lm, Move m)
 {
-    // replace with move from legal moves to get flags
-    // assume promotion flags are already set in m
-    Move* legal = is_legal_move(lm, m);
-    if (!legal)
+    if (!is_legal_move(lm, m))
         return 0;
 
     Undo undo;
-    apply_move(pos, legal, &undo);
+    apply_move(pos, m, &undo);
 
     return 1;
 }

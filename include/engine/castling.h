@@ -8,12 +8,12 @@
 #include "engine/types.h"
 #include "engine/attack_generator.h"
 
-#include "utils/bitboard_utils.h"
+#include "utils/utils.h"
 
 #include "ui/console_logger.h"
 
 void add_castling(Position* pos, LegalMoves* lm);
-void update_castle_rights(Position* pos, Move* m);
+void update_castle_rights(Position* pos, Move m, int moved_piece);
 
 #endif
 

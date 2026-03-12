@@ -14,9 +14,9 @@ int compare_moves(const void* a, const void* b)
     return mb->score - ma->score;  // descending
 }
 
-int is_capture_move(uint64_t bb, Move* m)
+int is_capture_move(uint64_t bb, Move m)
 {
-    return ((bb & (1ULL << m->dest)) > 0);
+    return ((bb & (1ULL << move_to(m))) > 0);
 }
 
 int is_check(Position* pos, uint8_t player)
@@ -27,7 +27,7 @@ int is_check(Position* pos, uint8_t player)
     return ((atk & (1ULL << king_sq)) != 0);
 }
 
-int gives_check(Position* pos, Move* m)
+int gives_check(Position* pos, Move m)
 {
     Undo undo;
     apply_move(pos, m, &undo);
@@ -35,11 +35,6 @@ int gives_check(Position* pos, Move* m)
     undo_move(pos, m, &undo);
 
     return check;
-}
-
-int is_promotion_move(Move* m)
-{
-    return (m->flags >= KNIGHT_PROMOTION && m->flags <= QUEEN_PROMOTION);
 }
 
 void sort_mvv_lva(Position* pos, LegalMoves* lm)
@@ -50,18 +45,18 @@ void sort_mvv_lva(Position* pos, LegalMoves* lm)
         // enpassant is not included in this but should be fine
         int score = 0;
 
-        if (is_capture_move(pos->bb[get_bb_index(pos->bb, lm->moves[i].start)], &lm->moves[i]))
+        if (is_capture_move(pos->bb[get_bb_index(pos->bb, move_from(lm->moves[i]))], lm->moves[i]))
         {
-            int victim_val = PIECE_VALUES[get_bb_index(pos->bb, lm->moves[i].dest) % 5];
-            int attacker_val = PIECE_VALUES[get_bb_index(pos->bb, lm->moves[i].start) % 5];
+            int victim_val = PIECE_VALUES[get_bb_index(pos->bb, move_to(lm->moves[i])) % 5];
+            int attacker_val = PIECE_VALUES[get_bb_index(pos->bb, move_from(lm->moves[i])) % 5];
 
             score += 1000 + (victim_val - attacker_val);
         }
 
-        if (gives_check(pos, &lm->moves[i]))
+        if (gives_check(pos, lm->moves[i]))
             score += 900;
 
-        if (is_promotion_move(&lm->moves[i]))
+        if (is_promotion_move(lm->moves[i]))
             score += 1000;
 
         moves_with_scores[i] = (MoveScore) { lm->moves[i], score } ;
@@ -82,12 +77,12 @@ void filter_moves(Position* pos, LegalMoves* lm)
     {
         Undo undo;  
 
-        apply_move(pos, &lm->moves[i], &undo);  
+        apply_move(pos, lm->moves[i], &undo);  
 
         if (!is_check(pos, !pos->player))
             valid_moves[valid_move_count++] = lm->moves[i];
 
-        undo_move(pos, &lm->moves[i], &undo); 
+        undo_move(pos, lm->moves[i], &undo); 
     }
 
     memcpy(lm->moves, valid_moves, sizeof(Move) * valid_move_count); 

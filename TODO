@@ -1,4 +1,10 @@
 
+promotions are broken
+no asking for promoted piece
+no auto conversion
+
+check utils: is_pawn_promotion
+
 insufficient material draw
 threefold repetition draw
 
