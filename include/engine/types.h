@@ -54,6 +54,7 @@ typedef struct
     uint8_t     player;
     uint8_t     castle_rights;
     uint8_t     enpassant;
+    uint8_t     enpassant_hashed;
     uint8_t     halfmove;
     uint16_t    fullmove;
     uint64_t    zobrist_hash;
@@ -65,6 +66,7 @@ typedef struct
     int         captured_piece; 
     uint8_t     castle_rights;
     uint8_t     enpassant;
+    uint8_t     enpassant_hashed;
     uint8_t     halfmove;
     uint16_t    fullmove;
     uint64_t    zobrist_hash;

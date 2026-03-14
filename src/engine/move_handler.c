@@ -139,7 +139,8 @@ void undo_move(Position* pos, Move m, Undo* undo)
     // restore state
     pos->castle_rights = undo->castle_rights;
     pos->enpassant = undo->enpassant;
-        
+    pos->enpassant_hashed = undo->enpassant_hashed;
+
     pos->halfmove = undo->halfmove; 
     pos->fullmove = undo->fullmove;
 
@@ -157,9 +158,25 @@ void save_state(Position* pos, Move m, Undo* undo)
     undo->captured_piece = get_bb_index(pos->bb, move_to(m)); 
     undo->castle_rights  = pos->castle_rights;
     undo->enpassant      = pos->enpassant;
+    undo->enpassant_hashed = pos->enpassant_hashed;
     undo->halfmove       = pos->halfmove;
     undo->fullmove       = pos->fullmove;
     undo->zobrist_hash   = pos->zobrist_hash;
+}
+
+// NOTE: can only be called after move is applied to position
+int enpassant_legal(Position* pos, Move m, Undo* undo)
+{
+    if (pos->enpassant != INVALID_SQUARE && is_double_pawn_move(m, undo->moved_piece))
+    {
+        if (undo->moved_piece % 6 == 0)
+        {
+            if (((pos->enpassant % 8 != 0) && (get_bb_index(pos->bb, move_to(m) - 1) == ((undo->moved_piece + 6) % 12))) || 
+                ((pos->enpassant % 8 != 7) && (get_bb_index(pos->bb, move_to(m) + 1) == ((undo->moved_piece + 6) % 12))))
+                return 1;
+        }
+    }
+    return 0;
 }
 
 void apply_move(Position* pos, Move m, Undo* undo)
@@ -168,6 +185,13 @@ void apply_move(Position* pos, Move m, Undo* undo)
     save_state(pos, m, undo);
 
     assert(undo->moved_piece > -1);
+
+    if (pos->enpassant_hashed)
+    {
+        pos->enpassant_hashed = 0;
+        printf("old enpassant is hashed 0x%016lx\n", pos->zobrist_hash);
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + undo->enpassant % 8];
+    }
 
 	// capture
     if (undo->captured_piece > -1) 
@@ -190,21 +214,19 @@ void apply_move(Position* pos, Move m, Undo* undo)
     handle_special_move(pos, m, undo->moved_piece); 
     update_castle_rights(pos, m, undo->moved_piece); 
 
-    // adding enpassant hash if double pawn push and enpassant is legal move
-    if (pos->enpassant != INVALID_SQUARE)
-    {
-        // pawn move
-        if (undo->moved_piece % 6 == 0)
-        {
-            if (((pos->enpassant % 8 != 0) && (get_bb_index(pos->bb, move_to(m) - 1) == ((undo->moved_piece + 6) % 12))) || 
-                ((pos->enpassant % 8 != 7) && (get_bb_index(pos->bb, move_to(m) + 1) == ((undo->moved_piece + 6) % 12))))
-            {
-                printf("setting enpassant 0x%016lx\n", pos->zobrist_hash);
-                pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
-            }
-        }
-    }
+    /* 
+     * MOVE IS FULLY APPLIED enpassant is updated 
+     * enpassant is set on double pawn push
+     * enpassant is removed after any other move
+    */
 
+    if (enpassant_legal(pos, m, undo))
+    {
+        printf("setting enpassant 0x%016lx\n", pos->zobrist_hash);
+        pos->enpassant_hashed = 1;
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+    }
+   
     if (pos->castle_rights != undo->castle_rights)
     {
         printf("removing castle rights\n");
@@ -213,17 +235,6 @@ void apply_move(Position* pos, Move m, Undo* undo)
         if (lost_rights & 2) pos->zobrist_hash ^= Random64[BK_CASTLE];
         if (lost_rights & 4) pos->zobrist_hash ^= Random64[WQ_CASTLE];
         if (lost_rights & 8) pos->zobrist_hash ^= Random64[WK_CASTLE];
-    }
-
-    // enpassant was just available 
-    if (undo->enpassant != INVALID_SQUARE && pos->enpassant == INVALID_SQUARE && !is_double_pawn_move(m, undo->moved_piece))
-    {
-    // enpassant move wasnt taken
-        if ((move_to(m) != undo->enpassant) || (undo->moved_piece != (pos->player ? WHITE_PAWN : BLACK_PAWN)))
-        {
-            printf("removing legal enpassant\n");
-            pos->zobrist_hash ^= Random64[ENPASSANT_BASE + undo->enpassant % 8];
-        }
     }
     
     // move clocks
