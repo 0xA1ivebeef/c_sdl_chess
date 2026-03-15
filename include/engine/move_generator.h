@@ -4,11 +4,13 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "engine/constants.h"
 #include "engine/types.h"
 #include "engine/bitmask_loader.h"
 #include "engine/castling.h"
+#include "engine/zobrist.h"
 
 #include "ui/console_logger.h"
 
@@ -25,7 +27,7 @@ typedef enum ATTACKS
     KING_ATTACKS,
 } ATTACKS;
 
-void generate_legal_moves(Position* pos, LegalMoves* legal_moves);
+void generate_legal_moves(Position* pos, LegalMoves* lm);
 
 #endif
 

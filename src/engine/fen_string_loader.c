@@ -112,7 +112,7 @@ void load_fen_string(Position* pos, int index)
 {
     assert(index < FEN_STRING_COUNT);
 
-    const char* fen_string =  FEN_STRINGS[index]; // "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const char* fen_string =  FEN_STRINGS[1]; // "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     size_t i = 0;
     int piece;

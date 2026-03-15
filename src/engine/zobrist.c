@@ -243,51 +243,28 @@ uint64_t get_zobrist_hash(Position* pos)
             int sq = __builtin_ctzll(bb);
             int idx = my_to_poly(i)*64 + polyglot_sq(sq);
 
-            printf("xoring piece %d on sq %d polyglot index is %d\n", i, sq, idx);
+            // // printf("xoring piece %d on sq %d polyglot index is %d\n", i, sq, idx);
 
             hash ^= Random64[idx];
             bb &= bb - 1;
         }
     }
 
-    if (pos->castle_rights & 1) 
-    {
-        printf("hash logs: xored black qs castling\n");
-        hash ^= Random64[BQ_CASTLE];
-    }
-    
-    if (pos->castle_rights & 2) 
-    {
-        printf("hash logs: xored black ks castling\n");
-        hash ^= Random64[BK_CASTLE];
-    }
-
-    if (pos->castle_rights & 4) 
-    {
-        printf("hash logs: xored white qs castling\n");
-        hash ^= Random64[WQ_CASTLE];
-    }
-
-    if (pos->castle_rights & 8) 
-    {
-        printf("hash logs: xored white ks castling\n");
-        hash ^= Random64[WK_CASTLE];
-    }
-
-    if (pos->enpassant >= 16 && pos->enpassant <= 55)
-    {
-        printf("hash logs: xored enpassant\n");
-        hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
-    }
+    if (pos->castle_rights & 1) hash ^= Random64[BQ_CASTLE];
+    if (pos->castle_rights & 2) hash ^= Random64[BK_CASTLE];
+    if (pos->castle_rights & 4) hash ^= Random64[WQ_CASTLE];
+    if (pos->castle_rights & 8) hash ^= Random64[WK_CASTLE];
 
     if (pos->player == WHITE)
     {
-        printf("hash logs: xored black to move\n");
+        // printf("hash logs: xored black to move\n");
         hash ^= Random64[WHITE_TO_MOVE];
     }
 
-    printf("final hash: 0x%016lx", hash);
+    // printf("final hash: 0x%016lx\n", hash);
 
+    // enpassant hashing is implicit in move_generation
+    
     return hash;
 }
 

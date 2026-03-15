@@ -70,7 +70,7 @@ void sort_mvv_lva(Position* pos, LegalMoves* lm)
 
 void filter_moves(Position* pos, LegalMoves* lm)
 {
-    printf("FILTER MOVES\n");
+    // printf("FILTER MOVES\n");
     Move valid_moves[LEGAL_MOVES_SIZE] = {0};
     int valid_move_count = 0;
 

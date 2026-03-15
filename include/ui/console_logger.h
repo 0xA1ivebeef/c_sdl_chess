@@ -11,6 +11,7 @@
 
 #include "utils/utils.h"
 
+void log_move(Move m);
 void log_position_diff(Position* a, Position* b);
 void log_gamestate(Position* pos);
 void log_bitboard(uint64_t* bb);

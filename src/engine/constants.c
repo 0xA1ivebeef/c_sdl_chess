@@ -4,14 +4,6 @@
 #define FILE_A 0x0101010101010101ULL
 #define FILE_H 0x8080808080808080ULL
 
-const uint16_t PROMOTION_FLAGS[4] = 
-{
-    (1 << 12), // knight
-    (2 << 12), // b
-    (3 << 12), // r
-    (4 << 12)  // q
-};
-
 const uint16_t FROM_MASK  = 0x0FC0; // 6 bit
 const uint16_t TO_MASK    = 0x003F; // 6 bit
 const uint16_t PROMO_MASK = 0x7000; // 3 bit
@@ -21,6 +13,14 @@ const int KNIGHT_VAL = 300;
 const int BISHOP_VAL = 300;
 const int ROOK_VAL = 500;
 const int QUEEN_VAL = 900;
+
+const uint16_t PROMOTION_FLAGS[4] =
+{
+    (1 << 12),
+    (2 << 12),
+    (3 << 12),
+    (4 << 12)
+};
 
 const int PIECE_VALUES[5] = 
 {
@@ -35,5 +35,4 @@ const int file_offsets[8] = { 1, 0, -1,  0, 1, -1,  1, -1 };
 const int rank_offsets[8] = { 0, 1,  0, -1, 1,  1, -1, -1 };
 
 const int translation_table[5] = {1, 3, 3, 5, 9};
-const int depth = 3;
 

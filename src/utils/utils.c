@@ -1,6 +1,20 @@
 
 #include "utils/utils.h"
 
+int enpassant_legal(Position* pos, Move m, Undo* undo)
+{
+    if (pos->enpassant != INVALID_SQUARE && is_double_pawn_move(m, undo->moved_piece))
+    {
+        if (undo->moved_piece % 6 == 0)
+        {
+            if (((pos->enpassant % 8 != 0) && (get_bb_index(pos->bb, move_to(m) - 1) == ((undo->moved_piece + 6) % 12))) || 
+                ((pos->enpassant % 8 != 7) && (get_bb_index(pos->bb, move_to(m) + 1) == ((undo->moved_piece + 6) % 12))))
+                return 1;
+        }
+    }
+    return 0;
+}
+
 int get_king_sq(Position* pos, uint8_t player)
 {
     uint64_t bb = pos->bb[player ? WHITE_KING : BLACK_KING];

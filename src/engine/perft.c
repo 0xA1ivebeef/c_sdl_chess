@@ -35,9 +35,9 @@ typedef struct
 {
     int nodes;
     Move move;
-} move_node;
+} MoveNode;
 
-int perft_divide(Position* pos, LegalMoves* lm, int depth, move_node* move_nodes)
+int perft_divide(Position* pos, LegalMoves* lm, int depth, MoveNode* move_nodes)
 {
     generate_legal_moves(pos, lm);
     filter_moves(pos, lm);
@@ -53,7 +53,8 @@ int perft_divide(Position* pos, LegalMoves* lm, int depth, move_node* move_nodes
         Undo undo;
 
         apply_move(pos, m, &undo);
-        move_nodes[i] = (move_node) { get_nodes(pos, depth - 1, lm), moves[i] };
+
+        move_nodes[i] = (MoveNode) { get_nodes(pos, depth - 1, lm), moves[i] };
         undo_move(pos, m, &undo);
 
         total += move_nodes[i].nodes;
@@ -65,7 +66,7 @@ int perft_divide(Position* pos, LegalMoves* lm, int depth, move_node* move_nodes
 
 int perft(Position* pos, LegalMoves* lm, int depth)
 {
-    move_node move_nodes[LEGAL_MOVES_SIZE] = {0};
+    MoveNode move_nodes[LEGAL_MOVES_SIZE] = {0};
     int total = perft_divide(pos, lm, depth, move_nodes);
 
     int i = 0;

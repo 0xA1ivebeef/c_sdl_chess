@@ -1,12 +1,6 @@
 
 #include "engine/move_generator.h"
 
-const uint64_t PROMOTION_RANK_MASK[2] = 
-{
-    0xFF00000000000000ULL, // black  
-    0x00000000000000FFULL  // white 
-};
-
 uint64_t pawn_attacks(int king_sq, int by_side)
 {
     int side = by_side ? 1 : -1; // -1 if by_side==black
@@ -43,10 +37,17 @@ void add_enpassant(Position* pos, LegalMoves* lm)
         right_start = INVALID_SQUARE;
 
     if (left_start != INVALID_SQUARE && own_pawns & (1ULL << left_start))
+    {
+        pos->enpassant_hashed = 1;
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
         add_move(lm, left_start, pos->enpassant, 0);
-
+    }
     if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
+    {
+        pos->enpassant_hashed = 1;
+        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
         add_move(lm, right_start, pos->enpassant, 0);
+    }
 }
 
 uint64_t get_pawn_attacking_moves(int p, int sq, uint64_t* occ)
@@ -142,21 +143,16 @@ uint64_t get_legal_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
     return 0;
 }
 
-int is_promotion(int p, int piece, int ds)
+int is_promotion(int piece, int ds)
 {
-    if (piece != WHITE_PAWN && piece != BLACK_PAWN)
-        return 0;
-
-    if ((PROMOTION_RANK_MASK[p] & (1ULL << ds)) == 0)
-        return 0;
-
-    return 1;
+    return (piece % 6 == 0 && (ds < 8 || ds > 56));
 }
 
 void add_promotion_moves(LegalMoves* lm, Move m)
 {
+    assert(move_to(m) < 8 || move_to(m) > 56); 
     for (int i = 0; i < 4; ++i)
-        lm->moves[lm->count++] = m | PROMOTION_FLAGS[i];
+        lm->moves[lm->count++] = m | (i << 12);
 }
 
 void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
@@ -168,8 +164,11 @@ void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
         int dest = __builtin_ctzll(moves);
         Move m = (sq << 6) | dest;
 
-        if (is_promotion(pos->player, piece, dest))
+        if (is_promotion(piece, dest))
+        {
+            printf("move_generator: promotion move piece %d, dest %d\n", piece, dest);
             add_promotion_moves(lm, m); // add manually cause 4x move
+        }
         else 
             lm->moves[lm->count++] = m; // just add
         

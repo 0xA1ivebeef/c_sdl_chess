@@ -1,6 +1,12 @@
 
 #include "ui/console_logger.h"
 
+void log_move(Move m)
+{
+    printf("promotion: %d\n", PROMOTION_FLAGS[m >> 12]);
+    printf("%s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
+}
+
 void log_position_diff(Position* a, Position* b)
 {
     for (int i = 0; i < 12; i++)
