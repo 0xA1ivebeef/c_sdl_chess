@@ -19,9 +19,12 @@ extern const int WHITE_TO_MOVE;
 extern const uint64_t Random64[781];
 
 int open_book(const char* book_path);
+void close_opening_book();
+
 uint8_t polyglot_sq(uint8_t sq);
 int my_to_poly(int piece);
 int poly_to_my(int poly);
+
 uint64_t get_zobrist_hash(Position* pos);
 
 #endif

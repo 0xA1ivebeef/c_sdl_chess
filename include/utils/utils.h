@@ -3,10 +3,9 @@
 #define UTILS_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 #include "engine/types.h"
-
-#include "utils/char_utils.h"
 
 static inline int move_from(Move m) { return (m & FROM_MASK) >> 6; }
 static inline int move_to(Move m)   { return m & TO_MASK; }

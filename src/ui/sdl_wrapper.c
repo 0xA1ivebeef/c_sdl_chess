@@ -176,6 +176,8 @@ int init_sdl(AppContext* app)
             dark_transparent, 0, 2*M_PI 
     );
 
+    close_opening_book();
+
     return 0;
 }
 

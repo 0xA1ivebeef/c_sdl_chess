@@ -9,6 +9,10 @@ void position_init(Position* pos, LegalMoves* lm)
     update_occ(pos);
 	
     generate_legal_moves(pos, lm); 
+    // filter_moves(pos, lm);
+
+    printf("position init logging legal moves\n");
+    log_legal_moves(lm);
 
     pos->zobrist_hash = get_zobrist_hash(pos);
 
@@ -19,6 +23,9 @@ void update(Position* pos, UIContext* ui, LegalMoves* lm)
 {
     generate_legal_moves(pos, lm);
     filter_moves(pos, lm);
+
+    printf("update logging legal moves\n");
+    log_legal_moves(lm);
 
     if (lm->count == 0)
     {
@@ -49,7 +56,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
 
     // int ai_move_pending = 0;
 
-    perft(pos, lm, 5);
+    // perft(pos, lm, 5);
     // full_perft_test(pos, lm);
     // return;
 

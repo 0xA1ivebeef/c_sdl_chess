@@ -243,13 +243,14 @@ uint64_t get_zobrist_hash(Position* pos)
             int sq = __builtin_ctzll(bb);
             int idx = my_to_poly(i)*64 + polyglot_sq(sq);
 
-            // // printf("xoring piece %d on sq %d polyglot index is %d\n", i, sq, idx);
+            //printf("xoring piece %d on sq %d polyglot index is %d\n", i, sq, idx);
 
             hash ^= Random64[idx];
             bb &= bb - 1;
         }
     }
 
+    //printf("updating castle rights\n");
     if (pos->castle_rights & 1) hash ^= Random64[BQ_CASTLE];
     if (pos->castle_rights & 2) hash ^= Random64[BK_CASTLE];
     if (pos->castle_rights & 4) hash ^= Random64[WQ_CASTLE];
@@ -257,24 +258,99 @@ uint64_t get_zobrist_hash(Position* pos)
 
     if (pos->player == WHITE)
     {
-        // printf("hash logs: xored black to move\n");
+        //printf("hash logs: xored black to move\n");
         hash ^= Random64[WHITE_TO_MOVE];
     }
 
-    // printf("final hash: 0x%016lx\n", hash);
+    //printf("final hash: 0x%016lx\n", hash);
 
     // enpassant hashing is implicit in move_generation
     
     return hash;
 }
 
+static FILE* f = NULL;
+static long size = 0;
+static const int entry_size = 16;
+
 int open_book(const char* book_path)
 {
-    FILE* f = fopen(book_path, "rb");
+    f = fopen(book_path, "rb");
     if (!f)
         return -1;
 
-    fclose(f);
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    printf("opened file %s, size = %zu, entries: %zu\n", book_path, size, size / entry_size);
+    return 0;
+}
+
+void close_opening_book()
+{
+    if (f)
+        fclose(f);
+}
+
+uint16_t read_be16(FILE* f)
+{
+    uint8_t buff[2];
+    if (fread(buff, 1, 2, f) != 2)
+    {
+        fprintf(stderr, "read_be64 file read failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return ((uint16_t) buff[0] << 8) | ((uint16_t) buff[0]);
+}
+
+uint32_t read_be32(FILE* f)
+{
+    uint8_t buff[4];
+    if (fread(buff, 1, 4, f) != 4)
+    {
+        fprintf(stderr, "read_be64 file read failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return (
+        ((uint32_t) buff[0] << 24) | ((uint32_t) buff[1] << 16) | 
+        ((uint32_t) buff[2] <<  8) | ((uint32_t) buff[3]) );
+}
+
+uint64_t read_be64(FILE* f)
+{
+    uint8_t buff[8];
+    if (fread(buff, 1, 8, f) != 8)
+    {
+        fprintf(stderr, "read_be64 file read failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return (
+        ((uint64_t) buff[0] << 56) | ((uint64_t) buff[1] << 48) | 
+        ((uint64_t) buff[2] << 40) | ((uint64_t) buff[3] << 32) |
+        ((uint64_t) buff[4] << 24) | ((uint64_t) buff[5] << 16) | 
+        ((uint64_t) buff[6] <<  8) |  (uint64_t) buff[7] );
+}
+
+PolyglotEntry read_entry(FILE* f)
+{
+    PolyglotEntry e;
+
+    e.key    = read_be64(f);
+    e.move   = read_be16(f);
+    e.weight = read_be16(f);
+    e.learn  = read_be32(f);
+
+    return e;
+}
+
+Move get_random_opening_move(uint64_t hash)
+{
+    // search hash in book as key
+    // entry is big endian 16 byte
 
     return 0;
 }

@@ -1,10 +1,29 @@
 
 #include "ui/console_logger.h"
 
+
+void print_uint16_binary(uint16_t n)
+{
+    for (int i = 15; i >= 0; i--) 
+    {
+        printf("%d", (n >> i) & 1);
+
+        if (i == 12 || i == 6) 
+        {
+            printf(" ");
+        }
+    }
+}
+
 void log_move(Move m)
 {
-    printf("promotion: %d\n", PROMOTION_FLAGS[m >> 12]);
-    printf("%s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
+    printf("promotion: %d\n", (m >> 12));
+    printf("%s %s %d %d\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)), move_from(m), move_to(m));
+
+    printf("int move: %d\n", m);
+    printf("bin move: \n");
+    print_uint16_binary(m);
+    printf("\n");
 }
 
 void log_position_diff(Position* a, Position* b)

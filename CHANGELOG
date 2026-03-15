@@ -173,5 +173,11 @@ polyglot hashing implemented todo fix to match examples in original doc
 
 zobrist / polyglot hashing fully working according to test cases at http://hgm.nubati.net/book_format.html
 
+--------------------------------------------------------------------------------
 
+15-03-2026
+
+zobrist / polyglot hashing fully working tested with full perft and comparing incremental 
+hashes with hashes calculated from scratch 
+started on reading big endian openings book bin
 

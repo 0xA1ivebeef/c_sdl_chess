@@ -31,12 +31,6 @@ int get_nodes(Position* pos, int depth, LegalMoves* lm)
     return nodes;
 }
 
-typedef struct
-{
-    int nodes;
-    Move move;
-} MoveNode;
-
 int perft_divide(Position* pos, LegalMoves* lm, int depth, MoveNode* move_nodes)
 {
     generate_legal_moves(pos, lm);

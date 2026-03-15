@@ -39,13 +39,17 @@ void add_enpassant(Position* pos, LegalMoves* lm)
     if (left_start != INVALID_SQUARE && own_pawns & (1ULL << left_start))
     {
         pos->enpassant_hashed = 1;
+        // printf("hashing enpassant\n");
         pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
         add_move(lm, left_start, pos->enpassant, 0);
     }
     if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
     {
-        pos->enpassant_hashed = 1;
-        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+        if (!pos->enpassant_hashed)
+        {
+            pos->enpassant_hashed = 1;
+            pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+        }
         add_move(lm, right_start, pos->enpassant, 0);
     }
 }
@@ -145,14 +149,14 @@ uint64_t get_legal_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
 
 int is_promotion(int piece, int ds)
 {
-    return (piece % 6 == 0 && (ds < 8 || ds > 56));
+    return (piece % 6 == 0 && (ds < 8 || ds > 55));
 }
 
 void add_promotion_moves(LegalMoves* lm, Move m)
 {
-    assert(move_to(m) < 8 || move_to(m) > 56); 
+    assert(move_to(m) < 8 || move_to(m) > 55); 
     for (int i = 0; i < 4; ++i)
-        lm->moves[lm->count++] = m | (i << 12);
+        lm->moves[lm->count++] = m | PROMOTION_FLAGS[i];
 }
 
 void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
@@ -166,7 +170,7 @@ void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
 
         if (is_promotion(piece, dest))
         {
-            printf("move_generator: promotion move piece %d, dest %d\n", piece, dest);
+            // printf("move_generator: promotion move piece %d, dest %d\n", piece, dest);
             add_promotion_moves(lm, m); // add manually cause 4x move
         }
         else 

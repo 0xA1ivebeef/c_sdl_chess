@@ -34,7 +34,7 @@ typedef struct
 } UIContext;
 
 /*  
- *  POLYGLOT
+ *  POLYGLOT LAYOUT
     promo start  dest
     0xxx 000000 000000
 */
@@ -45,6 +45,12 @@ typedef struct LegalMoves
     Move moves[LEGAL_MOVES_SIZE];
     uint8_t count;
 } LegalMoves;
+
+typedef struct
+{
+    int nodes;
+    Move move;
+} MoveNode;
 
 typedef struct
 {
@@ -71,6 +77,15 @@ typedef struct
     uint16_t    fullmove;
     uint64_t    zobrist_hash;
 } Undo;
+
+// ! polyglot books are in BIG ENDIAN
+typedef struct 
+{
+    uint64_t    key;
+    Move        move;
+    uint16_t    weight;
+    uint32_t    learn;
+} PolyglotEntry;
 
 #endif
 
