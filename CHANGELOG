@@ -181,3 +181,12 @@ zobrist / polyglot hashing fully working tested with full perft and comparing in
 hashes with hashes calculated from scratch 
 started on reading big endian openings book bin
 
+--------------------------------------------------------------------------------
+
+16-03-2026
+
+binary searching openings book for hashes and getting all entries ordered by weight
+openigns book working choosing TITANS.bin now for main openings like french / caro etc.
+
+--------------------------------------------------------------------------------
+

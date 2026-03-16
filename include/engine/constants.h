@@ -9,6 +9,7 @@
 
 #define TILESIZE 128
 
+#define BOOK_MOVE_SIZE 1024
 #define LEGAL_MOVES_SIZE 255
 
 #define min(a, b) (a < b ? a : b)

@@ -230,6 +230,11 @@ int my_to_poly(int piece)
         return (piece - 6) * 2 + 1; // white
 }
 
+Move poly_move_to_my(Move poly)
+{
+    return (poly & PROMO_MASK) | (polyglot_sq(move_from(poly)) << 6) | polyglot_sq(move_to(poly));
+}
+
 uint64_t get_zobrist_hash(Position* pos)
 {
     uint64_t hash = 0;
@@ -269,21 +274,28 @@ uint64_t get_zobrist_hash(Position* pos)
     return hash;
 }
 
-static FILE* f = NULL;
-static long size = 0;
-static const int entry_size = 16;
+static FILE* f;
+static size_t size_b = 0;
+static int entry_count = 0;
+static const size_t entry_size = 16;
 
 int open_book(const char* book_path)
 {
+    srand(time(NULL));
+
     f = fopen(book_path, "rb");
     if (!f)
         return -1;
 
     fseek(f, 0, SEEK_END);
-    size = ftell(f);
+    size_b = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    printf("opened file %s, size = %zu, entries: %zu\n", book_path, size, size / entry_size);
+    assert(size_b % entry_size == 0);
+    entry_count = size_b / entry_size;
+
+    printf("opened file %s, size = %zu, entries: %d\n", book_path, size_b, entry_count);
+
     return 0;
 }
 
@@ -293,65 +305,191 @@ void close_opening_book()
         fclose(f);
 }
 
-uint16_t read_be16(FILE* f)
-{
-    uint8_t buff[2];
-    if (fread(buff, 1, 2, f) != 2)
-    {
-        fprintf(stderr, "read_be64 file read failed\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return ((uint16_t) buff[0] << 8) | ((uint16_t) buff[0]);
-}
-
-uint32_t read_be32(FILE* f)
-{
-    uint8_t buff[4];
-    if (fread(buff, 1, 4, f) != 4)
-    {
-        fprintf(stderr, "read_be64 file read failed\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return (
-        ((uint32_t) buff[0] << 24) | ((uint32_t) buff[1] << 16) | 
-        ((uint32_t) buff[2] <<  8) | ((uint32_t) buff[3]) );
-}
-
-uint64_t read_be64(FILE* f)
+int read_key(uint64_t* key)
 {
     uint8_t buff[8];
+
     if (fread(buff, 1, 8, f) != 8)
+        return 0; // EOF or error
+
+    *key =
+        ((uint64_t)buff[0] << 56) |
+        ((uint64_t)buff[1] << 48) |
+        ((uint64_t)buff[2] << 40) |
+        ((uint64_t)buff[3] << 32) |
+        ((uint64_t)buff[4] << 24) |
+        ((uint64_t)buff[5] << 16) |
+        ((uint64_t)buff[6] << 8)  |
+        ((uint64_t)buff[7]);
+
+    return 1;
+}
+
+int read_entry(PolyglotEntry* entry)
+{
+    uint8_t buff[16];
+
+    if (fread(buff, 1, 16, f) != 16)
+        return 0; // EOF or error
+
+    entry->key =
+        ((uint64_t)buff[0] << 56) |
+        ((uint64_t)buff[1] << 48) |
+        ((uint64_t)buff[2] << 40) |
+        ((uint64_t)buff[3] << 32) |
+        ((uint64_t)buff[4] << 24) |
+        ((uint64_t)buff[5] << 16) |
+        ((uint64_t)buff[6] << 8)  |
+        ((uint64_t)buff[7]);
+
+    entry->move =
+        ((uint16_t)buff[8] << 8) |
+        ((uint16_t)buff[9]);
+
+    entry->weight =
+        ((uint16_t)buff[10] << 8) |
+        ((uint16_t)buff[11]);
+
+    entry->learn =
+        ((uint32_t)buff[12] << 24) |
+        ((uint32_t)buff[13] << 16) |
+        ((uint32_t)buff[14] << 8)  |
+        ((uint32_t)buff[15]);
+
+    return 1;
+}
+
+void get_entry_at_index(PolyglotEntry* e, int index)
+{
+    assert(index >= 0 && index < entry_count);
+    // entry at index = entry at index * entry_size
+    
+    size_t offset = index * entry_size;
+    assert(offset < size_b);
+    if (fseek(f, offset, SEEK_SET) != 0)
     {
-        fprintf(stderr, "read_be64 file read failed\n");
+        perror("fseek");
         exit(EXIT_FAILURE);
     }
 
-    return (
-        ((uint64_t) buff[0] << 56) | ((uint64_t) buff[1] << 48) | 
-        ((uint64_t) buff[2] << 40) | ((uint64_t) buff[3] << 32) |
-        ((uint64_t) buff[4] << 24) | ((uint64_t) buff[5] << 16) | 
-        ((uint64_t) buff[6] <<  8) |  (uint64_t) buff[7] );
+    if (!read_entry(e))
+    {
+        fprintf(stderr, "zobrist: couldnt read entry at index %d\n", index);
+        exit(EXIT_FAILURE);
+    }
 }
 
-PolyglotEntry read_entry(FILE* f)
+uint64_t get_key_at_index(int index)
 {
-    PolyglotEntry e;
+    assert(index >= 0 && index < entry_count);
+    // entry at index = entry at index * entry_size
+    
+    size_t offset = index * entry_size;
+    assert(offset < size_b);
+    if (fseek(f, offset, SEEK_SET) != 0)
+    {
+        perror("fseek");
+        exit(EXIT_FAILURE);
+    }
 
-    e.key    = read_be64(f);
-    e.move   = read_be16(f);
-    e.weight = read_be16(f);
-    e.learn  = read_be32(f);
+    uint64_t key;
+    if (!read_key(&key))
+    {
+        fprintf(stderr, "zobrist: couldnt read key at index %d\n", index);
+        exit(EXIT_FAILURE);
+    }
 
-    return e;
+    return key;
+}
+
+// binary searching openings book for hashes and getting all entries ordered by weight
+// return the number of entries found for the hash
+int get_all_entries_with_hash(uint64_t hash, BookMove buff[BOOK_MOVE_SIZE], int* weight_sum)
+{
+    // openings book is sorted ascending uint64_t polyglot hashes (!BE)
+    int num_entries_read = 0;
+    int valid_match = 0;
+
+    int low = 0;
+    int high = entry_count - 1;
+    while (low <= high)
+    {
+        int mid = (low + high) / 2;
+        uint64_t curr = get_key_at_index(mid);
+
+        if (curr == hash)
+        {
+            valid_match = mid; // found
+            break; 
+        }
+
+        if (curr < hash)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+
+    if (!valid_match)
+    {
+        printf("no entries for key: %zu\n", hash);
+        return num_entries_read;
+    }
+
+    // look left until there is a different hash
+    int first_entry = valid_match;
+    while (first_entry > 0)
+    {
+        if (get_key_at_index(first_entry - 1) != hash)
+            break;
+
+        first_entry--;
+    }
+
+    // process moves
+    int idx = first_entry;
+    while (idx < entry_count)
+    {
+        PolyglotEntry e;
+        get_entry_at_index(&e, idx);
+
+        if (e.key != hash)
+            break;
+
+        *weight_sum += e.weight;
+        if (num_entries_read - 1 >= BOOK_MOVE_SIZE)
+        {
+            fprintf(stderr, "buffer overflow in book move\n");
+            exit(EXIT_FAILURE);
+        }
+        buff[num_entries_read++] = (BookMove) { e.move, e.weight };
+        idx++;
+    }    
+
+    return num_entries_read;
 }
 
 Move get_random_opening_move(uint64_t hash)
 {
-    // search hash in book as key
-    // entry is big endian 16 byte
+    printf("opening book looking for hash: 0x%016lx\n", hash);
 
+    BookMove buff[BOOK_MOVE_SIZE] = {0};
+    int weight_sum = 0;
+
+    int num_entries = get_all_entries_with_hash(hash, buff, &weight_sum);
+    printf("opening book found %d entries\n", num_entries);
+    
+    if (num_entries == 0 || weight_sum <= 0)
+        return 0;
+        
+    int r = rand() % weight_sum; 
+
+    for (int i = 0; i < num_entries; ++i)
+    {
+        if (r < buff[i].weight)
+            return poly_move_to_my(buff[i].move);
+        r -= buff[i].weight;
+    }
+        
     return 0;
 }
 

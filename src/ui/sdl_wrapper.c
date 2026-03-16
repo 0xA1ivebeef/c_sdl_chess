@@ -122,6 +122,8 @@ int load_piece_textures(AppContext* app)
 
 void cleanup(AppContext* app)
 {
+    close_opening_book();
+
     for (int i = 0; i < 12; ++i)
         SDL_DestroyTexture(app->textures[i]);
 
@@ -175,8 +177,6 @@ int init_sdl(AppContext* app)
             app->renderer, 70, 50, 
             dark_transparent, 0, 2*M_PI 
     );
-
-    close_opening_book();
 
     return 0;
 }

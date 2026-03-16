@@ -54,7 +54,18 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
 {
     SDL_Event e;
 
-    // int ai_move_pending = 0;
+    int ai_move_pending = 0;
+
+    BookMove buff[BOOK_MOVE_SIZE];
+    int weight_sum = 0;
+    printf("opening book looking for hash: 0x%016lx\n", pos->zobrist_hash);
+    int num_entries = get_all_entries_with_hash(pos->zobrist_hash, buff, &weight_sum);
+    for (int i = 0; i < num_entries; ++i)
+    {
+        Move m = poly_move_to_my(buff[i].move);
+        printf("%s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
+        printf("weight: %d\n", buff[i].weight);
+    }
 
     // perft(pos, lm, 5);
     // full_perft_test(pos, lm);
@@ -66,14 +77,14 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
         {
             if (handle_event(app, pos, ui, &e, lm))
             {  
-                // ai_move_pending = 1;
+                ai_move_pending = 1;
 
                 update(pos, ui, lm);
                 render(app, pos->bb);
             }
         }
  
-        /*
+        // /*
         if (pos->player == BLACK && ai_move_pending)
         {
             ai_move_pending = 0;
@@ -84,7 +95,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
             update(pos, ui, lm);
             render(app, pos->bb);
         }
-        */
+        // */
     }
 }
 

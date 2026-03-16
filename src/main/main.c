@@ -3,7 +3,7 @@
 
 int main()
 {
-    if (open_book("assets/baron30.bin") != 0)
+    if (open_book("assets/Openings/Titans.bin") != 0)
         return -1;
 
     LegalMoves lm = {0};

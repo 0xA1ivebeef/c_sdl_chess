@@ -4,6 +4,8 @@
 #define INF 1000000
 #define MATE 3200
 
+static int get_opening_move = 1;
+
 int count_material(uint64_t* bb, uint8_t player)
 {
     int res = 0;
@@ -148,6 +150,21 @@ Move search_root(Position* pos, LegalMoves* lm, int depth)
 
 int opponent_move(Position* pos, LegalMoves* lm)
 {
+    // assuming opening book moves are legal
+    if (get_opening_move)
+    {
+        Move opening_move = get_random_opening_move(pos->zobrist_hash);
+        printf("opening book got move:\n");
+        log_move(opening_move);
+        if (!opening_move)
+        {
+            printf("opening is finished\n");
+            get_opening_move = 0; // dont look for openings anymore
+        }
+        else
+            return handle_move(pos, lm, opening_move);
+    }
+
     Move m = search_root(pos, lm, 5);
     if (!m)
         return -1;

@@ -78,7 +78,12 @@ typedef struct
     uint64_t    zobrist_hash;
 } Undo;
 
-// ! polyglot books are in BIG ENDIAN
+typedef struct
+{
+    Move move;
+    uint16_t weight;
+} BookMove;
+
 typedef struct 
 {
     uint64_t    key;
