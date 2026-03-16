@@ -1,6 +1,8 @@
 
 #include "engine/zobrist.h"
 
+// TODO refactor
+
 const int WK_CASTLE = 768;
 const int WQ_CASTLE = 769;
 const int BK_CASTLE = 770;

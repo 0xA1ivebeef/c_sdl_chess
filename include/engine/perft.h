@@ -14,7 +14,7 @@
 
 #include "utils/utils.h"
 
-int perft(Position* pos, LegalMoves* lm, int depth);
-void full_perft_test(Position* pos, LegalMoves* lm);
+int perft(Position* pos, int depth);
+void full_perft_test(Position* pos);
 
 #endif
