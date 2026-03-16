@@ -11,7 +11,9 @@
 #include "ui/sdl_wrapper.h"
 #include "ui/console_logger.h"
 
-void render(AppContext* app, uint64_t* bb);
+#include "utils/utils.h"
+
+void render(AppContext* app, uint64_t* bb, Move last_move);
 void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int start);
 
 #endif

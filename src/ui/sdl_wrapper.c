@@ -1,7 +1,7 @@
 
 #include "ui/sdl_wrapper.h"
 
-static char* piece_image_paths[12] = 
+static char* piece_image_paths[NUM_TEXTURES] = 
 {
     "assets/pieces-basic-png/black-pawn.png",
     "assets/pieces-basic-png/black-knight.png",
@@ -16,6 +16,29 @@ static char* piece_image_paths[12] =
     "assets/pieces-basic-png/white-queen.png",
     "assets/pieces-basic-png/white-king.png"
 };
+
+static char* sound_paths[NUM_SOUNDS] =
+{
+    "assets/sounds/move.wav",
+    "assets/sounds/capture.wav",
+    "assets/sounds/castle.wav",
+    "assets/sounds/promote.wav",
+    "assets/sounds/check.wav"
+};
+
+int load_sounds(AppContext* app)
+{
+    for (int i = 0; i < NUM_SOUNDS; ++i)
+    {
+        app->sounds[i] = Mix_LoadWAV(sound_paths[i]);
+        if (!app->sounds[i])
+        {
+            fprintf(stderr, "sound loading failed\n");
+            return 1;
+        }
+    }
+    return 0;
+}
 
 SDL_Texture* create_circle_texture(SDL_Renderer* renderer, int radius, SDL_Color color)
 {
@@ -99,7 +122,7 @@ SDL_Texture* create_ring_texture(SDL_Renderer* renderer, int outer_radius, int i
 int load_piece_textures(AppContext* app)
 {
     SDL_Surface* loaded_surface = NULL;
-    for(int i = 0; i < 12; ++i)
+    for(int i = 0; i < NUM_TEXTURES; ++i)
     {
         loaded_surface = IMG_Load(piece_image_paths[i]);
         if(!loaded_surface)
@@ -124,29 +147,43 @@ void cleanup(AppContext* app)
 {
     close_opening_book();
 
-    for (int i = 0; i < 12; ++i)
-        SDL_DestroyTexture(app->textures[i]);
+    for (int i = 0; i < NUM_SOUNDS; ++i)
+        if (app->sounds[i]) Mix_FreeChunk(app->sounds[i]);
 
-    SDL_DestroyTexture(app->move_circle);
-    SDL_DestroyTexture(app->capture_circle);
+    for (int i = 0; i < NUM_TEXTURES; ++i)
+        if (app->textures[i]) SDL_DestroyTexture(app->textures[i]);
 
-    SDL_DestroyRenderer(app->renderer);
-    SDL_DestroyWindow(app->window);
+    if (app->move_circle) SDL_DestroyTexture(app->move_circle);
+    if (app->capture_circle) SDL_DestroyTexture(app->capture_circle);
+
+    if (app->renderer) SDL_DestroyRenderer(app->renderer);
+    if (app->window) SDL_DestroyWindow(app->window);
+
+    Mix_CloseAudio();
     IMG_Quit();
     SDL_Quit();
 }
 
 int init_sdl(AppContext* app)
 {
-    if(SDL_Init(SDL_INIT_VIDEO) != 0)
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
     {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
+        cleanup(app);
+        return 1;
+    }
+    
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
+    {
+        fprintf(stderr, "SDL_mixer could not initialize! Mix_Error %s\n", Mix_GetError());
+        cleanup(app);
         return 1;
     }
     
     if(!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
     {
         fprintf(stderr, "IMG_Init: %s\n", IMG_GetError());
+        cleanup(app);
         return 1;
     }
     
@@ -155,6 +192,7 @@ int init_sdl(AppContext* app)
     if(app->window == NULL)
     {
         fprintf(stderr, "window creation: %s\n", SDL_GetError());
+        cleanup(app);
         return 1;
     }
     
@@ -162,9 +200,7 @@ int init_sdl(AppContext* app)
     if(app->renderer == NULL)
     {
         fprintf(stderr, "renderer creation: %s\n", SDL_GetError());
-        SDL_DestroyWindow(app->window);
-        IMG_Quit();
-        SDL_Quit();
+        cleanup(app);
         return 1;
     }
 
@@ -177,6 +213,13 @@ int init_sdl(AppContext* app)
             app->renderer, 70, 50, 
             dark_transparent, 0, 2*M_PI 
     );
+
+    if (load_sounds(app) != 0)
+    {
+        fprintf(stderr, "sound loading error\n");
+        cleanup(app);
+        return 1;
+    }
 
     return 0;
 }

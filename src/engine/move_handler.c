@@ -243,7 +243,7 @@ int handle_move(Position* pos, LegalMoves* lm, Move m)
 
     Undo undo;
     apply_move(pos, m, &undo);
-
+        
     return 1;
 }
 

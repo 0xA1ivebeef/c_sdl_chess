@@ -1,6 +1,18 @@
 
 #include "ui/renderer.h"
 
+void render_move(AppContext* app, Move m)
+{
+    SDL_SetRenderDrawColor(app->renderer, 100, 230, 230, 30);
+
+    SDL_Rect r = { move_from(m) % 8 * TILESIZE, move_from(m) / 8 * TILESIZE, TILESIZE, TILESIZE };
+    SDL_RenderFillRect(app->renderer, &r);
+    r.x = move_to(m) % 8 * TILESIZE;
+    r.y = move_to(m) / 8 * TILESIZE;
+    SDL_RenderFillRect(app->renderer, &r);
+    SDL_RenderPresent(app->renderer);
+}
+
 void render_board(AppContext* app)
 {
     SDL_SetRenderDrawColor(app->renderer, 130, 115, 185, 255);
@@ -67,13 +79,15 @@ void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int star
     SDL_RenderPresent(app->renderer);
 }
 
-void render(AppContext* app, uint64_t* bitboards)
+void render(AppContext* app, uint64_t* bitboards, Move last_move)
 {
     SDL_SetRenderDrawColor(app->renderer, 255, 255, 255, 255);
     SDL_RenderClear(app->renderer);
 
     render_board(app);
     render_pieces(app, bitboards);
+    if (last_move != 0)
+        render_move(app, last_move);
 
     SDL_RenderPresent(app->renderer);
 }

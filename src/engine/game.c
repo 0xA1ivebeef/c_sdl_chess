@@ -3,9 +3,11 @@
 
 #define AI_COLOR BLACK
 
+static int GAMEMODE = 0;
+
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 1);
+    load_fen_string(pos, 0);
     generate_occ(pos);
 	
     generate_legal_moves(pos, lm); 
@@ -47,39 +49,47 @@ void update(Position* pos, UIContext* ui, LegalMoves* lm)
 void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
 {
     SDL_Event e;
-    
+    Move last_move;
+
+    // gamemode = 0; normal game against opponent
+    //            1; eval mode free to play any moves 
+    //            2; perft mode 
+
+    if (GAMEMODE == 2)
+    {
+        full_perft_test(pos);
+        return;
+    }
+
+    // perft(pos, 5); single position given depth
+    // search_test(pos); comparing alpha beta vs pure search
+
     int ai_move_pending = 0;
-
-    // perft(pos, 5);
-    full_perft_test(pos);
-    // search_test(pos);
-    return;
-
     while (ui->running)
     {
         if (SDL_WaitEventTimeout(&e, 16))
         {
-            if (handle_event(app, pos, ui, &e, lm))
+            if (handle_event(app, pos, ui, &e, lm, &last_move))
             {  
-                ai_move_pending = 1;
-
                 update(pos, ui, lm);
-                render(app, pos->bb);
+                render(app, pos->bb, last_move);
+                ai_move_pending = 1;
             }
         }
  
-        // /*
         if (pos->player == BLACK && ai_move_pending)
         {
-            ai_move_pending = 0;
-
-            if (opponent_move(pos, lm) <= 0)
-                printf("OPPONENT MOVE FAILED\n");
+            last_move = opponent_move(pos, lm);
+            if (last_move == 0)
+            {
+                fprintf(stderr, "OPPONENT MOVE FAILED\n");
+                exit(EXIT_FAILURE);
+            }
 
             update(pos, ui, lm);
-            render(app, pos->bb);
+            render(app, pos->bb, last_move);
+            ai_move_pending = 0;
         }
-        // */
     }
 }
 

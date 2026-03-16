@@ -15,7 +15,7 @@ uint8_t select_piece(int mx, int my, uint64_t occ)
     return INVALID_SQUARE;
 }
 
-int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, LegalMoves* lm)
+int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, LegalMoves* lm, Move* last_move)
 {
     switch (e->type)
     {
@@ -49,7 +49,7 @@ int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, Le
             if (dest == INVALID_SQUARE) 
             {
                 ui->selected_square = INVALID_SQUARE; // unselect
-                render(app, pos->bb);
+                render(app, pos->bb, 0);
                 break;
             }
 
@@ -61,13 +61,14 @@ int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, Le
 
             if (handle_move(pos, lm, tmp)) 
             {
+                *last_move = tmp;
                 ui->selected_square = INVALID_SQUARE;
                 return 1; // move applied
             }
 
             // illegal move, just unselect and redraw
             ui->selected_square = INVALID_SQUARE;
-            render(app, pos->bb);
+            render(app, pos->bb, 0);
             break;
         }
     }

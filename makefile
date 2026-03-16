@@ -16,7 +16,7 @@ all: main
 
 # Link all object files into the final executable
 main: $(OBJ_FILES)
-	$(CC) $(OBJ_FILES) -lSDL2 -lSDL2_image -lm -o main
+	$(CC) $(OBJ_FILES) -lSDL2 -lSDL2_image -lSDL2_mixer -lm -o main
 
 # Compile .c to .o, preserving directory structure inside obj/
 $(OBJ_DIR)/%.o: %.c

@@ -3,7 +3,7 @@
 
 static int get_opening_move = 1;
 
-int opponent_move(Position* pos, LegalMoves* lm)
+Move opponent_move(Position* pos, LegalMoves* lm)
 {
     // assuming opening book moves are legal
     if (get_opening_move)
@@ -15,15 +15,19 @@ int opponent_move(Position* pos, LegalMoves* lm)
             get_opening_move = 0; // dont look for openings anymore
         }
         else
-            return handle_move(pos, lm, opening_move);
+        {
+            handle_move(pos, lm, opening_move);
+            return opening_move;
+        }
     }
 
     Move m = search_root(pos, 5);
     if (!m)
-        return -1;
+        return 0;
         
     printf("picked move: %s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
 
-    return handle_move(pos, lm, m); 
+    handle_move(pos, lm, m); 
+    return m;
 }
 

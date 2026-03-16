@@ -1,11 +1,17 @@
 
-Transposition Tables
+evaluation mode (show best moves with evaluation)
+play whatever moves and evalutate resulting position like spectator mode
+
+transposition tables
 
 insufficient material draw
 threefold repetition draw
 
+add sounds, decide where to handle audio logic, block audio on searches
+only play audio on opponent and player move once depending on the move type
+
 maybe:
 render the last move that was made
 store a piece array and incrementally update it instead of get_bb_index 
-add sounds
+
 

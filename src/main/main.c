@@ -3,7 +3,7 @@
 
 int main()
 {
-    if (open_book("assets/Openings/Titans.bin") != 0)
+    if (open_book("assets/openings/Titans.bin") != 0)
         return -1;
 
     LegalMoves lm = {0};
@@ -19,7 +19,8 @@ int main()
 
     // running, selected_square, needs_update, game_over
     UIContext ui_context = { 1, INVALID_SQUARE, 0, 0 };
-    render(&app, pos.bb);
+    render(&app, pos.bb, 0);
+
     game_loop(&app, &pos, &ui_context, &lm); 
  
     cleanup(&app);

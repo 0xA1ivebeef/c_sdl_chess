@@ -102,10 +102,10 @@ typedef struct
 typedef struct
 {
     uint64_t hash;
-    int depth;
-    int score;
     Move best_move;
-    int flag;
+    uint8_t depth;
+    uint8_t score;
+    uint8_t flag;
 } TTEntry;
 
 #endif

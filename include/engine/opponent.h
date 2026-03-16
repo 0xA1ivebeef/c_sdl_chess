@@ -14,6 +14,6 @@
 #include "engine/search.h"
 
 int evaluate(Position* pos);
-int opponent_move(Position* pos, LegalMoves* lm);
+Move opponent_move(Position* pos, LegalMoves* lm);
 
 #endif
