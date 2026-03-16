@@ -1,12 +1,11 @@
 
-promotions are broken
-no asking for promoted piece
-no auto conversion
-
-check utils: is_pawn_promotion
+Transposition Tables
 
 insufficient material draw
 threefold repetition draw
 
+maybe:
+render the last move that was made
+store a piece array and incrementally update it instead of get_bb_index 
 add sounds
 

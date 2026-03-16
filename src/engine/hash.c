@@ -1,5 +1,5 @@
 
-#include "engine/zobrist.h"
+#include "engine/hash.h"
 
 // TODO refactor
 

@@ -76,15 +76,18 @@ void full_perft_test(Position* pos)
 
         // init
         load_fen_string(pos, i);
-        update_occ(pos);
+        generate_occ(pos);
         generate_legal_moves(pos, &lm); 
-        pos->zobrist_hash = get_zobrist_hash(pos);
+        pos->hash = get_zobrist_hash(pos);
 
+        double start = get_time_seconds();
         int res = perft(pos, depth);
+        double end = get_time_seconds();
         if (res != expected)
             printf("test %d failed, expected: %d, actual: %d\n", i+1, expected, res);
         else
             printf("test %d successfull\n", i+1);
+        printf("EXECUTION TIME: %f\n", end-start);
     }
 }
 

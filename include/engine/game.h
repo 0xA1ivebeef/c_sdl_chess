@@ -21,9 +21,8 @@
 #include "engine/attack_generator.h"
 #include "engine/check.h"
 #include "engine/perft.h"
-#include "engine/zobrist.h"
-
-#include "opponent/opponent.h"
+#include "engine/hash.h"
+#include "engine/opponent.h"
 
 #include "utils/utils.h"
 

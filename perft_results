@@ -1,5 +1,0 @@
-
-perft failed for fen string 2, expected: 193690690, got: 193675609
-perft failed for fen string 4, expected: 15833292, got: 15661531
-perft failed for fen string 5, expected: 89941194, got: 83248695
-

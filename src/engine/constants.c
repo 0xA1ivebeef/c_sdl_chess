@@ -1,9 +1,6 @@
 
 #include "engine/constants.h"
 
-#define FILE_A 0x0101010101010101ULL
-#define FILE_H 0x8080808080808080ULL
-
 const uint16_t FROM_MASK  = 0x0FC0; // 6 bit
 const uint16_t TO_MASK    = 0x003F; // 6 bit
 const uint16_t PROMO_MASK = 0x7000; // 3 bit

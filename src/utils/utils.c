@@ -1,6 +1,13 @@
 
 #include "utils/utils.h"
 
+double get_time_seconds()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + ts.tv_nsec / 1e9;
+}
+
 int enpassant_legal(Position* pos, Move m, Undo* undo)
 {
     if (pos->enpassant != INVALID_SQUARE && is_double_pawn_move(m, undo->moved_piece))
@@ -31,7 +38,7 @@ int get_bb_index(uint64_t* bb, int sq)
     return -1;
 }
 
-void update_occ(Position* pos)
+void generate_occ(Position* pos)
 {
     for(int i = 0; i < 3; ++i)
         pos->occ[i] = 0;

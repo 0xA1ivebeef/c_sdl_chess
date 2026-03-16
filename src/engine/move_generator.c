@@ -40,7 +40,7 @@ void add_enpassant(Position* pos, LegalMoves* lm)
     {
         pos->enpassant_hashed = 1;
         // printf("hashing enpassant\n");
-        pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+        pos->hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
         add_move(lm, left_start, pos->enpassant, 0);
     }
     if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
@@ -48,7 +48,7 @@ void add_enpassant(Position* pos, LegalMoves* lm)
         if (!pos->enpassant_hashed)
         {
             pos->enpassant_hashed = 1;
-            pos->zobrist_hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+            pos->hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
         }
         add_move(lm, right_start, pos->enpassant, 0);
     }

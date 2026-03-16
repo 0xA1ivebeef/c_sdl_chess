@@ -8,7 +8,7 @@
 #include <assert.h>
 
 #include "engine/types.h"
-#include "engine/zobrist.h"
+#include "engine/hash.h"
 #include "engine/castling.h"
 
 #include "utils/utils.h"

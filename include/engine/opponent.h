@@ -10,7 +10,8 @@
 #include "engine/constants.h"
 #include "engine/move_generator.h"
 #include "engine/check.h"
-#include "engine/zobrist.h"
+#include "engine/hash.h"
+#include "engine/search.h"
 
 int evaluate(Position* pos);
 int opponent_move(Position* pos, LegalMoves* lm);

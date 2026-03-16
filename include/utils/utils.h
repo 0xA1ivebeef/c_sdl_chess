@@ -4,16 +4,19 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "engine/types.h"
 
 static inline int move_from(Move m) { return (m & FROM_MASK) >> 6; }
 static inline int move_to(Move m)   { return m & TO_MASK; }
 
+double get_time_seconds();
+
 int enpassant_legal(Position* pos, Move m, Undo* undo);
 
 int get_king_sq(Position* pos, uint8_t player);
-void update_occ(Position* pos);
+void generate_occ(Position* pos);
 int get_bb_index(uint64_t* bb, int sq);
 uint8_t get_legal_move_count(Move* lm);
 

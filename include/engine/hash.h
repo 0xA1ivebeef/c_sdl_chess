@@ -1,6 +1,6 @@
 
-#ifndef ZOBRIST_H
-#define ZOBRIST_H
+#ifndef HASH_H
+#define HASH_H
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -10,7 +10,7 @@
 #include "engine/types.h"
 #include "engine/bitmask_loader.h"
 #include "engine/castling.h"
-#include "engine/zobrist.h"
+#include "engine/hash.h"
 
 #include "ui/console_logger.h"
 

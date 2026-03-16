@@ -6,7 +6,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "engine/constants.h"
-#include "engine/zobrist.h"
+#include "engine/hash.h"
 
 typedef struct AppContext
 {

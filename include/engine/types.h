@@ -40,6 +40,12 @@ typedef struct
 */
 typedef uint16_t Move;
 
+typedef struct MoveScore 
+{
+    Move move;
+    int score;
+} MoveScore;
+
 typedef struct LegalMoves
 {
     Move moves[LEGAL_MOVES_SIZE];
@@ -63,7 +69,7 @@ typedef struct
     uint8_t     enpassant_hashed;
     uint8_t     halfmove;
     uint16_t    fullmove;
-    uint64_t    zobrist_hash;
+    uint64_t    hash;
 } Position;
 
 typedef struct
@@ -75,7 +81,8 @@ typedef struct
     uint8_t     enpassant_hashed;
     uint8_t     halfmove;
     uint16_t    fullmove;
-    uint64_t    zobrist_hash;
+    uint64_t    occ[3];
+    uint64_t    hash;
 } Undo;
 
 typedef struct
@@ -91,6 +98,15 @@ typedef struct
     uint16_t    weight;
     uint32_t    learn;
 } PolyglotEntry;
+
+typedef struct
+{
+    uint64_t hash;
+    int depth;
+    int score;
+    Move best_move;
+    int flag;
+} TTEntry;
 
 #endif
 
