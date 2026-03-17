@@ -10,5 +10,6 @@
 #include "engine/types.h"
 #include "engine/game.h"
 #include "engine/hash.h"
+#include "engine/transposition_table.h"
 
 #endif

@@ -99,14 +99,15 @@ typedef struct
     uint32_t    learn;
 } PolyglotEntry;
 
+/*
 typedef struct
 {
     uint64_t hash;
     Move best_move;
     uint8_t depth;
-    uint8_t score;
+    uint8_t eval;
     uint8_t flag;
 } TTEntry;
-
+*/
 #endif
 

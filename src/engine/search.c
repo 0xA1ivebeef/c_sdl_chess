@@ -1,6 +1,7 @@
 
 #include "engine/search.h"
 
+static int tt_hits = 0;
 static uint64_t nodes = 0;
 
 int count_material(uint64_t* bb, uint8_t player)
@@ -75,7 +76,93 @@ void sort_mvv_lva(Position* pos, LegalMoves* lm)
         lm->moves[i] = moves_with_scores[i].move;
 }
 
+// alpha = best value MAX can gurantee so far (lower bound of what MAX can achieve)
+// beta  = best value MIN can gurantee so far (upper bound of what MIN can force)
+//
+// if a >= b stop exploring because MAX already has a better option elsewhere
+// if its a MAX node and MIN has a better option if its a MIN node
+//
+// no possible value subtree can produce that would matter to the parent
 int alphabeta(Position* pos, int depth, int alpha, int beta)
+{
+    nodes++;
+    if (depth == 0)
+        return evaluate(pos);
+
+    int orig_alpha = alpha;
+    int orig_beta = beta;
+
+    TTEntry* entry = TT_lookup(pos->hash);
+
+    if (entry && entry->depth >= depth)
+    {
+        tt_hits++;
+        if (entry->flag == TT_EXACT)
+            return entry->eval;
+        
+        if (entry->flag == TT_LOWERBOUND)
+            alpha = max(alpha, entry->eval);
+
+        if (entry->flag == TT_UPPERBOUND)
+            beta = min(beta, entry->eval);
+
+        if (alpha >= beta) // algorithm condition (prune)
+            return alpha;
+    }
+
+    LegalMoves lm;
+    generate_legal_moves(pos, &lm);
+    filter_moves(pos, &lm);
+
+    if (lm.count == 0)
+    {
+        if (is_check(pos, pos->player))
+            return -MATE + depth; // faster mates should be prio
+        else 
+            return 0;
+    }
+
+    // TODO play TT move first
+    sort_mvv_lva(pos, &lm);
+
+    int best = -INF;
+    Move best_move = 0;
+    for (int i = 0; i < lm.count; i++)
+    {
+        Undo undo;
+        apply_move(pos, lm.moves[i], &undo);
+
+        int score = -alphabeta(pos, depth - 1, -beta, -alpha);
+
+        undo_move(pos, lm.moves[i], &undo);
+
+        if (score > best)
+        {
+            best = score;
+            best_move = lm.moves[i];
+        }
+
+        if (best > alpha)
+            alpha = best;
+
+        if (alpha >= beta)
+            break;  // prune remaining moves
+    }
+
+    TTEntry new_entry = { pos->hash, best_move, depth, best, 0 };
+    if (best <= orig_alpha)
+        new_entry.flag = TT_UPPERBOUND;
+    else if (best >= orig_beta)
+        new_entry.flag = TT_LOWERBOUND;
+    else
+        new_entry.flag = TT_EXACT;
+
+    TT_store(&new_entry);
+
+    return best;
+}
+
+int alphanott(Position* pos, int depth, int alpha, int beta)
 {
     nodes++;
     if (depth == 0)
@@ -88,7 +175,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     if (lm.count == 0)
     {
         if (is_check(pos, pos->player))
-            return -MATE;
+            return -MATE + depth; // faster mates should be prio
         else 
             return 0;
     }
@@ -96,7 +183,6 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     sort_mvv_lva(pos, &lm);
 
     int best = -INF;
-
     for (int i = 0; i < lm.count; i++)
     {
         Undo undo;
@@ -107,7 +193,9 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
         undo_move(pos, lm.moves[i], &undo);
 
         if (score > best)
+        {
             best = score;
+        }
 
         if (best > alpha)
             alpha = best;
@@ -186,6 +274,8 @@ Move search_root(Position* pos, int depth)
 
         undo_move(pos, lm.moves[i], &undo);
     }
+
+    printf("tt hits %d\n", tt_hits);
 
     return best_move;
 }

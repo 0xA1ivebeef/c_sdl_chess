@@ -21,7 +21,11 @@ Move opponent_move(Position* pos, LegalMoves* lm)
         }
     }
 
-    Move m = search_root(pos, 5);
+    double start =  get_time_seconds();
+    Move m = search_root(pos, 7);
+    double end = get_time_seconds();
+    printf("opponent move took %f sec\n", end-start);
+
     if (!m)
         return 0;
         

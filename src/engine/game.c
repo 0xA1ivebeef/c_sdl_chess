@@ -7,7 +7,7 @@ static int GAMEMODE = 0;
 
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 0);
+    load_fen_string(pos, 1);
     generate_occ(pos);
 	
     generate_legal_moves(pos, lm); 
@@ -62,7 +62,8 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     }
 
     // perft(pos, 5); single position given depth
-    // search_test(pos); comparing alpha beta vs pure search
+    // search_test(pos); 
+    // return;
 
     int ai_move_pending = 0;
     while (ui->running)

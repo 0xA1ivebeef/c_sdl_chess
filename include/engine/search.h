@@ -8,6 +8,7 @@
 #include "engine/constants.h"
 #include "engine/check.h"
 #include "engine/move_generator.h"
+#include "engine/transposition_table.h"
 
 #include "utils/utils.h"
 

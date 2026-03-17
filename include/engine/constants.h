@@ -10,8 +10,8 @@
 #define TILESIZE 128
 
 #define TT_EXACT 0 // exact eval
-#define TT_ALPHA 1 // upper bound
-#define TT_BETA  2 // lower bound
+#define TT_UPPERBOUND 1 
+#define TT_LOWERBOUND 2 
 
 #define TT_SIZE (1 << 22) // ~4M entries
 

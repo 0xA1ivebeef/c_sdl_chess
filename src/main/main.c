@@ -6,6 +6,9 @@ int main()
     if (open_book("assets/openings/Titans.bin") != 0)
         return -1;
 
+    if (TT_init() != 0)
+        return -1;
+
     LegalMoves lm = {0};
 
     AppContext app = {0}; 
