@@ -30,11 +30,6 @@ int compare_moves(const void* a, const void* b)
     return mb->score - ma->score;  // descending
 }
 
-int is_capture_move(uint64_t bb, Move m)
-{
-    return ((bb & (1ULL << move_to(m))) > 0);
-}
-
 int gives_check(Position* pos, Move m)
 {
     Undo undo;
@@ -45,37 +40,84 @@ int gives_check(Position* pos, Move m)
     return check;
 }
 
-void sort_moves(Position* pos, LegalMoves* lm, Move best_move)
+/*
+    Typical strong engine ordering:
+
+    TT move / best move
+    Good captures (MVV-LVA)
+    Promotions
+    Killer moves
+    History heuristic moves
+    Checks (optional / often implicit)
+    Bad captures (SEE < 0)
+*/
+
+#define SCORE_TT_MOVE      1000000
+#define SCORE_GOOD_CAPTURE  100000
+#define SCORE_PROMOTION      90000
+#define SCORE_KILLER         80000
+#define SCORE_HISTORY         1000
+
+void score_moves(Position* pos, LegalMoves* lm, int* scores, Move best_move)
 {
-    MoveScore moves_with_scores[LEGAL_MOVES_SIZE];
     for (int i = 0; i < lm->count; ++i)
     {
-        int score = 0;
+        Move m = lm->moves[i];
+        scores[i] = 0;
 
-        if (is_capture_move(pos->bb[get_bb_index(pos->bb, move_from(lm->moves[i]))], lm->moves[i]))
+        if (m == best_move)
         {
-            int victim_val = PIECE_VALUES[get_bb_index(pos->bb, move_to(lm->moves[i])) % 5];
-            int attacker_val = PIECE_VALUES[get_bb_index(pos->bb, move_from(lm->moves[i])) % 5];
-
-            score += 1000 + (victim_val - attacker_val);
+            scores[i] = SCORE_TT_MOVE;
+            continue;
         }
 
-        if (gives_check(pos, lm->moves[i]))
-            score += 900;
+        // capture
+        if (pos->occ[!pos->player] & (1ULL << move_to(m))) 
+        {
+            // TODO cache a pieces bitboard dont use get_bb_index
+            int victim = PIECE_VALUES[get_bb_index(pos->bb, move_to(lm->moves[i])) % 5];
+            int attacker = PIECE_VALUES[get_bb_index(pos->bb, move_from(lm->moves[i])) % 5];
 
-        if (is_promotion_move(lm->moves[i]))
-            score += 1000;
+            scores[i] += SCORE_GOOD_CAPTURE + (victim*10 - attacker);
+            continue;
+        }
 
-        if (lm->moves[i] == best_move)
-            score += 1000*1000;
 
-        moves_with_scores[i] = (MoveScore) { lm->moves[i], score } ;
+        if (is_promotion_move(m))
+        {
+            scores[i] = SCORE_PROMOTION;
+            continue;
+        }
+
+        // TODO killer moves, history
+        
+        if (gives_check(pos, m))
+            scores[i] = 100;
+    }
+}
+
+Move pick_next_move(LegalMoves* lm, int* scores, int start)
+{
+    int best = start;
+
+    for (int i = start + 1; i < lm->count; i++)
+        if (scores[i] > scores[best])
+            best = i;
+
+    if (best != start)
+    {
+        // swap moves
+        Move tmp_move = lm->moves[start];
+        lm->moves[start] = lm->moves[best];
+        lm->moves[best] = tmp_move;
+
+        // swap scores
+        int tmp_score = scores[start];
+        scores[start] = scores[best];
+        scores[best] = tmp_score;
     }
 
-    qsort(moves_with_scores, lm->count, sizeof(struct MoveScore), compare_moves);
-
-    for (int i = 0; i < lm->count; ++i)
-        lm->moves[i] = moves_with_scores[i].move;
+    return lm->moves[start];
 }
 
 // alpha = best value MAX can gurantee so far (lower bound of what MAX can achieve)
@@ -95,7 +137,6 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     int orig_beta = beta;
 
     TTEntry* entry = TT_lookup(pos->hash);
-
     if (entry && entry->depth >= depth)
     {
         tt_hits++;
@@ -109,7 +150,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
             beta = min(beta, entry->eval);
 
         if (alpha >= beta) // algorithm condition (prune)
-            return alpha;
+            return entry->eval;
     }
 
     LegalMoves lm;
@@ -124,24 +165,28 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
             return 0;
     }
 
-    // TODO play TT move first
-    sort_moves(pos, &lm, entry->best_move);
+    int scores[LEGAL_MOVES_SIZE] = {0};
+    Move tmp = 0;
+    if (entry)
+        tmp = entry->best_move;
+    score_moves(pos, &lm, scores, tmp);
 
     int best = -INF;
     Move best_move = 0;
     for (int i = 0; i < lm.count; i++)
     {
         Undo undo;
-        apply_move(pos, lm.moves[i], &undo);
+        Move this_move = pick_next_move(&lm, scores, i);
+        apply_move(pos, this_move, &undo);
 
         int score = -alphabeta(pos, depth - 1, -beta, -alpha);
 
-        undo_move(pos, lm.moves[i], &undo);
+        undo_move(pos, this_move, &undo);
 
         if (score > best)
         {
             best = score;
-            best_move = lm.moves[i];
+            best_move = this_move;
         }
 
         if (best > alpha)
@@ -164,98 +209,17 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     return best;
 }
 
-int alphanott(Position* pos, int depth, int alpha, int beta)
-{
-    nodes++;
-    if (depth == 0)
-        return evaluate(pos);
-
-    LegalMoves lm;
-    generate_legal_moves(pos, &lm);
-    filter_moves(pos, &lm);
-
-    if (lm.count == 0)
-    {
-        if (is_check(pos, pos->player))
-            return -MATE + depth; // faster mates should be prio
-        else 
-            return 0;
-    }
-
-    sort_mvv_lva(pos, &lm);
-
-    int best = -INF;
-    for (int i = 0; i < lm.count; i++)
-    {
-        Undo undo;
-        apply_move(pos, lm.moves[i], &undo);
-
-        int score = -alphabeta(pos, depth - 1, -beta, -alpha);
-
-        undo_move(pos, lm.moves[i], &undo);
-
-        if (score > best)
-        {
-            best = score;
-        }
-
-        if (best > alpha)
-            alpha = best;
-
-        if (alpha >= beta)
-            break;  // prune remaining moves
-    }
-
-    return best;
-}
-
-// negamax always assumes returned score
-// is from the perspective of the player to move
-int search(Position* pos, int depth)
-{
-    nodes++;
-    if (depth == 0)
-        return evaluate(pos);
-
-    LegalMoves lm;
-    generate_legal_moves(pos, &lm);
-    filter_moves(pos, &lm);
-
-    if (lm.count == 0)
-    {
-        if (is_check(pos, pos->player))
-            return -MATE;
-        else 
-            return 0;
-    }
-
-    int best_eval = -INF;
-
-    for (int i = 0; i < lm.count; ++i)
-    {
-        Undo undo;
-        apply_move(pos, lm.moves[i], &undo);
-
-        int eval = -search(pos, depth - 1);
-        best_eval = max(eval, best_eval);
-
-        undo_move(pos, lm.moves[i], &undo);
-    }
-
-    return best_eval; 
-}
-
 Move search_root(Position* pos, int depth)
 {
     LegalMoves lm;
-
     generate_legal_moves(pos, &lm);
     filter_moves(pos, &lm);
 
     if (lm.count == 0)
         return 0;
 
-    sort_mvv_lva(pos, &lm);
+    int scores[LEGAL_MOVES_SIZE] = {0};
+    score_moves(pos, &lm, scores, 0);
 
     Move best_move = 0;
     int best_eval = -INF;
@@ -263,7 +227,8 @@ Move search_root(Position* pos, int depth)
     for (int i = 0; i < lm.count; ++i)
     {
         Undo undo;
-        apply_move(pos, lm.moves[i], &undo);
+        Move this_move = pick_next_move(&lm, scores, i);
+        apply_move(pos, this_move, &undo);
 
         // negamax so this returns a large number if the position 
         // is good for the player who made the move
@@ -271,10 +236,10 @@ Move search_root(Position* pos, int depth)
         if (eval > best_eval)
         {
             best_eval = eval;
-            best_move = lm.moves[i];
+            best_move = this_move;
         }
 
-        undo_move(pos, lm.moves[i], &undo);
+        undo_move(pos, this_move, &undo);
     }
 
     printf("tt hits %d\n", tt_hits);
@@ -284,19 +249,13 @@ Move search_root(Position* pos, int depth)
 
 void search_test(Position* pos)
 {
-    printf("classical search\n");
+    nodes = 0;
+    printf("alpha beta search\n");
     double start = get_time_seconds();
-    search(pos, 4);
+    alphabeta(pos, 5, -INF, INF);
     double end = get_time_seconds();
     printf("EXECUTION TIME: %f seconds\n", end-start);
     printf("NODES SEARCHED %zu\n", nodes);
-
-    nodes = 0;
-    printf("alpha beta search\n");
-    start = get_time_seconds();
-    alphabeta(pos, 4, -INF, INF);
-    end = get_time_seconds();
-    printf("EXECUTION TIME: %f seconds\n", end-start);
-    printf("NODES SEARCHED %zu\n", nodes);
+    printf("TT Hits: %d\n", tt_hits);
 }
 
