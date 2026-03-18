@@ -3,8 +3,6 @@
 
 #define AI_COLOR BLACK
 
-static int GAMEMODE = 0;
-
 void position_init(Position* pos, LegalMoves* lm)
 {
     load_fen_string(pos, 1);
@@ -51,19 +49,10 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    // gamemode = 0; normal game against opponent
-    //            1; eval mode free to play any moves 
-    //            2; perft mode 
-
-    if (GAMEMODE == 2)
-    {
-        full_perft_test(pos);
-        return;
-    }
-
+    // full_perft_test(pos);
     // perft(pos, 5); single position given depth
-    search_test(pos); 
-    return;
+    // search_test(pos); 
+    // return;
 
     int ai_move_pending = 0;
     while (ui->running)
