@@ -2,6 +2,8 @@
 #include "engine/search.h"
 
 static int tt_hits = 0;
+static int tt_probes = 0;
+static int tt_cutoffs = 0;
 static uint64_t nodes = 0;
 
 int count_material(uint64_t* bb, uint8_t player)
@@ -137,20 +139,24 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     int orig_beta = beta;
 
     TTEntry* entry = TT_lookup(pos->hash);
+    tt_probes++;
     if (entry && entry->depth >= depth)
     {
         tt_hits++;
         if (entry->flag == TT_EXACT)
+        {
+            tt_cutoffs++;
             return entry->eval;
-        
+        }
         if (entry->flag == TT_LOWERBOUND)
             alpha = max(alpha, entry->eval);
-
         if (entry->flag == TT_UPPERBOUND)
             beta = min(beta, entry->eval);
-
         if (alpha >= beta) // algorithm condition (prune)
+        {
+            tt_cutoffs++;
             return entry->eval;
+        }
     }
 
     LegalMoves lm;
@@ -257,5 +263,9 @@ void search_test(Position* pos)
     printf("EXECUTION TIME: %f seconds\n", end-start);
     printf("NODES SEARCHED %zu\n", nodes);
     printf("TT Hits: %d\n", tt_hits);
+    printf("TT Probes: %d\n", tt_probes);
+    printf("TT HIT RATE: %f\n", (float)tt_probes / (float)tt_hits);
+    printf("TT CUTOFFS: %d\n", tt_cutoffs); 
+    printf("TT cuttoff rate: %f\n", (float)tt_cutoffs / (float)tt_probes); 
 }
 
