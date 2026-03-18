@@ -62,8 +62,8 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     }
 
     // perft(pos, 5); single position given depth
-    // search_test(pos); 
-    // return;
+    search_test(pos); 
+    return;
 
     int ai_move_pending = 0;
     while (ui->running)

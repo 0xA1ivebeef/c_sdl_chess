@@ -1,4 +1,20 @@
 
+magic bitboards
+
+jit move generation captures first
+
+legal moves improved check function keeping track of pinned pieces etc.
+- keep track of all squares the opponent attacks (attack bitboards)
+- detect if the king is in check so it needs to move to a safe square or
+
+attacker must be captured or check must be blocked
+blocking capturing and moving the king must make sure the king is not in check
+after the move so it doesnt move into check and blocking or capturing doesnt reveal
+an attack on the king -> keeping track of pinned pieces going from the king to 
+pieces through own pieces to limit movement axis of pinned pieces
+
+-> incremental attack bitboards maybe?
+
 evaluation mode (show best moves with evaluation)
 play whatever moves and evalutate resulting position like spectator mode
 
@@ -11,7 +27,6 @@ add sounds, decide where to handle audio logic, block audio on searches
 only play audio on opponent and player move once depending on the move type
 
 maybe:
-render the last move that was made
 store a piece array and incrementally update it instead of get_bb_index 
 
 

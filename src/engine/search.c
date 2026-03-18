@@ -45,12 +45,11 @@ int gives_check(Position* pos, Move m)
     return check;
 }
 
-void sort_mvv_lva(Position* pos, LegalMoves* lm)
+void sort_moves(Position* pos, LegalMoves* lm, Move best_move)
 {
     MoveScore moves_with_scores[LEGAL_MOVES_SIZE];
     for (int i = 0; i < lm->count; ++i)
     {
-        // enpassant is not included in this but should be fine
         int score = 0;
 
         if (is_capture_move(pos->bb[get_bb_index(pos->bb, move_from(lm->moves[i]))], lm->moves[i]))
@@ -66,6 +65,9 @@ void sort_mvv_lva(Position* pos, LegalMoves* lm)
 
         if (is_promotion_move(lm->moves[i]))
             score += 1000;
+
+        if (lm->moves[i] == best_move)
+            score += 1000*1000;
 
         moves_with_scores[i] = (MoveScore) { lm->moves[i], score } ;
     }
@@ -123,7 +125,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     }
 
     // TODO play TT move first
-    sort_mvv_lva(pos, &lm);
+    sort_moves(pos, &lm, entry->best_move);
 
     int best = -INF;
     Move best_move = 0;
@@ -284,7 +286,7 @@ void search_test(Position* pos)
 {
     printf("classical search\n");
     double start = get_time_seconds();
-    search(pos, 5);
+    search(pos, 4);
     double end = get_time_seconds();
     printf("EXECUTION TIME: %f seconds\n", end-start);
     printf("NODES SEARCHED %zu\n", nodes);
@@ -292,7 +294,7 @@ void search_test(Position* pos)
     nodes = 0;
     printf("alpha beta search\n");
     start = get_time_seconds();
-    alphabeta(pos, 5, -INF, INF);
+    alphabeta(pos, 4, -INF, INF);
     end = get_time_seconds();
     printf("EXECUTION TIME: %f seconds\n", end-start);
     printf("NODES SEARCHED %zu\n", nodes);

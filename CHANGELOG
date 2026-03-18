@@ -192,3 +192,8 @@ factored legal moves out of the perft
 
 --------------------------------------------------------------------------------
 
+17-03-2026
+
+transposition table implemented, size around 64mb for now
+todo implement move ordering from TT
+
