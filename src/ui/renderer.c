@@ -58,13 +58,13 @@ void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int star
     int radius = 20;
 	for(int i = 0; i < lm->count; ++i)
     {
-        if (move_from(lm->moves[i]) == start)
+        Move m = lm->moves[i];
+        if (move_from(m) == start)
         {
-            int cx = move_to(lm->moves[i]) % 8 * TILESIZE + TILESIZE / 2;
-            int cy = move_to(lm->moves[i]) / 8 * TILESIZE + TILESIZE / 2;
+            int cx = move_to(m) % 8 * TILESIZE + TILESIZE / 2;
+            int cy = move_to(m) / 8 * TILESIZE + TILESIZE / 2;
 
-
-            if (get_bb_index(pos->bb, move_to(lm->moves[i])) > -1)
+            if (pos->piece_on_sq[move_to(m)] != EMPTY)
             {
                 SDL_Rect dest = { cx - radius*3, cy - radius*3, radius*6, radius*6 };
                 SDL_RenderCopy(app->renderer, app->capture_circle, NULL, &dest);

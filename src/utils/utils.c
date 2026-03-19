@@ -14,8 +14,8 @@ int enpassant_legal(Position* pos, Move m, Undo* undo)
     {
         if (undo->moved_piece % 6 == 0)
         {
-            if (((pos->enpassant % 8 != 0) && (get_bb_index(pos->bb, move_to(m) - 1) == ((undo->moved_piece + 6) % 12))) || 
-                ((pos->enpassant % 8 != 7) && (get_bb_index(pos->bb, move_to(m) + 1) == ((undo->moved_piece + 6) % 12))))
+            if (((pos->enpassant % 8 != 0) && (pos->piece_on_sq[move_to(m) - 1] == ((undo->moved_piece + 6) % 12))) || 
+                ((pos->enpassant % 8 != 7) && (pos->piece_on_sq[move_to(m) + 1] == ((undo->moved_piece + 6) % 12))))
                 return 1;
         }
     }
@@ -26,16 +26,6 @@ int get_king_sq(Position* pos, uint8_t player)
 {
     uint64_t bb = pos->bb[player ? WHITE_KING : BLACK_KING];
     return bb ? __builtin_ctzll(bb) : -1;
-}
-
-int get_bb_index(uint64_t* bb, int sq)
-{
-    for(int i = 0; i < 12; ++i)
-    {
-        if(bb[i] & (1ULL << sq))
-            return i;
-    }
-    return -1;
 }
 
 void generate_piece_on_sq(Position* pos)
@@ -100,7 +90,7 @@ uint16_t char_to_promotion_flag(char c)
 
 int is_pawn_promotion(Position* pos, Move m)
 {
-    int moved_piece = get_bb_index(pos->bb, move_from(m));
+    int moved_piece = pos->piece_on_sq[move_from(m)];
     if ((moved_piece == WHITE_PAWN && move_to(m) < 8) || 
         (moved_piece == BLACK_PAWN && move_to(m) > 55))
         return 1;

@@ -76,9 +76,8 @@ void score_moves(Position* pos, LegalMoves* lm, int* scores, Move best_move)
         // capture
         if (pos->occ[!pos->player] & (1ULL << move_to(m))) 
         {
-            // TODO cache a pieces bitboard dont use get_bb_index
-            int victim = PIECE_VALUES[get_bb_index(pos->bb, move_to(lm->moves[i])) % 5];
-            int attacker = PIECE_VALUES[get_bb_index(pos->bb, move_from(lm->moves[i])) % 5];
+            int victim = PIECE_VALUES[pos->piece_on_sq[move_to(m)] % 5];
+            int attacker = PIECE_VALUES[pos->piece_on_sq[move_from(m)] % 5];
 
             scores[i] += SCORE_GOOD_CAPTURE + (victim*10 - attacker);
             continue;
