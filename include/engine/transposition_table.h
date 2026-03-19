@@ -10,15 +10,6 @@
 
 #include "engine/types.h"
 
-typedef struct __attribute__((aligned(16)))
-{
-    uint64_t hash;
-    Move best_move;
-    uint8_t depth;
-    uint8_t eval;
-    uint8_t flag;
-} TTEntry;
-
 int TT_init();
 void TT_clear();
 void TT_store(TTEntry* new_entry);

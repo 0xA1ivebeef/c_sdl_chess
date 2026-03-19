@@ -36,12 +36,12 @@ int perft_divide(Position* pos, int depth, MoveNode* move_nodes)
     int total = 0;
     for (int i = 0; i < lm.count; ++i)
     {
+        Move m = lm.moves[i];
         Undo undo;
-
-        apply_move(pos, lm.moves[i], &undo);
-
-        move_nodes[i] = (MoveNode) { get_nodes(pos, depth - 1), lm.moves[i] };
-        undo_move(pos, lm.moves[i], &undo);
+        apply_move(pos, m, &undo);
+        move_nodes[i] = (MoveNode) { get_nodes(pos, depth - 1), m };
+        // printf("perft divide finished move %s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
+        undo_move(pos, m, &undo);
 
         total += move_nodes[i].nodes;
     }
@@ -77,6 +77,7 @@ void full_perft_test(Position* pos)
         // init
         load_fen_string(pos, i);
         generate_occ(pos);
+        generate_piece_on_sq(pos);
         generate_legal_moves(pos, &lm); 
         pos->hash = get_zobrist_hash(pos);
 

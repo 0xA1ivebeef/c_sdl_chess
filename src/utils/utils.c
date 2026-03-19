@@ -38,6 +38,23 @@ int get_bb_index(uint64_t* bb, int sq)
     return -1;
 }
 
+void generate_piece_on_sq(Position* pos)
+{
+    for (int i = 0; i < 64; ++i)
+        pos->piece_on_sq[i] = EMPTY;
+
+    for (int i = 0; i < 12; ++i)
+    {
+        uint64_t bb = pos->bb[i];
+        while (bb)
+        {
+            int sq = __builtin_ctzll(bb);
+            pos->piece_on_sq[sq] = i;
+            bb &= bb - 1;
+        }
+    }
+}
+
 void generate_occ(Position* pos)
 {
     for(int i = 0; i < 3; ++i)

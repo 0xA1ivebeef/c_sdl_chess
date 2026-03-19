@@ -1,7 +1,6 @@
 
 #include "ui/console_logger.h"
 
-
 void print_uint16_binary(uint16_t n)
 {
     for (int i = 15; i >= 0; i--) 
@@ -13,6 +12,27 @@ void print_uint16_binary(uint16_t n)
             printf(" ");
         }
     }
+}
+
+void log_piece_on_sq(uint8_t n[64])
+{
+    printf("PIECE ON SQUARE ARRAY\n");
+    for (int i = 0; i < 64; ++i)
+    { 
+        if (n[i] == EMPTY)
+            printf(" - ");
+        else
+        {
+            if (n[i] > 9)
+                printf(" %d", n[i]);
+            else
+                printf(" %d ", n[i]);
+        }
+
+        if ((i+1) % 8 == 0)
+            printf("\n\n");
+    }
+    printf("\n");
 }
 
 void log_move(Move m)

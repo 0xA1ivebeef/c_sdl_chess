@@ -16,7 +16,10 @@ double get_time_seconds();
 int enpassant_legal(Position* pos, Move m, Undo* undo);
 
 int get_king_sq(Position* pos, uint8_t player);
+
+void generate_piece_on_sq(Position* pos);
 void generate_occ(Position* pos);
+
 int get_bb_index(uint64_t* bb, int sq);
 uint8_t get_legal_move_count(Move* lm);
 

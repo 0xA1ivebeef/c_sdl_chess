@@ -11,6 +11,7 @@
 
 #include "utils/utils.h"
 
+void log_piece_on_sq(uint8_t n[64]);
 void log_move(Move m);
 void log_position_diff(Position* a, Position* b);
 void log_gamestate(Position* pos);

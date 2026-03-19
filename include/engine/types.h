@@ -63,6 +63,8 @@ typedef struct
     uint64_t    bb[12];
     uint64_t    occ[3];
 
+    uint8_t     piece_on_sq[64];
+
     uint8_t     player;
     uint8_t     castle_rights;
     uint8_t     enpassant;
@@ -74,6 +76,8 @@ typedef struct
 
 typedef struct
 {
+    uint64_t    occ[3];
+
     int         moved_piece; // can be neg
     int         captured_piece; 
     uint8_t     castle_rights;
@@ -81,7 +85,6 @@ typedef struct
     uint8_t     enpassant_hashed;
     uint8_t     halfmove;
     uint16_t    fullmove;
-    uint64_t    occ[3];
     uint64_t    hash;
 } Undo;
 
@@ -99,8 +102,7 @@ typedef struct
     uint32_t    learn;
 } PolyglotEntry;
 
-/*
-typedef struct
+typedef struct __attribute__((aligned(16)))
 {
     uint64_t hash;
     Move best_move;
@@ -108,6 +110,6 @@ typedef struct
     uint8_t eval;
     uint8_t flag;
 } TTEntry;
-*/
+
 #endif
 

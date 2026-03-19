@@ -5,18 +5,18 @@ void handle_pawn_promotion(Position* pos, Move m)
 {
     assert((m >> 12) != 0);
 
-    int dest = move_to(m);
-
     int pawn = pos->player ? WHITE_PAWN : BLACK_PAWN;
     int promote_piece = m >> 12; 
     promote_piece += pawn; // setting color 
 
     // replace pawn with promoted piece
-    pos->bb[pawn] &= ~(1ULL << dest);
-    pos->bb[promote_piece] |= (1ULL << dest); 
+    pos->bb[pawn] &= ~(1ULL << move_to(m));
+    pos->bb[promote_piece] |= (1ULL << move_to(m)); 
 
-    pos->hash ^= Random64[my_to_poly(pawn) * 64 + polyglot_sq(dest)];
-    pos->hash ^= Random64[my_to_poly(promote_piece) * 64 + polyglot_sq(dest)];
+    pos->piece_on_sq[move_to(m)] = promote_piece;
+
+    pos->hash ^= Random64[my_to_poly(pawn) * 64 + polyglot_sq(move_to(m))];
+    pos->hash ^= Random64[my_to_poly(promote_piece) * 64 + polyglot_sq(move_to(m))];
 }
 
 void handle_enpassant(Position* pos, Move m)
@@ -29,28 +29,33 @@ void handle_enpassant(Position* pos, Move m)
     pos->bb[captured_pawn] &= ~(1ULL << capture_sq); // capture enpassanted pawn
     pos->occ[!pos->player] &= ~(1ULL << capture_sq); 
 
+    pos->piece_on_sq[capture_sq] = EMPTY;
+
     pos->hash ^= Random64[my_to_poly(captured_pawn) * 64 + polyglot_sq(capture_sq)];
 }
 
+// TODO check moved piece and captured piece
+    
 void handle_castling(Position* pos, Move m)
 {
     int rook = pos->player ? WHITE_ROOK : BLACK_ROOK; 
-    if(move_from(m) > move_to(m))
-    {
-        pos->bb[rook] &= ~(1ULL << (move_to(m) - 2));
-        pos->bb[rook] |= (1ULL << (move_to(m) + 1));
 
-        pos->hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) - 2)];
-        pos->hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) + 1)];
-    }
-    else
+    int rook_from = move_to(m) + 1; // ks
+    int rook_to = move_to(m) - 1; 
+    if (move_from(m) > move_to(m))
     {
-        pos->bb[rook] &= ~(1ULL << (move_to(m) + 1));
-        pos->bb[rook] |= (1ULL << (move_to(m) - 1));
- 
-        pos->hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) + 1)];
-        pos->hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(move_to(m) - 1)];
+        rook_from = move_to(m) - 2;
+        rook_to = move_to(m) + 1;
     }
+
+    pos->bb[rook] |= (1ULL << rook_to);
+    pos->bb[rook] &= ~(1ULL << rook_from);
+
+    pos->piece_on_sq[rook_from] = EMPTY;
+    pos->piece_on_sq[rook_to] = rook;
+
+    pos->hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(rook_from)];
+    pos->hash ^= Random64[my_to_poly(rook) * 64 + polyglot_sq(rook_to)];
 }
 
 void handle_special_move(Position* pos, Move m, int moved_piece)
@@ -72,22 +77,21 @@ void handle_special_move(Position* pos, Move m, int moved_piece)
 
 void undo_castling(Position* pos, Move m)
 {
-    int rook = (move_from(m) > 32 ) ? WHITE_ROOK : BLACK_ROOK; 
+    int rook = move_from(m) > 32 ? WHITE_ROOK : BLACK_ROOK; 
 
-    int rook_from, rook_to;
-    if(move_from(m) > move_to(m))
+    int rook_from = move_to(m) + 1; // ks
+    int rook_to = move_to(m) - 1; 
+    if (move_from(m) > move_to(m))
     {
-        rook_from = move_to(m) - 2; // queenside
+        rook_from = move_to(m) - 2;
         rook_to = move_to(m) + 1;
-    }
-    else
-    {
-        rook_from = move_to(m) + 1; // kingside
-        rook_to = move_to(m) - 1;
     }
 
     pos->bb[rook] |= (1ULL << rook_from); // add rook back on a file
     pos->bb[rook] &= ~(1ULL << rook_to); // remove rook
+    
+    pos->piece_on_sq[rook_from] = rook;
+    pos->piece_on_sq[rook_to] = EMPTY; 
 }
 
 void undo_enpassant(Position* pos, Move m, Undo* undo)
@@ -102,6 +106,7 @@ void undo_enpassant(Position* pos, Move m, Undo* undo)
     }
 
     pos->bb[restore_piece] |= (1ULL << capture_sq); // restore captured pawn
+    pos->piece_on_sq[capture_sq] = restore_piece;
 }
 
 void undo_promotion(Position* pos, Move m, Undo* undo)
@@ -113,6 +118,7 @@ void undo_promotion(Position* pos, Move m, Undo* undo)
     int promoted_piece = (m >> 12) + is_white*6; 
 
     pos->bb[promoted_piece] &= ~(1ULL << move_to(m));
+    // pos->piece_on_sq[move_to(m)] = undo->moved_piece;
 }
 
 void undo_move(Position* pos, Move m, Undo* undo)
@@ -127,14 +133,20 @@ void undo_move(Position* pos, Move m, Undo* undo)
     if (is_promotion_move(m))
         undo_promotion(pos, m, undo);
 
-    // reverse capturing
-    if (undo->captured_piece > -1) 
-        pos->bb[undo->captured_piece] |= (1ULL << move_to(m));
-
     // restore moved piece 
     pos->bb[undo->moved_piece] |= (1ULL << move_from(m));
     pos->bb[undo->moved_piece] &= ~(1ULL << move_to(m));
+
+    pos->piece_on_sq[move_from(m)] = undo->moved_piece;
+    pos->piece_on_sq[move_to(m)] = EMPTY; 
  
+    // reverse capturing
+    if (undo->captured_piece != EMPTY) 
+    {
+        pos->bb[undo->captured_piece] |= (1ULL << move_to(m));
+        pos->piece_on_sq[move_to(m)] = undo->captured_piece;
+    }
+
     // restore state
     pos->castle_rights = undo->castle_rights;
     pos->enpassant = undo->enpassant;
@@ -154,16 +166,22 @@ void undo_move(Position* pos, Move m, Undo* undo)
 
 void save_state(Position* pos, Move m, Undo* undo)
 {
-    undo->moved_piece       = get_bb_index(pos->bb, move_from(m));
-    undo->captured_piece    = get_bb_index(pos->bb, move_to(m)); 
+    undo->moved_piece       = pos->piece_on_sq[move_from(m)];
+    undo->captured_piece    = pos->piece_on_sq[move_to(m)];
+
+    // printf("moved piece: %d\n", undo->moved_piece);
+    // printf("captured piece: %d\n", undo->captured_piece);
+
     undo->castle_rights     = pos->castle_rights;
     undo->enpassant         = pos->enpassant;
     undo->enpassant_hashed  = pos->enpassant_hashed;
     undo->halfmove          = pos->halfmove;
     undo->fullmove          = pos->fullmove;
+
     undo->occ[0]            = pos->occ[0];
     undo->occ[1]            = pos->occ[1];
     undo->occ[2]            = pos->occ[2];
+
     undo->hash              = pos->hash;
 }
 
@@ -171,7 +189,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
 {   
     save_state(pos, m, undo);
     
-    if (undo->moved_piece < 0)
+    if (undo->moved_piece == EMPTY)
     {
         printf("trying illegal move, no startsquare piece\n");
         log_move(m);
@@ -185,7 +203,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
     }
 
     // capture
-    if (undo->captured_piece > -1) 
+    if (undo->captured_piece != EMPTY) 
     {
         pos->bb[undo->captured_piece] &= ~(1ULL << move_to(m));
         pos->hash ^= Random64[my_to_poly(undo->captured_piece) * 64 + polyglot_sq(move_to(m))];
@@ -194,6 +212,9 @@ void apply_move(Position* pos, Move m, Undo* undo)
     // move
     pos->bb[undo->moved_piece] &= ~(1ULL << move_from(m));
     pos->bb[undo->moved_piece] |= (1ULL << move_to(m));
+
+    pos->piece_on_sq[move_from(m)] = EMPTY;
+    pos->piece_on_sq[move_to(m)] = undo->moved_piece;
 
     pos->hash ^= Random64[my_to_poly(undo->moved_piece) * 64 + polyglot_sq(move_from(m))];
     pos->hash ^= Random64[my_to_poly(undo->moved_piece) * 64 + polyglot_sq(move_to(m))];
@@ -212,7 +233,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
     
     // move clocks
     int pawn_move = (undo->moved_piece == WHITE_PAWN || undo->moved_piece == BLACK_PAWN);
-    if (pawn_move || undo->captured_piece > -1) 
+    if (pawn_move || undo->captured_piece != EMPTY) 
         pos->halfmove = 0;
     else 
         pos->halfmove++;
@@ -223,7 +244,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
     pos->hash ^= Random64[WHITE_TO_MOVE];
     
     pos->player ^= 1;
-    generate_occ(pos);
+    generate_occ(pos); // TODO incrementally
 }
 
 int is_legal_move(LegalMoves* lm, Move m)

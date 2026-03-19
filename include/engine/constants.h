@@ -13,14 +13,13 @@
 #define TT_UPPERBOUND 1 
 #define TT_LOWERBOUND 2 
 
-#define TT_SIZE (1 << 22) // ~4M entries
-
 #define BOOK_MOVE_SIZE 1024
 #define LEGAL_MOVES_SIZE 255
 
 #define min(a, b) (a < b ? a : b)
 #define max(a, b) (a > b ? a : b)
 
+#define EMPTY 255
 #define INVALID_SQUARE 255
 
 #define RANK_1 0x00000000000000FFULL

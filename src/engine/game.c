@@ -5,11 +5,16 @@
 
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 1);
+    load_fen_string(pos, 0);
+
     generate_occ(pos);
+    
+    generate_piece_on_sq(pos);
+    log_piece_on_sq(pos->piece_on_sq);
 	
     generate_legal_moves(pos, lm); 
     filter_moves(pos, lm);
+    log_legal_moves(lm);
 
     pos->hash = get_zobrist_hash(pos);
 
@@ -49,9 +54,9 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    // full_perft_test(pos);
-    // perft(pos, 2); 
-    search_test(pos); 
+    full_perft_test(pos);
+    // perft(pos, 5); 
+    // search_test(pos); 
     return;
 
     int ai_move_pending = 0;

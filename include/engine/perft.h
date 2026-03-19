@@ -10,7 +10,7 @@
 #include "engine/move_handler.h"
 #include "engine/attack_generator.h"
 #include "engine/check.h"
-#include "fen_string_loader.h"
+#include "engine/fen_string_loader.h"
 
 #include "utils/utils.h"
 
