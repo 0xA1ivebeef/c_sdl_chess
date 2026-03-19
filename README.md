@@ -31,7 +31,7 @@ EXECUTION TIME: 0.308834 seconds <br>
 NODES SEARCHED 592356 <br>
 
 Alpha Beta TT improved move ordering <br>
-EXECUTION TIME: 0.079480 seconds <br>
+EXECUTION TIME: 0.074908 seconds <br>
 NODES SEARCHED 87350 <br>
 TT Hits: 1253 <br>
 TT Probes: 7836 <br>
@@ -42,18 +42,18 @@ TT cuttoff rate: 0.125702 <br>
 ----------------------------------------------------------------------------<br>
 
 FEATURES: <br>
-full bitboard engine<br>
-full legal move generation (normal sliding pieces)<br>
-attack bitboard generation for both players in any position<br>
-full special move handling promotions, castling, enpassant<br>
-concept of check and checkmate, stalemate<br>
-full perft suite according to chess programming wiki perft result<br>
-openings book (Titans.bin)<br>
-benchmarking search and perft <br>
-transposition table 64MB <br>
+Full bitboard engine<br>
+Full legal move generation<br>
+Attack bitboard generation for both players in any position<br>
+Full special move handling promotions, castling, enpassant<br>
+Concept of check and checkmate, stalemate<br>
+Full perft suite testing positions from chess programming wiki perft result<br>
+Openings book (Titans.bin)<br>
+Benchmarking search and perft <br>
+Transposition table 64MB <br>
 
-negamax opponent algorithm with alpha beta pruning and move ordering<br>
-full zobrist hashing and incremental updating<br>
+Negamax opponent algorithm with alpha beta pruning and move ordering<br>
+Full zobrist hashing and incremental updating<br>
 
 ----------------------------------------------------------------------------<br>
 

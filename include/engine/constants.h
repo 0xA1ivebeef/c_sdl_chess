@@ -13,6 +13,11 @@
 #define TT_UPPERBOUND 1 
 #define TT_LOWERBOUND 2 
 
+#define UNDO_NO 0
+#define UNDO_CASTLE 1
+#define UNDO_ENPASSANT 2
+#define UNDO_PROMOTION 3
+
 #define BOOK_MOVE_SIZE 1024
 #define LEGAL_MOVES_SIZE 255
 

@@ -206,5 +206,10 @@ searching UB bug -> memory leak in TT not freeing malloced memory
 --------------------------------------------------------------------------------
 
 19-03-2026 
+fixed git repo and branches, main is stable again
+removed get_bb_index, piece_on_sq array fully implemented
+incremental occupancy board (no performance improvements)
+explicit handling of special moves in move_handler (no performance improvements)
 
+--------------------------------------------------------------------------------
 

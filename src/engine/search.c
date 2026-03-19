@@ -181,17 +181,17 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     for (int i = 0; i < lm.count; i++)
     {
         Undo undo;
-        Move this_move = pick_next_move(&lm, scores, i);
-        apply_move(pos, this_move, &undo);
+        Move m = pick_next_move(&lm, scores, i);
+        apply_move(pos, m, &undo);
 
         int score = -alphabeta(pos, depth - 1, -beta, -alpha);
 
-        undo_move(pos, this_move, &undo);
+        undo_move(pos, m, &undo);
 
         if (score > best)
         {
             best = score;
-            best_move = this_move;
+            best_move = m;
         }
 
         if (best > alpha)
@@ -232,8 +232,8 @@ Move search_root(Position* pos, int depth)
     for (int i = 0; i < lm.count; ++i)
     {
         Undo undo;
-        Move this_move = pick_next_move(&lm, scores, i);
-        apply_move(pos, this_move, &undo);
+        Move m = pick_next_move(&lm, scores, i);
+        apply_move(pos, m, &undo);
 
         // negamax so this returns a large number if the position 
         // is good for the player who made the move
@@ -241,10 +241,10 @@ Move search_root(Position* pos, int depth)
         if (eval > best_eval)
         {
             best_eval = eval;
-            best_move = this_move;
+            best_move = m;
         }
 
-        undo_move(pos, this_move, &undo);
+        undo_move(pos, m, &undo);
     }
 
     printf("tt hits %d\n", tt_hits);

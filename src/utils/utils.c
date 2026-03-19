@@ -25,7 +25,7 @@ int enpassant_legal(Position* pos, Move m, Undo* undo)
 int get_king_sq(Position* pos, uint8_t player)
 {
     uint64_t bb = pos->bb[player ? WHITE_KING : BLACK_KING];
-    return bb ? __builtin_ctzll(bb) : -1;
+    return bb ? __builtin_ctzll(bb) : INVALID_SQUARE;
 }
 
 void generate_piece_on_sq(Position* pos)

@@ -78,8 +78,9 @@ typedef struct
 {
     uint64_t    occ[3];
 
-    int         moved_piece; // can be neg
-    int         captured_piece; 
+    uint8_t     moved_piece; 
+    uint8_t     captured_piece;
+    uint8_t     special_move;
     uint8_t     castle_rights;
     uint8_t     enpassant;
     uint8_t     enpassant_hashed;

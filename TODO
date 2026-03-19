@@ -9,7 +9,6 @@ SEE
 
 OPTIMIZATIONS:
 --------------------------------------------------------------------------------
-pieces on squares array
 magic bitboards
 undo stack 
 jit move generation captures first (needed for quiescence)
