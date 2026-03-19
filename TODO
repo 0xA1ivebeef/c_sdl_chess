@@ -18,8 +18,6 @@ pieces through own pieces to limit movement axis of pinned pieces
 evaluation mode (show best moves with evaluation)
 play whatever moves and evalutate resulting position like spectator mode
 
-transposition tables
-
 insufficient material draw
 threefold repetition draw
 

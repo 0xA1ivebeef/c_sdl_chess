@@ -7,7 +7,7 @@ OBJ_DIR = obj
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c')
 OBJ_FILES := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
-BUILD ?= debug  # default is debug
+BUILD?=release
 
 ifeq ($(BUILD),debug)
     CFLAGS = -g -O1 -fsanitize=address,undefined -Wall -Wextra -Iinclude

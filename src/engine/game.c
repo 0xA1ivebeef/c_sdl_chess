@@ -49,9 +49,9 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    full_perft_test(pos);
+    // full_perft_test(pos);
     // perft(pos, 2); 
-    // search_test(pos); 
+    search_test(pos); 
     return;
 
     int ai_move_pending = 0;
