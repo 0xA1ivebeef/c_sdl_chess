@@ -29,12 +29,12 @@ void update(Position* pos, UIContext* ui, LegalMoves* lm)
     {
         if (is_check(pos, pos->player))
         {
-            ui->running = 0;
+            ui->game_over = 1;
             printf("CHECKMATE\n");
         }
         else
         {
-            ui->running = 0;
+            ui->game_over = 1;
             printf("STALEMATE"); 
         }
     }
@@ -55,8 +55,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
 
     // full_perft_test(pos);
     // perft(pos, 5); 
-    search_test(pos); 
-    return;
+    // search_test(pos); 
 
     int ai_move_pending = 0;
     while (ui->running)
@@ -71,7 +70,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
             }
         }
  
-        if (0 && pos->player == BLACK && ai_move_pending)
+        if (pos->player == BLACK && ai_move_pending && !ui->game_over)
         {
             last_move = opponent_move(pos, lm);
             if (last_move == 0)
