@@ -49,10 +49,10 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    // full_perft_test(pos);
-    // perft(pos, 5); single position given depth
+    full_perft_test(pos);
+    // perft(pos, 2); 
     // search_test(pos); 
-    // return;
+    return;
 
     int ai_move_pending = 0;
     while (ui->running)
@@ -67,7 +67,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
             }
         }
  
-        if (pos->player == BLACK && ai_move_pending)
+        if (0 && pos->player == BLACK && ai_move_pending)
         {
             last_move = opponent_move(pos, lm);
             if (last_move == 0)

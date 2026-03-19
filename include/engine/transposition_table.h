@@ -20,6 +20,7 @@ typedef struct __attribute__((aligned(16)))
 } TTEntry;
 
 int TT_init();
+void TT_clear();
 void TT_store(TTEntry* new_entry);
 TTEntry* TT_lookup(uint64_t hash);
 

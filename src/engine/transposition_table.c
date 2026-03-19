@@ -29,6 +29,16 @@ int TT_init()
     return 0;
 }
 
+void TT_clear()
+{
+    if (TT)
+    {
+        free(TT);
+        TT = NULL;
+        TT_size = 0;
+    }
+}
+
 // might make this modulo or something if its colliding
 static inline int get_TT_index(uint64_t hash)
 {

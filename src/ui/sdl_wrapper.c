@@ -146,6 +146,7 @@ int load_piece_textures(AppContext* app)
 void cleanup(AppContext* app)
 {
     close_opening_book();
+    TT_clear();
 
     for (int i = 0; i < NUM_SOUNDS; ++i)
         if (app->sounds[i]) Mix_FreeChunk(app->sounds[i]);

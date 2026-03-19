@@ -71,10 +71,16 @@ int can_castle(Position* pos, int bit_index)
     // log_bitboard(&atk);
     
 	if (atk & attack_mask)
-		return 0;	
+    {
+        // printf("castling square under attack\n");
+        return 0;	
+    }
 
 	if (pos->occ[2] & occ_mask) 
+    {
+        // printf("castling square occupied\n");
 		return 0;
+    }
 
 	return 1;
 }
@@ -88,8 +94,10 @@ void add_castling(Position* pos, LegalMoves* lm)
 
         if(pos->castle_rights & castle_flag) 
         {
+            // printf("castling flag set\n");
             if(can_castle(pos, bit_index)) // passing bit_index 0..3 to map to bitmasks
             {        
+                // printf("adding castling moves\n");
                 Move m = (castle_starts[bit_index] << 6) | castle_dests[bit_index];
                 lm->moves[lm->count++] = m;
             }   

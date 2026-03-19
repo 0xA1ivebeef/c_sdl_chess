@@ -8,6 +8,7 @@
 
 #include "engine/constants.h"
 #include "engine/hash.h"
+#include "engine/transposition_table.h"
 
 #define NUM_SOUNDS 5
 #define NUM_TEXTURES 12

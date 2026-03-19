@@ -133,6 +133,7 @@ uint64_t get_castling_attack_bitboard(Position* pos)
     // castling is illegal if the king passes through a square thats attacked by a piece
     // even a pawn if there is no actual piece there
     uint8_t enemy = !pos->player;
+    // printf("getting attack bitboard of enemy: %s\n", enemy ? "WHITE" : "BLACK");
     uint64_t attacks = get_attack_bb(pos, enemy);
 
     uint64_t enemy_pawn_attacks = 0;
