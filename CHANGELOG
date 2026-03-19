@@ -197,3 +197,14 @@ factored legal moves out of the perft
 transposition table implemented, size around 64mb for now
 todo implement move ordering from TT
 
+--------------------------------------------------------------------------------
+
+18-03-2026
+piece_on_square array added to position with incremental update in apply move
+searching UB bug -> memory leak in TT not freeing malloced memory
+
+--------------------------------------------------------------------------------
+
+19-03-2026 
+
+

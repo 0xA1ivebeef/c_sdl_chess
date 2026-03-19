@@ -57,11 +57,3 @@ full zobrist hashing and incremental updating<br>
 
 ----------------------------------------------------------------------------<br>
 
-TODO implement:<br>
-
-threefold repetition draw<br>
-
-magic bitboards<br>
-positional play, king safety etc.<br>
-insufficient material draw<br>
-
