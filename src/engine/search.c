@@ -175,6 +175,8 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     if (entry)
         tmp = entry->best_move;
     score_moves(pos, &lm, scores, tmp);
+    for (int i = 0; i < lm.count; ++i)
+        printf("Move %s%s Score %d\n", square_to_notation(move_from(lm.moves[i])), square_to_notation(move_to(lm.moves[i])), scores[i]);
 
     int best = -INF;
     Move best_move = 0;

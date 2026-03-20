@@ -53,7 +53,7 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    // full_perft_test(pos);
+    full_perft_test(pos);
     // perft(pos, 5); 
     // search_test(pos); 
 
