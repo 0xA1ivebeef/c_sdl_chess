@@ -5,10 +5,17 @@ void render_move(AppContext* app, Move m)
 {
     SDL_SetRenderDrawColor(app->renderer, 100, 230, 230, 30);
 
-    SDL_Rect r = { move_from(m) % 8 * TILESIZE, move_from(m) / 8 * TILESIZE, TILESIZE, TILESIZE };
+    SDL_Rect r = { 
+        (file(move_from(m))) * TILESIZE, 
+        (rank(move_from(m))) * TILESIZE, 
+        TILESIZE, TILESIZE 
+    };
+
     SDL_RenderFillRect(app->renderer, &r);
-    r.x = move_to(m) % 8 * TILESIZE;
-    r.y = move_to(m) / 8 * TILESIZE;
+
+    r.x = file(move_to(m)) * TILESIZE;
+    r.y = rank(move_to(m)) * TILESIZE;
+
     SDL_RenderFillRect(app->renderer, &r);
     SDL_RenderPresent(app->renderer);
 }
@@ -20,11 +27,11 @@ void render_board(AppContext* app)
     
     SDL_SetRenderDrawColor(app->renderer, 245, 245, 235, 255);
     SDL_Rect r = { 0, 0, TILESIZE, TILESIZE };
-    for(int i = 0; i < 8; ++i)
+    for (int i = 0; i < 8; ++i)
     {
-        for(int j = 0; j < 8; ++j)
+        for (int j = 0; j < 8; ++j)
         {
-            if((i + j) % 2 == 0)
+            if ((i + j) % 2 == 0)
             {
                 r.x = i * TILESIZE;
                 r.y = j * TILESIZE;
@@ -43,8 +50,8 @@ void render_pieces(AppContext* app, const uint64_t* bitboards)
         {
             if(bitboards[j] & (1ULL << i))
             {
-                dstrect.x = i % 8 * TILESIZE;
-                dstrect.y = i / 8 * TILESIZE;
+                dstrect.x = file(i) * TILESIZE;
+                dstrect.y = rank(i) * TILESIZE;
                 SDL_RenderCopy(app->renderer, app->textures[j], NULL, &dstrect);
             }
         }
@@ -61,8 +68,8 @@ void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int star
         Move m = lm->moves[i];
         if (move_from(m) == start)
         {
-            int cx = move_to(m) % 8 * TILESIZE + TILESIZE / 2;
-            int cy = move_to(m) / 8 * TILESIZE + TILESIZE / 2;
+            int cx = file(move_to(m)) * TILESIZE + TILESIZE / 2;
+            int cy = rank(move_to(m)) * TILESIZE + TILESIZE / 2;
 
             if (pos->piece_on_sq[move_to(m)] != EMPTY)
             {

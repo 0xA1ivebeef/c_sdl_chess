@@ -14,6 +14,7 @@
 
 int count_material(uint64_t* bb, uint8_t player);
 int evaluate(Position* pos);
+int insufficient_material(Position* pos);
 Move search_root(Position* pos, int depth);
 void search_test(Position* pos);
 

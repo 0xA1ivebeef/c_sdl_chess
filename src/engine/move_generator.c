@@ -30,7 +30,7 @@ void add_enpassant(Position* pos, LegalMoves* lm)
         right_start = pos->enpassant + 9;
     }
 
-    int ep_file = pos->enpassant % 8;
+    int ep_file = file(pos->enpassant);
     if (ep_file == 0)
         left_start = INVALID_SQUARE;
     else if (ep_file == 7)
@@ -40,7 +40,7 @@ void add_enpassant(Position* pos, LegalMoves* lm)
     {
         pos->enpassant_hashed = 1;
         // printf("hashing enpassant\n");
-        pos->hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+        pos->hash ^= Random64[ENPASSANT_BASE + ep_file];
         add_move(lm, left_start, pos->enpassant, 0);
     }
     if (right_start != INVALID_SQUARE && own_pawns & (1ULL << right_start))
@@ -48,7 +48,7 @@ void add_enpassant(Position* pos, LegalMoves* lm)
         if (!pos->enpassant_hashed)
         {
             pos->enpassant_hashed = 1;
-            pos->hash ^= Random64[ENPASSANT_BASE + pos->enpassant % 8];
+            pos->hash ^= Random64[ENPASSANT_BASE + ep_file];
         }
         add_move(lm, right_start, pos->enpassant, 0);
     }
@@ -81,15 +81,12 @@ uint64_t get_knight_legal_moves(int p, int sq, uint64_t* occ)
 
 void resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
 {
-    int file = sq % 8;
-    int rank = sq / 8;
-    
     int x, y, attacking_sq;
 
     for (int i = 1; i < 8; ++i)
     {
-        x = file + i * file_offsets[dir];
-        y = rank + i * rank_offsets[dir];
+        x = file(sq) + i * file_offsets[dir];
+        y = rank(sq) + i * rank_offsets[dir];
 
         if (x < 0 || x > 7 || y < 0 || y > 7)
             return;

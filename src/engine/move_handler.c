@@ -216,7 +216,7 @@ void apply_move(Position* pos, Move m, Undo* undo)
     if (pos->enpassant_hashed)
     {
         pos->enpassant_hashed = 0;
-        pos->hash ^= Random64[ENPASSANT_BASE + undo->enpassant % 8];
+        pos->hash ^= Random64[ENPASSANT_BASE + file(undo->enpassant)];
     }
 
     // capture

@@ -14,8 +14,8 @@ int enpassant_legal(Position* pos, Move m, Undo* undo)
     {
         if (undo->moved_piece % 6 == 0)
         {
-            if (((pos->enpassant % 8 != 0) && (pos->piece_on_sq[move_to(m) - 1] == ((undo->moved_piece + 6) % 12))) || 
-                ((pos->enpassant % 8 != 7) && (pos->piece_on_sq[move_to(m) + 1] == ((undo->moved_piece + 6) % 12))))
+            if (((file(pos->enpassant) != 0) && (pos->piece_on_sq[move_to(m) - 1] == ((undo->moved_piece + 6) % 12))) || 
+                ((file(pos->enpassant) != 7) && (pos->piece_on_sq[move_to(m) + 1] == ((undo->moved_piece + 6) % 12))))
                 return 1;
         }
     }
@@ -133,8 +133,8 @@ const char* square_to_notation(int sq)
         out[2] = '\0';
         return out;
     }
-    out[0] = 'a' + (sq % 8);
-    out[1] = '8' - (sq / 8);
+    out[0] = 'a' + file(sq);
+    out[1] = '8' - rank(sq);
     out[2] = '\0';
     return out;
 }

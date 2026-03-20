@@ -5,7 +5,7 @@
 
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 1);
+    load_fen_string(pos, 0);
 
     generate_occ(pos);
     generate_piece_on_sq(pos);
@@ -22,8 +22,6 @@ void update(Position* pos, UIContext* ui, LegalMoves* lm)
 {
     generate_legal_moves(pos, lm);
     filter_moves(pos, lm);
-
-    log_legal_moves(lm);
 
     if (lm->count == 0)
     {
@@ -45,6 +43,12 @@ void update(Position* pos, UIContext* ui, LegalMoves* lm)
         ui->game_over = 1;  
 	}
 
+    if (insufficient_material(pos))
+    {
+        printf("insufficient material draw\n");
+        ui->game_over = 1;
+    }
+    
     log_gamestate(pos);
 }
 
@@ -53,15 +57,24 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    full_perft_test(pos);
+    // full_perft_test(pos);
     // perft(pos, 5); 
-    // search_test(pos); 
+    search_test(pos); 
 
     int ai_move_pending = 0;
     while (ui->running)
     {
+
         if (SDL_WaitEventTimeout(&e, 16))
         {
+            if (ui->game_over)
+            {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+                    ui->running = 0;
+
+                continue;
+            }
+
             if (handle_event(app, pos, ui, &e, lm, &last_move))
             {  
                 update(pos, ui, lm);

@@ -214,14 +214,13 @@ const uint64_t Random64[781] =
 
 uint8_t polyglot_sq(uint8_t sq)
 {
-    int rank = sq / 8;
-    int file = sq % 8;
-    return (7 - rank) * 8 + file;
+    return (7 - rank(sq)) * 8 + file(sq);
 }
 
 int poly_to_my(int poly)
 {
-    return (poly % 2) * 6 + (poly / 2);
+    return (poly & 1) * 6 + (poly >> 1);
+    // return (poly % 2) * 6 + (poly / 2);
 }
 
 int my_to_poly(int piece)

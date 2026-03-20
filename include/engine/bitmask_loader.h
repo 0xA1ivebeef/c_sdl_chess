@@ -3,7 +3,10 @@
 #define BITMASK_LOADER_H
 
 #include <stdint.h>
-#include "constants.h"
+
+#include "engine/constants.h"
+
+#include "utils/utils.h"
 
 extern uint64_t white_pawn_normal_bitmasks[64];
 extern uint64_t black_pawn_normal_bitmasks[64];

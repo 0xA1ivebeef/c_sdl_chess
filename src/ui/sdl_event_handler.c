@@ -19,10 +19,6 @@ int handle_event(AppContext* app, Position* pos, UIContext* ui, SDL_Event* e, Le
 {
     switch (e->type)
     {
-        case SDL_QUIT:
-            ui->running = 0;
-            break;
-
         case SDL_KEYDOWN:
             if (e->key.keysym.sym == SDLK_ESCAPE)
                 ui->running = 0;

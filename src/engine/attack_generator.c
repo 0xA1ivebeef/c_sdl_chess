@@ -14,16 +14,13 @@ uint64_t get_knight_attack_moves(int p, int sq, uint64_t* occ)
 
 void atk_resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
 {
-    int file = sq % 8;
-    int rank = sq / 8;
-    
     int x, y;
     int attacking_sq;
 
     for (int i = 1; i < 8; ++i)
     {
-        x = file + i * file_offsets[dir];
-        y = rank + i * rank_offsets[dir];
+        x = file(sq) + i * file_offsets[dir];
+        y = rank(sq) + i * rank_offsets[dir];
 
         if (x < 0 || x > 7 || y < 0 || y > 7)
             return;

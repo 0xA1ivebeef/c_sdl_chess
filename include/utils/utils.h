@@ -8,8 +8,26 @@
 
 #include "engine/types.h"
 
+static inline int rank(int sq) { return sq >> 3; }
+static inline int file(int sq) { return sq & 7; }
+
 static inline int move_from(Move m) { return (m & FROM_MASK) >> 6; }
 static inline int move_to(Move m)   { return m & TO_MASK; }
+
+static inline int has_pawn(Position* pos)
+{
+    return (pos->bb[BLACK_PAWN] != 0) || (pos->bb[WHITE_PAWN] != 0);
+}
+
+static inline int has_rook(Position* pos)
+{
+    return (pos->bb[BLACK_ROOK] != 0) || (pos->bb[WHITE_ROOK] != 0);
+}
+
+static inline int has_queen(Position* pos)
+{
+    return (pos->bb[BLACK_QUEEN] != 0) || (pos->bb[WHITE_QUEEN] != 0);
+}
 
 double get_time_seconds();
 
