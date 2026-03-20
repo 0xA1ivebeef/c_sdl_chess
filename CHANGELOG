@@ -213,3 +213,7 @@ explicit handling of special moves in move_handler (no performance improvements)
 
 --------------------------------------------------------------------------------
 
+20-03-2026
+changed file and rank calculation of squares to bitwise operations
+implemented insufficient material draws
+
