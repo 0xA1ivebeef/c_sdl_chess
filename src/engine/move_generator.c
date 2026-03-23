@@ -61,7 +61,7 @@ uint64_t get_pawn_attacking_moves(int p, int sq, uint64_t* occ)
     return white_pawn_attack_bitmasks[sq] & occ[!p];
 }
 
-uint64_t get_pawn_legal_moves(int p, int sq, uint64_t* occ)
+uint64_t get_pawn_moves(int p, int sq, uint64_t* occ)
 {
     uint64_t n_bm = p ? white_pawn_normal_bitmasks[sq] : black_pawn_normal_bitmasks[sq];
     uint64_t d_bm = p ? white_pawn_double_bitmasks[sq] & ~occ[2] : black_pawn_double_bitmasks[sq] & ~occ[2];
@@ -74,7 +74,7 @@ uint64_t get_pawn_legal_moves(int p, int sq, uint64_t* occ)
     return (normal_legal | c_bm | d_bm);
 }
 
-uint64_t get_knight_legal_moves(int p, int sq, uint64_t* occ)
+uint64_t get_knight_moves(int p, int sq, uint64_t* occ)
 {
     return (knight_bitmasks[sq] & ~occ[p]);
 }
@@ -105,7 +105,7 @@ void resolve_dir(int p, int sq, int dir, uint64_t* res, uint64_t* occ)
     }
 }
 
-uint64_t get_sliding_piece_legal_moves(int p, int sq, int piece, uint64_t* occ)
+uint64_t get_sliding_moves(int p, int sq, int piece, uint64_t* occ)
 {
     uint64_t result = 0;
 
@@ -118,27 +118,27 @@ uint64_t get_sliding_piece_legal_moves(int p, int sq, int piece, uint64_t* occ)
     return result;
 }
 
-uint64_t get_king_legal_moves(int p, int sq, uint64_t* occ)
+uint64_t get_king_moves(int p, int sq, uint64_t* occ)
 {
     return (king_bitmasks[sq] & ~occ[p]);
 }
 
-uint64_t get_legal_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
+uint64_t get_moves_bitmask(int p, int piece, int sq, uint64_t* occ)
 {
     piece %= 6; // abstract color, keep piecetype
                
     switch(piece)
     {
         case 0:
-            return get_pawn_legal_moves(p, sq, occ); 
+            return get_pawn_moves(p, sq, occ); 
         case 1:
-            return get_knight_legal_moves(p, sq, occ);
+            return get_knight_moves(p, sq, occ);
         case 2:
         case 3:
         case 4:
-            return get_sliding_piece_legal_moves(p, sq, piece, occ);
+            return get_sliding_moves(p, sq, piece, occ);
         case 5:
-            return get_king_legal_moves(p, sq, occ);
+            return get_king_moves(p, sq, occ);
     }
 
     return 0;
@@ -158,7 +158,7 @@ void add_promotion_moves(LegalMoves* lm, Move m)
 
 void get_pieces_moves(Position* pos, LegalMoves* lm, int piece, int sq)
 {
-    uint64_t moves = get_legal_moves_bitmask(pos->player, piece, sq, pos->occ);
+    uint64_t moves = get_moves_bitmask(pos->player, piece, sq, pos->occ);
     
     while(moves)
     {
@@ -200,5 +200,48 @@ void generate_legal_moves(Position* pos, LegalMoves* lm)
 
     add_castling(pos, lm);
     add_enpassant(pos, lm);
+}
+
+void resolve_attacks(uint64_t attacks, LegalMoves* cm, uint8_t sq, uint8_t piece)
+{
+    // resolve piece to attacks squares into moves
+    while (attacks)
+    {
+        int dest = __builtin_ctzll(attacks);
+        Move m = (sq << 6) | dest; 
+
+        if (is_promotion(piece, dest))
+            add_promotion_moves(cm, m);
+        else
+            cm->moves[cm->count++] = m;
+
+        attacks &= attacks - 1;
+    }
+}
+
+void generate_captures(Position* pos, LegalMoves* cm)
+{
+    cm->count = 0;
+
+    // resolve pieces of every bitboard 
+    int start = pos->player * 6;
+
+    uint64_t attacks = 0;
+    for (int i = start; i < start + 6; ++i)
+    {
+        uint64_t bb = pos->bb[i];
+        while (bb)
+        {
+            int sq = __builtin_ctzll(bb);
+
+            attacks = get_moves_bitmask(pos->player, i, sq, pos->occ) & pos->occ[!pos->player]; 
+            resolve_attacks(attacks, cm, sq, i);
+            
+            bb &= bb - 1; 
+        }
+    }
+
+    if (pos->enpassant != INVALID_SQUARE)
+        add_enpassant(pos, cm); // TODO without hashing
 }
 

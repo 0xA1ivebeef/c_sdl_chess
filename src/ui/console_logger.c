@@ -38,11 +38,11 @@ void log_piece_on_sq(uint8_t n[64])
 void log_move(Move m)
 {
     printf("promotion: %d\n", (m >> 12));
-    printf("%s %s %d %d\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)), move_from(m), move_to(m));
+    printf("%s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
 
-    printf("int move: %d\n", m);
-    printf("bin move: \n");
-    print_uint16_binary(m);
+    // printf("int move: %d\n", m);
+    // printf("bin move: \n");
+    // print_uint16_binary(m);
     printf("\n");
 }
 

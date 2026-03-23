@@ -5,7 +5,7 @@
 
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 0);
+    load_fen_string(pos, 4);
 
     generate_occ(pos);
     generate_piece_on_sq(pos);
@@ -57,21 +57,21 @@ void game_loop(AppContext* app, Position* pos, UIContext* ui, LegalMoves* lm)
     SDL_Event e;
     Move last_move;
 
-    // full_perft_test(pos);
+    // search_test(pos); 
+    
     // perft(pos, 5); 
-    search_test(pos); 
+    // perft_suite(pos);
+    // perft_captures_suite(pos);
 
     int ai_move_pending = 0;
     while (ui->running)
     {
-
         if (SDL_WaitEventTimeout(&e, 16))
         {
             if (ui->game_over)
             {
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
                     ui->running = 0;
-
                 continue;
             }
 

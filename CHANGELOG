@@ -217,3 +217,14 @@ explicit handling of special moves in move_handler (no performance improvements)
 changed file and rank calculation of squares to bitwise operations
 implemented insufficient material draws
 
+--------------------------------------------------------------------------------
+
+23-03-2026 
+implemented generate_captures in legal moves plus a simple perft suite for 
+depth 1 on different positions
+fixed a small but high impact bug in transposition tables 
+(now checking if hash matched entry in lookup) -> higher cutoffs and rate
+! all tests running correct with quiesence search
+
+--------------------------------------------------------------------------------
+

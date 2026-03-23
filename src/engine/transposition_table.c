@@ -58,7 +58,11 @@ void TT_store(TTEntry* new_entry)
 TTEntry* TT_lookup(uint64_t hash)
 {
     size_t index = get_TT_index(hash);
+    TTEntry* entry = &TT[index];
 
-    return &TT[index];
+    if (entry->hash == hash)
+        return entry;
+
+    return NULL;
 }
 

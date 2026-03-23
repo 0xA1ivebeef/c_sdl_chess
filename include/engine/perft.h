@@ -15,6 +15,7 @@
 #include "utils/utils.h"
 
 int perft(Position* pos, int depth);
-void full_perft_test(Position* pos);
+int perft_suite(Position* pos);
+int perft_captures_suite(Position* pos);
 
 #endif

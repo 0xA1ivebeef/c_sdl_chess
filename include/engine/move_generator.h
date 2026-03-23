@@ -28,6 +28,7 @@ typedef enum ATTACKS
 } ATTACKS;
 
 void generate_legal_moves(Position* pos, LegalMoves* lm);
+void generate_captures(Position* pos, LegalMoves* cm);
 
 #endif
 

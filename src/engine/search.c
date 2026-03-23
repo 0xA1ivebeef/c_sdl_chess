@@ -165,18 +165,62 @@ Move pick_next_move(LegalMoves* lm, int* scores, int start)
     return lm->moves[start];
 }
 
-// alpha = best value MAX can gurantee so far (lower bound of what MAX can achieve)
-// beta  = best value MIN can gurantee so far (upper bound of what MIN can force)
-//
-// if a >= b stop exploring because MAX already has a better option elsewhere
-// if its a MAX node and MIN has a better option if its a MIN node
-//
-// no possible value subtree can produce that would matter to the parent
+// only do quiescence search when position is not check
+// alpha min eval, maximizing player can ensure
+// beta max eval, minimizing player can ensure?
+int q_search(Position* pos, int alpha, int beta)
+{
+    // evaluate current position
+    int s_eval = evaluate(pos);
+    if (s_eval >= beta)
+        return beta; // beta cutoff
+
+    if (alpha < s_eval)
+        alpha = s_eval; // alpha improve
+        
+    // generate only captures
+    LegalMoves lm;
+    generate_captures(pos, &lm);
+    filter_moves(pos, &lm);
+    if (lm.count == 0)
+    {
+        if (is_check(pos, pos->player))
+            return -MATE;
+        else
+            return 0;
+    }
+
+    for (int i = 0; i < lm.count; i++)
+    {
+        Undo undo;
+        Move m = lm.moves[i];
+
+        /* TODO implement SEE (static exchange evaluation) 
+         * to skip losing captures but this is optimization
+        if (see(pos, move) < 0)
+            continue;
+        */
+
+        apply_move(pos, m, &undo);
+        int score = -q_search(pos, -beta, -alpha);
+        undo_move(pos, m, &undo);
+
+        if (score >= beta)
+            return beta; // cutoff
+
+        if (score > alpha)
+            alpha = score;
+    } 
+
+    // printf("q_search output: %d\n", alpha);
+    return alpha; 
+}
+
 int alphabeta(Position* pos, int depth, int alpha, int beta)
 {
     nodes++;
     if (depth == 0)
-        return evaluate(pos);
+        return q_search(pos, alpha, beta);
 
     if (insufficient_material(pos))
         return 0;
@@ -184,7 +228,6 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     int orig_alpha = alpha;
     int orig_beta = beta;
 
-    /*
     TTEntry* entry = TT_lookup(pos->hash);
     tt_probes++;
     if (entry && entry->depth >= depth)
@@ -195,16 +238,19 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
             tt_cutoffs++;
             return entry->eval;
         }
+
         if (entry->flag == TT_LOWERBOUND)
             alpha = max(alpha, entry->eval);
+
         if (entry->flag == TT_UPPERBOUND)
             beta = min(beta, entry->eval);
+
         if (alpha >= beta) // algorithm condition (prune)
         {
             tt_cutoffs++;
             return entry->eval;
         }
-    } */
+    }
 
     LegalMoves lm;
     generate_legal_moves(pos, &lm);
@@ -251,20 +297,18 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
             alpha = best;
 
         if (alpha >= beta)
-            break;  // prune remaining moves
+            break;  // prune
     }
 
-    /*
-    TTEntry new_entry = { pos->hash, best_move, depth, best, 0 };
-    if (best <= orig_alpha)
-        new_entry.flag = TT_UPPERBOUND;
-    else if (best >= orig_beta)
-        new_entry.flag = TT_LOWERBOUND;
-    else
-        new_entry.flag = TT_EXACT;
+    uint8_t flag = TT_EXACT;
+    if (best <= orig_alpha) // position is at most this good, maybe worse
+        flag = TT_UPPERBOUND;
+    else if (best >= orig_beta) // position is at least this good, maybe better
+        flag = TT_LOWERBOUND;
 
+    TTEntry new_entry = { pos->hash, best_move, depth, best, flag };
     TT_store(&new_entry);
-    */
+
     return best;
 }
 
@@ -321,11 +365,14 @@ void search_test(Position* pos)
 {
     nodes = 0;
     printf("alpha beta search\n");
+
     double start = get_time_seconds();
     alphabeta(pos, 5, -INF, INF);
     double end = get_time_seconds();
+
     printf("EXECUTION TIME: %f seconds\n", end-start);
     printf("NODES SEARCHED %zu\n", nodes);
+
     printf("TT Hits: %d\n", tt_hits);
     printf("TT Probes: %d\n", tt_probes);
     printf("TT HIT RATE: %f\n", (float)tt_probes / (float)tt_hits);

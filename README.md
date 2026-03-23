@@ -52,6 +52,7 @@ Openings book (Titans.bin)<br>
 Benchmarking search and perft <br>
 Transposition table 64MB <br>
 Insufficient material draws <br>
+Quiescence Search <br>
 
 Negamax opponent algorithm with alpha beta pruning and move ordering<br>
 Full zobrist hashing and incremental updating<br>

@@ -1,10 +1,15 @@
 
+PRIO:
+--------------------------------------------------------------------------------
+probably biggest change - stop deep searching quiet moves
+iterative deepening
+SEE in q_search
+
 FEATURES:
 --------------------------------------------------------------------------------
-threefold repetition draw
 iterative deepening
-quiescence search 
 SEE
+threefold repetition draw
 
 OPTIMIZATIONS:
 --------------------------------------------------------------------------------

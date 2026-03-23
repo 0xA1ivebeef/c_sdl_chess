@@ -2,6 +2,9 @@
 #ifndef ATTACK_GENERATOR_H
 #define ATTACK_GENERATOR_H
 
+#include <stdint.h>
+#include <assert.h>
+
 #include "ui/console_logger.h"
 
 #include "engine/constants.h"
