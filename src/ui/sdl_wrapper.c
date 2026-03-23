@@ -205,14 +205,16 @@ int init_sdl(AppContext* app)
         return 1;
     }
 
+    SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_BLEND);
+
     load_piece_textures(app);
 
     SDL_Color dark_transparent = { 20, 20, 20, 100 }; // black, alpha 100
     app->move_circle = create_circle_texture(app->renderer, 20, dark_transparent);
     app->capture_circle = create_ring_texture
     (
-            app->renderer, 70, 50, 
-            dark_transparent, 0, 2*M_PI 
+        app->renderer, 70, 50, 
+        dark_transparent, 0, 2*M_PI 
     );
 
     if (load_sounds(app) != 0)

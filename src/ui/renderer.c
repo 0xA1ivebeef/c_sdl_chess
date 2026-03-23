@@ -3,6 +3,9 @@
 
 void render_move(AppContext* app, Move m)
 {
+    if (!m)
+        return;
+
     SDL_SetRenderDrawColor(app->renderer, 100, 230, 230, 30);
 
     SDL_Rect r = { 
@@ -17,7 +20,6 @@ void render_move(AppContext* app, Move m)
     r.y = rank(move_to(m)) * TILESIZE;
 
     SDL_RenderFillRect(app->renderer, &r);
-    SDL_RenderPresent(app->renderer);
 }
 
 void render_board(AppContext* app)
@@ -60,9 +62,10 @@ void render_pieces(AppContext* app, const uint64_t* bitboards)
 
 void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int start)
 {
-    SDL_SetRenderDrawBlendMode(app->renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(app->renderer, 50, 50, 50, 50);
+
     int radius = 20;
+
 	for(int i = 0; i < lm->count; ++i)
     {
         Move m = lm->moves[i];
@@ -83,6 +86,7 @@ void render_legal_moves(AppContext* app, Position* pos, LegalMoves* lm, int star
             }
         }
     }
+
     SDL_RenderPresent(app->renderer);
 }
 
@@ -93,8 +97,7 @@ void render(AppContext* app, uint64_t* bitboards, Move last_move)
 
     render_board(app);
     render_pieces(app, bitboards);
-    if (last_move != 0)
-        render_move(app, last_move);
+    render_move(app, last_move);
 
     SDL_RenderPresent(app->renderer);
 }
