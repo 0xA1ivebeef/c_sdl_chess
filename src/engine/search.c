@@ -184,6 +184,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     int orig_alpha = alpha;
     int orig_beta = beta;
 
+    /*
     TTEntry* entry = TT_lookup(pos->hash);
     tt_probes++;
     if (entry && entry->depth >= depth)
@@ -203,7 +204,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
             tt_cutoffs++;
             return entry->eval;
         }
-    }
+    } */
 
     LegalMoves lm;
     generate_legal_moves(pos, &lm);
@@ -219,8 +220,8 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
 
     int scores[LEGAL_MOVES_SIZE] = {0};
     Move tmp = 0;
-    if (entry)
-        tmp = entry->best_move;
+    // if (entry)
+       //  tmp = entry->best_move;
     score_moves(pos, &lm, scores, tmp);
 
     /* 
@@ -253,6 +254,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
             break;  // prune remaining moves
     }
 
+    /*
     TTEntry new_entry = { pos->hash, best_move, depth, best, 0 };
     if (best <= orig_alpha)
         new_entry.flag = TT_UPPERBOUND;
@@ -262,7 +264,7 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
         new_entry.flag = TT_EXACT;
 
     TT_store(&new_entry);
-
+    */
     return best;
 }
 
@@ -293,6 +295,7 @@ Move search_root(Position* pos, int depth)
         // negamax so this returns a large number if the position 
         // is good for the player who made the move
         int eval = -alphabeta(pos, depth - 1, -INF, INF); 
+        printf("eval: %d\n", eval);
         if (eval > best_eval)
         {
             best_eval = eval;
@@ -300,9 +303,13 @@ Move search_root(Position* pos, int depth)
         }
 
         undo_move(pos, m, &undo);
-        printf("finished move %s%s\n", 
+        printf("finished move %s%s, best eval %d\n", 
                 square_to_notation(move_from(m)), 
-                square_to_notation(move_to(m)));
+                square_to_notation(move_to(m)),
+                best_eval);
+        printf("best move: %s%s\n",
+                square_to_notation(move_from(best_move)), 
+                square_to_notation(move_to(best_move)));
     }
 
     printf("tt hits %d\n", tt_hits);
