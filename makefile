@@ -10,7 +10,7 @@ OBJ_FILES := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 BUILD?=release
 
 ifeq ($(BUILD),debug)
-    CFLAGS = -g -O1 -fsanitize=address,undefined -Wall -Wextra -Iinclude
+    CFLAGS = -g -O2 -fsanitize=address,undefined -Wall -Wextra -Iinclude
     LDFLAGS = -fsanitize=address,undefined -lm -lSDL2 -lSDL2_image -lSDL2_mixer
 else ifeq ($(BUILD),release)
     CFLAGS = -O3 -march=native -flto -Wall -Wextra -Iinclude

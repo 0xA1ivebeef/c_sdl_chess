@@ -224,7 +224,11 @@ implemented generate_captures in legal moves plus a simple perft suite for
 depth 1 on different positions
 fixed a small but high impact bug in transposition tables 
 (now checking if hash matched entry in lookup) -> higher cutoffs and rate
-! all tests running correct with quiesence search
+tests running correctly with quiesence search
 
 --------------------------------------------------------------------------------
+
+24-03-2026
+fixed fastest mate bug
+tried to create flame graph but too much optimization (fewer symbols)
 

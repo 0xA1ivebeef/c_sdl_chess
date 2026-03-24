@@ -174,12 +174,13 @@ int init_sdl(AppContext* app)
         return 1;
     }
     
+    /* 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
     {
         fprintf(stderr, "SDL_mixer could not initialize! Mix_Error %s\n", Mix_GetError());
         cleanup(app);
         return 1;
-    }
+    } */
     
     if(!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
     {
@@ -217,12 +218,13 @@ int init_sdl(AppContext* app)
         dark_transparent, 0, 2*M_PI 
     );
 
+    /*
     if (load_sounds(app) != 0)
     {
         fprintf(stderr, "sound loading error\n");
         cleanup(app);
         return 1;
-    }
+    } */
 
     return 0;
 }

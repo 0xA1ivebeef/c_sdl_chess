@@ -58,8 +58,8 @@ int perft(Position* pos, int depth)
     int i = 0;
     while(move_nodes[i].nodes)
     {
-        log_move(move_nodes[i].move);
-        printf("%d\n", move_nodes[i].nodes);
+        // log_move(move_nodes[i].move);
+        // printf("%d\n", move_nodes[i].nodes);
         ++i;
     }
     return total;

@@ -1,7 +1,6 @@
 
 PRIO:
 --------------------------------------------------------------------------------
-graphics bug - probabaly rerendering somewhere i shouldnt
 probably biggest change - stop deep searching quiet moves
 iterative deepening
 SEE in q_search
