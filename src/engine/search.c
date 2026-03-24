@@ -1,10 +1,14 @@
 
 #include "engine/search.h"
 
+#define TIME_UP 65535
+
 static int tt_hits = 0;
 static int tt_probes = 0;
 static int tt_cutoffs = 0;
 static uint64_t nodes = 0;
+
+const int max_depth = 11;
 
 int count_material(uint64_t* bb, uint8_t player)
 {
@@ -79,7 +83,7 @@ int compare_moves(const void* a, const void* b)
 int gives_check(Position* pos, Move m)
 {
     Undo undo;
-    apply_move(pos, m, &undo);
+    make_move(pos, m, &undo);
     int check = is_check(pos, pos->player);  
     undo_move(pos, m, &undo);
 
@@ -196,7 +200,7 @@ int q_search(Position* pos, int alpha, int beta)
             continue;
         */
 
-        apply_move(pos, m, &undo);
+        make_move(pos, m, &undo);
         int score = -q_search(pos, -beta, -alpha);
         undo_move(pos, m, &undo);
 
@@ -211,8 +215,11 @@ int q_search(Position* pos, int alpha, int beta)
     return alpha; 
 }
 
-int alphabeta(Position* pos, int depth, int alpha, int beta)
+int alpha_beta(Position* pos, int depth, int alpha, int beta, SearchInfo* s)
 {
+    if (time_up(s))
+        return TIME_UP;
+
     nodes++;
 
     if (depth == 0)
@@ -268,15 +275,15 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
     */
 
     int best = -INF;
-    Move best_move = 0;
+    Move best_move = lm.moves[0];
+
     for (int i = 0; i < lm.count; i++)
     {
         Undo undo;
         Move m = pick_next_move(&lm, scores, i);
-        apply_move(pos, m, &undo);
 
-        int score = -alphabeta(pos, depth - 1, -beta, -alpha);
-
+        make_move(pos, m, &undo);
+        int score = -alpha_beta(pos, depth - 1, -beta, -alpha, NULL);
         undo_move(pos, m, &undo);
 
         if (score > best)
@@ -320,35 +327,96 @@ Move search_root(Position* pos, int depth)
     score_moves(pos, &lm, scores, 0);
 
     Move best_move = 0;
-    int best_eval = -INF;
+    int best_score = -INF;
 
     for (int i = 0; i < lm.count; ++i)
     {
         Undo undo;
         Move m = pick_next_move(&lm, scores, i);
-        apply_move(pos, m, &undo);
 
-        // negamax so this returns a large number if the position 
-        // is good for the player who made the move
-        int eval = -alphabeta(pos, depth - 1, -INF, INF); 
-        printf("eval: %d\n", eval);
-        if (eval > best_eval)
+        make_move(pos, m, &undo);
+        int score = -alpha_beta(pos, depth - 1, -INF, INF, NULL); 
+        undo_move(pos, m, &undo);
+
+        if (score > best_score)
         {
-            best_eval = eval;
+            best_score = score;
             best_move = m;
         }
 
-        undo_move(pos, m, &undo);
-        printf("finished move %s%s, best eval %d\n", 
-                square_to_notation(move_from(m)), 
-                square_to_notation(move_to(m)),
-                best_eval);
-        printf("best move: %s%s\n",
-                square_to_notation(move_from(best_move)), 
-                square_to_notation(move_to(best_move)));
+        printf("finished move\n");
+        log_move(m);
+        printf("best eval: %d", best_score);
+        printf("best move:\n");
+        log_move(best_move);
     }
 
     printf("tt hits %d\n", tt_hits);
+
+    return best_move;
+}
+
+Move alpha_beta_root(Position* pos, int depth, SearchInfo* s)
+{
+    if (insufficient_material(pos))
+        return 0;
+
+    LegalMoves lm;
+    generate_legal_moves(pos, &lm);
+    filter_moves(pos, &lm);
+
+    if (lm.count == 0)
+        return 0;
+
+    int scores[LEGAL_MOVES_SIZE] = {0};
+    score_moves(pos, &lm, scores, 0);
+
+    int best_score = -INF;
+    Move best_move = 0;
+
+    for (int i = 0; i < lm.count; ++i)
+    {
+        if (time_up(s))
+            return TIME_UP;
+
+        Undo undo;
+        Move m = pick_next_move(&lm, scores, i);
+
+        make_move(pos, m, &undo);
+        int score = -alpha_beta(pos, depth - 1, -INF, INF, s);
+        undo_move(pos, m, &undo); 
+
+        if (score > best_score)
+        {
+            best_score = score;
+            best_move = m;
+        }
+    }
+
+    return best_move;
+}
+
+// TODO handle this function returning 0 as unknown error
+Move iterative_deepening(Position* pos, double time_limit)
+{
+    double start_time = get_time_seconds();
+    SearchInfo s_info = { start_time, time_limit };
+    Move best_move = 0;
+
+    for (int depth = 1; depth < max_depth; ++depth)
+    {
+        Move m = alpha_beta_root(pos, depth, &s_info);
+
+        if (m == TIME_UP || time_up(&s_info))
+        {
+            printf("time is up\n");
+            break;
+        }
+
+        best_move = m;
+        printf("Depth %d, best_move ", depth);
+        log_move(m);
+    }
 
     return best_move;
 }
@@ -359,7 +427,7 @@ void search_test(Position* pos)
     printf("alpha beta search\n");
 
     double start = get_time_seconds();
-    alphabeta(pos, 5, -INF, INF);
+    alpha_beta(pos, 5, -INF, INF, NULL);
     double end = get_time_seconds();
 
     printf("EXECUTION TIME: %f seconds\n", end-start);

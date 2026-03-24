@@ -13,7 +13,7 @@
 
 #include "utils/utils.h"
 
-void apply_move(Position* pos, Move m, Undo* undo);
+void make_move(Position* pos, Move m, Undo* undo);
 void undo_move(Position* pos, Move m, Undo* undo);
 int handle_move(Position* pos, LegalMoves* lm, Move m);
 

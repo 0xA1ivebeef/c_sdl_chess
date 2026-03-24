@@ -34,7 +34,7 @@ added filter moves back to the game but it needs testing and refining
 fixing make move and undo move, reducing undo move to captured piece enpassant and
 castling the rest is implicit through move and position 
 
-fixed order of apply move and undo move to match inversion and added moved_piece
+fixed order of make_move and undo move to match inversion and added moved_piece
 to undo move to make it more stable and reduce the risk for bugs
 
 fixed update_castle_rights, removed responsibility from apply castling
@@ -53,7 +53,7 @@ the pawn it adds it to the board for some reason
 moved special move handler functions into move_handler
 and fixed logic in them and combined with undo logic
 
-implemented a memcpy of backup and position for apply and undo move to make sure
+implemented a memcpy of backup and position for make and undo move to make sure
 undo doesnt mutate the position which it does for enpassant thats why this causes
 undefined behaviour
 
@@ -104,9 +104,9 @@ search fixes this
 sort moves by descending order of MVV-LVA value in move_generator
 
 zobrist hashing for implementing a openings book in the future and transposition table maybe
-implemented incremental updating of zobrist in apply_move
+implemented incremental updating of zobrist in make_move
 
-save_state is now implicit to apply move and doesnt have to be called before it
+save_state is now implicit to make_move and doesnt have to be called before it
 
 full incremental zobrist hashing with full special move handling
 
@@ -200,7 +200,7 @@ todo implement move ordering from TT
 --------------------------------------------------------------------------------
 
 18-03-2026
-piece_on_square array added to position with incremental update in apply move
+piece_on_square array added to position with incremental update in make_move
 searching UB bug -> memory leak in TT not freeing malloced memory
 
 --------------------------------------------------------------------------------

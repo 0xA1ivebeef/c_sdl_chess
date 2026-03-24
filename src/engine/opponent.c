@@ -2,6 +2,7 @@
 #include "engine/opponent.h"
 
 static int get_opening_move = 1;
+static const double time_limit = 3.0;
 
 Move opponent_move(Position* pos, LegalMoves* lm)
 {
@@ -16,21 +17,23 @@ Move opponent_move(Position* pos, LegalMoves* lm)
         }
         else
         {
+            // TODO if its castling handle this, castling is given as e1h1 or e1a1 same for black
             handle_move(pos, lm, opening_move);
             return opening_move;
         }
     }
 
     double start =  get_time_seconds();
-    Move m = search_root(pos, 7);
+    Move m = iterative_deepening(pos, time_limit);
     double end = get_time_seconds();
+
     printf("opponent thought for %f sec\n", end-start);
+    printf("picked move:\n");
+    log_move(m);
 
     if (!m)
         return 0;
         
-    printf("picked move: %s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
-
     handle_move(pos, lm, m); 
     return m;
 }

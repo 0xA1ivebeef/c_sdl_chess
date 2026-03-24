@@ -22,7 +22,7 @@ void filter_moves(Position* pos, LegalMoves* lm)
     {
         Undo undo;  
         Move m = lm->moves[i];
-        apply_move(pos, m, &undo);  
+        make_move(pos, m, &undo);  
 
         if (!is_check(pos, !pos->player))
             lm->moves[write_ptr++] = m;

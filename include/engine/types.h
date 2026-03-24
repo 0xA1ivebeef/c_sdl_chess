@@ -112,5 +112,12 @@ typedef struct __attribute__((aligned(16)))
     uint8_t flag;
 } TTEntry;
 
+
+typedef struct
+{
+    double start_time;
+    double time_limit;
+} SearchInfo;
+
 #endif
 

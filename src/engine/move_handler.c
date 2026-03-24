@@ -201,7 +201,7 @@ void save_state(Position* pos, Move m, Undo* undo)
     undo->hash              = pos->hash;
 }
 
-void apply_move(Position* pos, Move m, Undo* undo)
+void make_move(Position* pos, Move m, Undo* undo)
 {   
     save_state(pos, m, undo);
     
@@ -284,7 +284,7 @@ int handle_move(Position* pos, LegalMoves* lm, Move m)
         return 0;
 
     Undo undo;
-    apply_move(pos, m, &undo);
+    make_move(pos, m, &undo);
         
     return 1;
 }

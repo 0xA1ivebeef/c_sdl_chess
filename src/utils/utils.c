@@ -1,6 +1,17 @@
 
 #include "utils/utils.h"
 
+int time_up(SearchInfo* s)
+{
+    if (!s)
+        return 0;
+
+    double curr = get_time_seconds();
+    if (curr - s->start_time >= s->time_limit)
+        return 1;
+    return 0;
+}
+
 double get_time_seconds()
 {
     struct timespec ts;

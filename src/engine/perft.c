@@ -19,7 +19,7 @@ int get_nodes(Position* pos, int depth)
     {
         Undo undo;
 
-        apply_move(pos, lm.moves[i], &undo);
+        make_move(pos, lm.moves[i], &undo);
         nodes += get_nodes(pos, depth - 1);
         undo_move(pos, lm.moves[i], &undo);
     }
@@ -38,7 +38,7 @@ int perft_divide(Position* pos, int depth, MoveNode* move_nodes)
     {
         Move m = lm.moves[i];
         Undo undo;
-        apply_move(pos, m, &undo);
+        make_move(pos, m, &undo);
         move_nodes[i] = (MoveNode) { get_nodes(pos, depth - 1), m };
         // printf("perft divide finished move %s%s\n", square_to_notation(move_from(m)), square_to_notation(move_to(m)));
         undo_move(pos, m, &undo);

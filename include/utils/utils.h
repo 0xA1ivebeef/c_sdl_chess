@@ -29,6 +29,7 @@ static inline int has_queen(Position* pos)
     return (pos->bb[BLACK_QUEEN] != 0) || (pos->bb[WHITE_QUEEN] != 0);
 }
 
+int time_up(SearchInfo* s);
 double get_time_seconds();
 
 int enpassant_legal(Position* pos, Move m, Undo* undo);
