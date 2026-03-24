@@ -5,7 +5,7 @@
 
 void position_init(Position* pos, LegalMoves* lm)
 {
-    load_fen_string(pos, 4);
+    load_fen_string(pos, 0);
 
     generate_occ(pos);
     generate_piece_on_sq(pos);

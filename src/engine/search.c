@@ -104,14 +104,14 @@ int gives_check(Position* pos, Move m)
 #define SCORE_KILLER         80000
 #define SCORE_HISTORY         1000
 
-void score_moves(Position* pos, LegalMoves* lm, int* scores, Move best_move)
+void score_moves(Position* pos, LegalMoves* lm, int* scores, Move tt_move)
 {
     for (int i = 0; i < lm->count; ++i)
     {
         Move m = lm->moves[i];
         scores[i] = 0;
 
-        if (m == best_move)
+        if (m == tt_move)
         {
             scores[i] = SCORE_TT_MOVE;
             continue;
@@ -183,12 +183,7 @@ int q_search(Position* pos, int alpha, int beta)
     generate_captures(pos, &lm);
     filter_moves(pos, &lm);
     if (lm.count == 0)
-    {
-        if (is_check(pos, pos->player))
-            return -MATE;
-        else
-            return 0;
-    }
+        return evaluate(pos);
 
     for (int i = 0; i < lm.count; i++)
     {
@@ -219,6 +214,7 @@ int q_search(Position* pos, int alpha, int beta)
 int alphabeta(Position* pos, int depth, int alpha, int beta)
 {
     nodes++;
+
     if (depth == 0)
         return q_search(pos, alpha, beta);
 
@@ -227,6 +223,16 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
 
     int orig_alpha = alpha;
     int orig_beta = beta;
+
+    LegalMoves lm;
+    generate_legal_moves(pos, &lm);
+    filter_moves(pos, &lm);
+    if (lm.count == 0)
+    {
+        if (is_check(pos, pos->player))
+            return -MATE - depth; // faster mates should be prio
+        return 0;
+    }
 
     TTEntry* entry = TT_lookup(pos->hash);
     tt_probes++;
@@ -252,23 +258,9 @@ int alphabeta(Position* pos, int depth, int alpha, int beta)
         }
     }
 
-    LegalMoves lm;
-    generate_legal_moves(pos, &lm);
-    filter_moves(pos, &lm);
-
-    if (lm.count == 0)
-    {
-        if (is_check(pos, pos->player))
-            return -MATE + depth; // faster mates should be prio
-        else 
-            return 0;
-    }
-
     int scores[LEGAL_MOVES_SIZE] = {0};
-    Move tmp = 0;
-    // if (entry)
-       //  tmp = entry->best_move;
-    score_moves(pos, &lm, scores, tmp);
+    Move tt_move = entry ? entry->best_move : 0;
+    score_moves(pos, &lm, scores, tt_move);
 
     /* 
     for (int i = 0; i < lm.count; ++i)
