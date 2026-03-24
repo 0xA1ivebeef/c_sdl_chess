@@ -1,7 +1,7 @@
 
 PRIO:
 --------------------------------------------------------------------------------
-probably biggest change - stop deep searching quiet moves
+killer moves seem to have no effect on the search
 iterative deepening
 SEE in q_search
 
